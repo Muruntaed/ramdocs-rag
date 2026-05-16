@@ -36,7 +36,6 @@ register("v1.0_madam_lite", _make_v1_madam_lite)
 def _make_v2_entity_first() -> V2EntityFirst:
     """v2.0: entity-first decomposition, multi-answer aware."""
     import os
-
     from ..core.llm import OpenAIClient
 
     analyzer = OpenAIClient(model=os.environ.get("OPENAI_MODEL_ANALYZER", "gpt-4o-mini"))
@@ -125,10 +124,8 @@ def _make_v4_evidence_quality():
     mediator = OpenAIClient(model=os.environ.get("OPENAI_MODEL_MEDIATOR", "gpt-4o"))
     skeptic = OpenAIClient(model=os.environ.get("OPENAI_MODEL_MEDIATOR", "gpt-4o"))
     return V4EvidenceQuality(
-        llm=analyzer,
-        evaluator_llm=evaluator,
-        mediator_llm=mediator,
-        skeptic_llm=skeptic,
+        llm=analyzer, evaluator_llm=evaluator,
+        mediator_llm=mediator, skeptic_llm=skeptic,
     )
 
 
@@ -147,10 +144,8 @@ def _make_v4_1_promptfix():
     mediator = OpenAIClient(model=os.environ.get("OPENAI_MODEL_MEDIATOR", "gpt-4o"))
     skeptic = OpenAIClient(model=os.environ.get("OPENAI_MODEL_MEDIATOR", "gpt-4o"))
     return V41PromptFix(
-        llm=analyzer,
-        evaluator_llm=evaluator,
-        mediator_llm=mediator,
-        skeptic_llm=skeptic,
+        llm=analyzer, evaluator_llm=evaluator,
+        mediator_llm=mediator, skeptic_llm=skeptic,
     )
 
 

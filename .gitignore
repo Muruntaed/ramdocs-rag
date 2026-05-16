@@ -1,7 +1,9 @@
-# Run artefacts: commit only _baseline and _reports; everything else stays local.
+# Run artefacts: commit only _baseline, _reports and _journal; everything else stays local.
 runs/*
 !runs/_baseline/
 !runs/_reports/
+!runs/_journal.md
+!runs/_WIP.md
 !runs/.gitkeep
 
 # Python
@@ -15,22 +17,12 @@ dist/
 .coverage
 htmlcov/
 
-# Virtual environment
+# Virtual environment (kept at the Egzakta/ level)
 .venv/
 
-# HuggingFace / sentence-transformers caches (any depth, any name).
-hf_cache/
-**/hf_cache/
-.cache/huggingface/
-~/.cache/huggingface/
-
-# Secrets
-.env
-.env.local
-*.pem
-*.key
+# HuggingFace / sentence-transformers caches
+data/hf_cache/
 
 # Editors
 .idea/
 .vscode/
-.DS_Store

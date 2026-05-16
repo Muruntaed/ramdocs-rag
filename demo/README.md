@@ -79,7 +79,7 @@ JSON output) is captured by a `TracingClient` subclass of the project's
 
 ## Deploy
 
-`your-domain.example/demo_1/` is served by Caddy in front of a uvicorn process
+`amorson.me/demo_1/` is served by Caddy in front of a uvicorn process
 managed by systemd. The Caddy block is in `deploy/caddy.snippet`, the
 unit file in `deploy/ramdocs-rag-demo.service`. A push to `main` triggers
 a GitHub Action that SSH-invokes a forced-command pull script on the
@@ -87,7 +87,7 @@ server, which then:
 
 1. `git pull` in `/opt/ramdocs-rag-demo`;
 2. `pip install -e ./backend` (no-op if unchanged);
-3. `rsync frontend/ → /var/www/your-domain.example/demo_1/`;
+3. `rsync frontend/ → /var/www/amorson.me/demo_1/`;
 4. `systemctl restart ramdocs-rag-demo`.
 
 The demo authenticates evaluators via basic auth; the password hash is

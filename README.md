@@ -2,9 +2,11 @@
 
 A multi-agent RAG prototype over the
 [`HanNight/RAMDocs`](https://huggingface.co/datasets/HanNight/RAMDocs)
-dataset. The brief asks for one solution; this repository delivers
-several — versioned pipelines compared on identical metrics on the
-same data subset — so that the chosen architecture is grounded in
+dataset, built as the Egzakta AI-Engineer test assignment.
+
+The original task (see [`../TASK.md`](../TASK.md)) asks for *one* solution.
+We deliver *several* — versioned pipelines compared on identical metrics
+on the same data subset — so that the chosen architecture is grounded in
 evidence rather than asserted.
 
 > **Status:** four major versions published frozen. **v4 · Evidence
@@ -142,25 +144,11 @@ When iterating to the next architecture (or a minor prompt tune):
 - LLM-judge is **not** used for any metric — per-doc gold annotations
   in RAMDocs are sufficient for all eleven metrics.
 
-### Why some pipeline modules are byte-identical across minor versions
-
-`agents.py`, `grouping.py` and `reliability.py` are intentionally copied
-between minor versions of the same major (e.g. `v3.0_skeptic/agents.py`
-== `v3.3_analyzer_tuned/agents.py`). This is a **freeze-immutability**
-trade-off: each published baseline must remain runnable byte-for-byte at
-any time, so we copy the runtime code into the version package and
-iterate only on the prompts inside `prompts/*.txt`. The dual cost is a
-larger codebase; the gain is that `runs/_baseline/v3.0_skeptic.json` can
-be reproduced years from now without untangling a shared dependency that
-has since drifted. If a *new* major version (vN+1) needs the same logic
-plus changes, the runtime code branches there — never in place.
-
 ## Further reading
 
-- [`docs/journal/index.html`](docs/journal/index.html) — HTML research
-  report for evaluators. GitHub renders this file as raw HTML when
-  viewed in the repository UI; for the rendered view either clone the
-  repo and open `docs/journal/index.html` locally, or enable GitHub
-  Pages on the repo (`Settings → Pages → Source: main / /docs`) to get a
-  proper public URL.
+- [`docs/journal/index.html`](docs/journal/index.html) — research report for evaluators
 - [`docs/architecture.md`](docs/architecture.md) — code-side architecture overview
+- [`runs/_journal.md`](runs/_journal.md) — full internal research log
+- [`runs/_WIP.md`](runs/_WIP.md) — current iteration state
+- [`../TASK.md`](../TASK.md) — original Egzakta assignment
+- [`../CLAUDE.md`](../CLAUDE.md) — operating rules for AI assistants on this repo

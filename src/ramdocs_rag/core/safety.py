@@ -81,15 +81,21 @@ _SCHEMA_RULE = """
 
 # ---------- per-role assembled blocks ----------
 
-SAFETY_ANALYZER = "\n".join([_SAFETY_HEADER, _GROUNDING_RULE, _LEAK_RULE, _SCHEMA_RULE, ""])
+SAFETY_ANALYZER = "\n".join(
+    [_SAFETY_HEADER, _GROUNDING_RULE, _LEAK_RULE, _SCHEMA_RULE, ""]
+)
 
-SAFETY_EVALUATOR = "\n".join([_SAFETY_HEADER, _GROUNDING_RULE, _LEAK_RULE, _SCHEMA_RULE, ""])
+SAFETY_EVALUATOR = "\n".join(
+    [_SAFETY_HEADER, _GROUNDING_RULE, _LEAK_RULE, _SCHEMA_RULE, ""]
+)
 
 SAFETY_MEDIATOR = "\n".join(
     [_SAFETY_HEADER, _GROUNDING_RULE, _OFFTOPIC_RULE, _LEAK_RULE, _SCHEMA_RULE, ""]
 )
 
-SAFETY_SKEPTIC = "\n".join([_SAFETY_HEADER, _GROUNDING_RULE, _LEAK_RULE, _SCHEMA_RULE, ""])
+SAFETY_SKEPTIC = "\n".join(
+    [_SAFETY_HEADER, _GROUNDING_RULE, _LEAK_RULE, _SCHEMA_RULE, ""]
+)
 
 # Stable marker we can detect to keep ``apply_safety`` idempotent — useful
 # because each version's ``_read_prompt`` is ``lru_cache``-d but tests may

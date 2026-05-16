@@ -24,7 +24,6 @@ to v4.0 modulo class name and version string; only the four prompts differ.
 from __future__ import annotations
 
 import time
-from collections import Counter
 
 from ramdocs_rag.core.llm import LLMClient
 from ramdocs_rag.core.retrieval import RetrievalConfig, retrieve
@@ -34,7 +33,6 @@ from ramdocs_rag.pipelines.base import Pipeline
 from .agents import (
     analyze_doc,
     evaluate_doc,
-    norm_text,
     resolve_entity_group,
     skeptic_verify,
 )
@@ -110,20 +108,21 @@ class V41PromptFix(Pipeline):
                     abstained=True,
                     explanation="No documents support an answer to the question.",
                 ),
-                cost_usd=cost,
-                latency_s=time.perf_counter() - t0,
-                llm_calls=calls,
+                cost_usd=cost, latency_s=time.perf_counter() - t0, llm_calls=calls,
             )
 
         rel = initial_reliability(retrieved, claims, trust_by_doc)
+
+        from collections import Counter
+        from .agents import _norm_text
         all_minority: set[str] = set()
         for group_claims in groups.values():
             if len(group_claims) < 2:
                 continue
-            counts = Counter(norm_text(c.text) for c in group_claims)
+            counts = Counter(_norm_text(c.text) for c in group_claims)
             top_text = counts.most_common(1)[0][0]
             for c in group_claims:
-                if norm_text(c.text) != top_text:
+                if _norm_text(c.text) != top_text:
                     all_minority.add(c.doc_id)
         rel = final_reliability(retrieved, claims, trust_by_doc, all_minority)
 
@@ -164,13 +163,8 @@ class V41PromptFix(Pipeline):
         )
 
         verified, _decisions, s_cost, s_calls = skeptic_verify(
-            self.skeptic_llm,
-            question.question,
-            draft,
-            retrieved,
-            rel,
-            trust_by_doc=trust_by_doc,
-            flags_by_doc=flags_by_doc,
+            self.skeptic_llm, question.question, draft, retrieved, rel,
+            trust_by_doc=trust_by_doc, flags_by_doc=flags_by_doc,
         )
         cost += s_cost
         calls += s_calls
@@ -206,7 +200,5 @@ class V41PromptFix(Pipeline):
         }
         base["min_relative_weight"] = self._min_relative_weight
         base["abstention_fallback"] = True
-        base["reliability_formula"] = (
-            "0.40·retrieval + 0.25·confidence + 0.35·trust − 0.10·minority"
-        )
+        base["reliability_formula"] = "0.40·retrieval + 0.25·confidence + 0.35·trust − 0.10·minority"
         return base

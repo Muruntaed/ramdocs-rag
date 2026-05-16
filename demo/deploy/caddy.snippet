@@ -1,15 +1,15 @@
-# Drop-in replacement for the existing `your-domain.example { ... }` block.
+# Drop-in replacement for the existing `amorson.me { ... }` block.
 # /demo_1 — static frontend + reverse_proxy to backend, behind basicauth.
-# Root path stays a plain file_server over /var/www/your-domain.
+# Root path stays a plain file_server over /var/www/amorson.me.
 #
 # Password hash must be set in /etc/caddy/Caddyfile.env as:
 #     DEMO_BASICAUTH_HASH='$2a$14$...'  (output of `caddy hash-password`)
 # (Caddyfile.env is loaded via `EnvironmentFile=` in the caddy systemd drop-in.)
 
-your-domain.example {
+amorson.me {
     @demo path /demo_1 /demo_1/*
     basicauth @demo {
-        demo_user {$DEMO_BASICAUTH_HASH}
+        egzakta_demo_user {$DEMO_BASICAUTH_HASH}
     }
 
     handle /demo_1/api/* {
@@ -22,13 +22,13 @@ your-domain.example {
     }
 
     handle /demo_1/* {
-        root * /var/www/your-domain
+        root * /var/www/amorson.me
         try_files {path} /demo_1/index.html
         file_server
     }
 
     handle {
-        root * /var/www/your-domain
+        root * /var/www/amorson.me
         file_server
     }
 }

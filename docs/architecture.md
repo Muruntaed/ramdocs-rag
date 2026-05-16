@@ -187,8 +187,11 @@ See the **Adding a new version** section in the top-level
 ## Where things are NOT
 
 - No `LangGraph` — we deliberately use plain Python control flow for
-  legibility and easy mocking.
-- No CI/CD in this repo. The reference deployment runs uvicorn under
-  systemd behind Caddy; see `demo/deploy/` for skeleton install scripts,
-  systemd unit and reverse-proxy snippet.
-- No Docker. Installation is `pip install -e .` into a venv.
+  legibility and easy mocking. The earlier LangGraph prototype is
+  preserved under `Egzakta/_legacy/ramdocs_rag_v0/` for reference only.
+- No `git` repository in `ramdocs_rag/` yet; `.gitignore` is prepared
+  for when we initialise.
+- No CI/CD in this repo. The `demo/.github/workflows/deploy.yml` is the
+  colleague's pull-trigger for the hosted demo, not this codebase.
+- No Docker. The deploy runs uvicorn under systemd on the target host;
+  installation is `pip install -e .` into a venv.

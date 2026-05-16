@@ -75,10 +75,12 @@ VERSIONS: dict[str, dict[str, str]] = {
 
 # ─── Datasets (built-in default + user-loaded by URL) ────────────────────────
 
-# Default location: data/ramdocs_subset.json at the repository root.
-# Override via RAMDOCS_SUBSET_PATH env var when running outside the repo.
-_DEFAULT_SUBSET = Path(__file__).resolve().parents[4] / "data" / "ramdocs_subset.json"
-_SUBSET_PATH = Path(os.environ.get("RAMDOCS_SUBSET_PATH", _DEFAULT_SUBSET))
+_SUBSET_PATH = Path(
+    os.environ.get(
+        "RAMDOCS_SUBSET_PATH",
+        "/home/andrey/Andrey_projects/Egzakta/ramdocs_rag/data/ramdocs_subset.json",
+    )
+)
 _MAX_DATASET_BYTES = 5 * 1024 * 1024  # 5 MB ceiling for ad-hoc URL fetches
 
 

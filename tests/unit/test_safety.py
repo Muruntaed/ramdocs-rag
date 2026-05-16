@@ -16,11 +16,11 @@ import importlib
 import pytest
 
 from ramdocs_rag.core.safety import (
-    _SAFETY_MARKER,
     SAFETY_ANALYZER,
     SAFETY_EVALUATOR,
     SAFETY_MEDIATOR,
     SAFETY_SKEPTIC,
+    _SAFETY_MARKER,
     apply_safety,
 )
 

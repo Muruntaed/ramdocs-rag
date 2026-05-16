@@ -42,6 +42,7 @@ from ramdocs_rag.core.dataset import load_subset
 from ramdocs_rag.core.llm import LLMCallResult, LLMClient, OpenAIClient
 from ramdocs_rag.core.types import Question, RetrievedDoc
 
+
 # ---------- dry-run mock that prints what the real client would send ----------
 
 
@@ -136,7 +137,9 @@ def _load_agent(pipeline: str, agent: str):
     (e.g. evaluator on v1/v2/v3 — none of them have it).
     """
     if agent not in _AGENT_REGISTRY:
-        raise SystemExit(f"Unknown --agent {agent!r}. Supported: {sorted(_AGENT_REGISTRY)}")
+        raise SystemExit(
+            f"Unknown --agent {agent!r}. Supported: {sorted(_AGENT_REGISTRY)}"
+        )
     module_path = f"ramdocs_rag.pipelines.{pipeline.replace('.', '_')}.agents"
     try:
         mod = importlib.import_module(module_path)
@@ -146,12 +149,15 @@ def _load_agent(pipeline: str, agent: str):
     fn = getattr(mod, fn_name, None)
     if fn is None:
         raise SystemExit(
-            f"Pipeline {pipeline} does not implement {agent} (no {fn_name} in {module_path})"
+            f"Pipeline {pipeline} does not implement {agent} "
+            f"(no {fn_name} in {module_path})"
         )
     return fn
 
 
-def _resolve_question_and_doc(question_id: str, doc_id_part: str) -> tuple[Question, RetrievedDoc]:
+def _resolve_question_and_doc(
+    question_id: str, doc_id_part: str
+) -> tuple[Question, RetrievedDoc]:
     subset = load_subset()
     q = next((x for x in subset if x.question_id == question_id), None)
     if q is None:
@@ -167,7 +173,8 @@ def _resolve_question_and_doc(question_id: str, doc_id_part: str) -> tuple[Quest
         )
     if len(matches) > 1:
         raise SystemExit(
-            f"Doc selector {doc_id_part!r} ambiguous, matched: {[d.doc_id for d in matches]}"
+            f"Doc selector {doc_id_part!r} ambiguous, matched: "
+            f"{[d.doc_id for d in matches]}"
         )
     doc = matches[0]
     return q, RetrievedDoc(doc_id=doc.doc_id, text=doc.text, score=1.0)
@@ -225,7 +232,9 @@ def main(argv: list[str] | None = None) -> int:
     else:
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:
-            raise SystemExit("OPENAI_API_KEY not set. Either export it or pass --dry-run.")
+            raise SystemExit(
+                "OPENAI_API_KEY not set. Either export it or pass --dry-run."
+            )
         client = OpenAIClient(model=args.model, api_key=api_key)
 
     print(f"[probe] pipeline={args.pipeline} agent={args.agent}")
@@ -241,7 +250,9 @@ def main(argv: list[str] | None = None) -> int:
         _print_dry_run(client)  # type: ignore[arg-type]
 
     print("=== AGENT OUTPUT ===")
-    payload = result.model_dump() if hasattr(result, "model_dump") else result.__dict__
+    payload = (
+        result.model_dump() if hasattr(result, "model_dump") else result.__dict__
+    )
     print(json.dumps(payload, ensure_ascii=False, indent=2))
     print()
     print(f"[probe] cost_usd={cost:.6f}  llm_calls={calls}")

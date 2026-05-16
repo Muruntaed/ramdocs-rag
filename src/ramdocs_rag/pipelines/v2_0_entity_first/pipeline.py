@@ -84,9 +84,7 @@ class V2EntityFirst(Pipeline):
                     abstained=True,
                     explanation="No documents support an answer to the question.",
                 ),
-                cost_usd=cost,
-                latency_s=time.perf_counter() - t0,
-                llm_calls=calls,
+                cost_usd=cost, latency_s=time.perf_counter() - t0, llm_calls=calls,
             )
 
         # 4. Initial reliability (no penalty)
@@ -100,13 +98,11 @@ class V2EntityFirst(Pipeline):
             # Find the intra-group minority by normalised answer text: every
             # claim that does NOT belong to the top-text cluster is a loser.
             from collections import Counter
-
-            from .agents import norm_text
-
-            counts = Counter(norm_text(c.text) for c in group_claims)
+            from .agents import _norm_text
+            counts = Counter(_norm_text(c.text) for c in group_claims)
             top_text = counts.most_common(1)[0][0]
             for c in group_claims:
-                if norm_text(c.text) != top_text:
+                if _norm_text(c.text) != top_text:
                     all_minority.add(c.doc_id)
 
         # 6. Final reliability (with intra-group minority penalty)
@@ -114,7 +110,8 @@ class V2EntityFirst(Pipeline):
 
         # 7. Compute group weights for relative filtering
         group_weights = {
-            key: sum(rel.get(c.doc_id, 0.0) for c in gclaims) for key, gclaims in groups.items()
+            key: sum(rel.get(c.doc_id, 0.0) for c in gclaims)
+            for key, gclaims in groups.items()
         }
         top_weight = max(group_weights.values()) if group_weights else 0.0
         cutoff = self._min_relative_weight * top_weight
@@ -122,7 +119,9 @@ class V2EntityFirst(Pipeline):
         # 8. Resolve each group (above cutoff); rejected groups → rejected docs
         variants = []
         rejected: set[str] = set(no_answer_doc_ids)
-        for key, gclaims in sorted(groups.items(), key=lambda kv: -group_weights[kv[0]]):
+        for key, gclaims in sorted(
+            groups.items(), key=lambda kv: -group_weights[kv[0]]
+        ):
             entity_display = display_entity(gclaims)
             if group_weights[key] < cutoff and len(variants) > 0:
                 # Below threshold — entire group rejected

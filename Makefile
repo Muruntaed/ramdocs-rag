@@ -1,20 +1,18 @@
 # Development and benchmark commands.
-# Every Python invocation runs through the project venv created by `make install`.
+# Every Python invocation runs through the Egzakta project venv (see CLAUDE.md).
 
-PY := ./.venv/bin/python
-PYTEST := ./.venv/bin/pytest
+PY := /home/andrey/Andrey_projects/Egzakta/.venv/bin/python
+PYTEST := /home/andrey/Andrey_projects/Egzakta/.venv/bin/pytest
 
 .PHONY: install test test-e2e bench compare lint format clean
 
-## install — create a local venv and install the package (with dev extras) in editable mode
+## install — install the package in editable mode (with dev extras)
 install:
-	python3 -m venv .venv
-	$(PY) -m pip install -U pip wheel
 	$(PY) -m pip install -e ".[dev]"
 
 ## test — fast tests with no API spend (unit + contract + integration with mocks)
 test:
-	$(PYTEST) tests/unit tests/integration -m "not e2e and not benchmark"
+	$(PYTEST) tests/unit tests/contract tests/integration -m "not e2e and not benchmark"
 
 ## test-e2e — real-OpenAI smoke (requires OPENAI_API_KEY)
 test-e2e:

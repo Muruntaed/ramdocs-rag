@@ -29,7 +29,6 @@ class _EntityAwareMockLLM:
             # Simple strategy: return the first candidate ``text``.
             # Parse the first ``text=...`` token from the user prompt.
             import re
-
             m = re.search(r"text=([\"'])(.*?)\1", user)
             text = m.group(2) if m else "unknown"
             parsed = {
@@ -60,31 +59,20 @@ class _EntityAwareMockLLM:
             else:
                 stance = "no_answer"
             parsed = {
-                "doc_id": doc_id,
-                "entity": entity,
-                "text": text,
-                "stance": stance,
-                "confidence": 0.9,
+                "doc_id": doc_id, "entity": entity, "text": text,
+                "stance": stance, "confidence": 0.9,
                 "supporting_quote": "mock-quote",
             }
         return LLMCallResult(
-            parsed=parsed,
-            raw_text=json.dumps(parsed),
-            cost_usd=0.0,
-            tokens_in=0,
-            tokens_out=0,
-            model=self.model,
+            parsed=parsed, raw_text=json.dumps(parsed),
+            cost_usd=0.0, tokens_in=0, tokens_out=0, model=self.model,
         )
 
 
 def _mk_q(docs, golds, meta, qid="qt", cat="pure_correct") -> Question:
     return Question(
-        question_id=qid,
-        question="Who is the artist of 'Without You I'm Nothing'?",
-        category=cat,
-        disambig_entity=[],
-        gold_answers=golds,
-        wrong_answers=[],
+        question_id=qid, question="Who is the artist of 'Without You I'm Nothing'?",
+        category=cat, disambig_entity=[], gold_answers=golds, wrong_answers=[],
         docs=[RAMDoc(doc_id=d, text=t) for d, t in docs],
         eval_metadata=[DocEvalMeta(doc_id=d, type=t, answer=a) for d, t, a in meta],  # type: ignore[arg-type]
     )
@@ -102,14 +90,9 @@ def test_v2_multi_answer_two_entities():
             ("d5", "Sandra Bernhard live album."),
         ],
         golds=["Placebo", "Sandra Bernhard"],
-        meta=[
-            ("d0", "correct", "Placebo"),
-            ("d1", "correct", "Placebo"),
-            ("d2", "correct", "Placebo"),
-            ("d3", "correct", "Sandra Bernhard"),
-            ("d4", "correct", "Sandra Bernhard"),
-            ("d5", "correct", "Sandra Bernhard"),
-        ],
+        meta=[("d0", "correct", "Placebo"), ("d1", "correct", "Placebo"),
+              ("d2", "correct", "Placebo"), ("d3", "correct", "Sandra Bernhard"),
+              ("d4", "correct", "Sandra Bernhard"), ("d5", "correct", "Sandra Bernhard")],
     )
     pipe = V2EntityFirst(llm=_EntityAwareMockLLM())
     result = pipe.run(q)
@@ -133,13 +116,9 @@ def test_v2_misinfo_entity_filtered():
             ("dm", "Album by The Beatles."),
         ],
         golds=["Placebo"],
-        meta=[
-            ("d0", "correct", "Placebo"),
-            ("d1", "correct", "Placebo"),
-            ("d2", "correct", "Placebo"),
-            ("d3", "correct", "Placebo"),
-            ("dm", "misinfo", "The Beatles"),
-        ],
+        meta=[("d0", "correct", "Placebo"), ("d1", "correct", "Placebo"),
+              ("d2", "correct", "Placebo"), ("d3", "correct", "Placebo"),
+              ("dm", "misinfo", "The Beatles")],
         cat="has_misinfo",
     )
     pipe = V2EntityFirst(llm=_EntityAwareMockLLM())

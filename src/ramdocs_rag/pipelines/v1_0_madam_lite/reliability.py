@@ -1,11 +1,11 @@
 """5-factor reliability formula (ported from the legacy prototype)::
 
-reliability(doc) =
-      0.40 * retrieval_score
-    + 0.25 * self_confidence
-    + 0.20 * recency            (exp-decay; default 0.5 without metadata)
-    + 0.15 * source_authority   (whitelist; default 0.5)
-    - 0.10 * minority_penalty   (1.0 if the doc is in the losing cluster)
+  reliability(doc) =
+        0.40 * retrieval_score
+      + 0.25 * self_confidence
+      + 0.20 * recency            (exp-decay; default 0.5 without metadata)
+      + 0.15 * source_authority   (whitelist; default 0.5)
+      - 0.10 * minority_penalty   (1.0 if the doc is in the losing cluster)
 """
 
 from __future__ import annotations
@@ -85,7 +85,9 @@ def compute_reliability(
     final: dict[str, float] = {}
     breakdowns: list[ReliabilityBreakdown] = []
     for d in docs:
-        b = _score_one(d, claim_by_doc.get(d.doc_id), in_minority=d.doc_id in minority)
+        b = _score_one(
+            d, claim_by_doc.get(d.doc_id), in_minority=d.doc_id in minority
+        )
         final[d.doc_id] = b.score
         breakdowns.append(b)
     return final, breakdowns

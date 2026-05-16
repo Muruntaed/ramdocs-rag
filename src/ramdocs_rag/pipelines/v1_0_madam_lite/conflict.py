@@ -8,9 +8,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from ramdocs_rag.core.retrieval import _get_embedder
+import numpy as np
 
 from ...core.types import Claim
+from ramdocs_rag.core.retrieval import _get_embedder
 
 SIMILARITY_THRESHOLD: float = 0.75
 MAJORITY_RATIO: float = 1.5
@@ -48,7 +49,9 @@ def cluster_claims(
 
     embedder = _get_embedder()
     texts = [_normalise(c.text) for c in supports]
-    embeddings = embedder.encode(texts, normalize_embeddings=True, show_progress_bar=False)
+    embeddings = embedder.encode(
+        texts, normalize_embeddings=True, show_progress_bar=False
+    )
     n = len(supports)
 
     parent = list(range(n))

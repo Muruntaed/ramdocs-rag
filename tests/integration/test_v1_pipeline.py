@@ -18,9 +18,7 @@ from ramdocs_rag.core.types import DocEvalMeta, Question, RAMDoc
 from ramdocs_rag.pipelines.v1_0_madam_lite import V1MadamLite
 
 
-def _mk_question(
-    qid: str, docs: list[tuple[str, str]], golds: list[str], meta: list[tuple[str, str, str | None]]
-) -> Question:
+def _mk_question(qid: str, docs: list[tuple[str, str]], golds: list[str], meta: list[tuple[str, str, str | None]]) -> Question:
     return Question(
         question_id=qid,
         question="Who is the artist of the album 'X'?",
@@ -63,11 +61,7 @@ def test_v1_deterministic_path_all_agree():
             ("d2", "X is a Placebo album."),
         ],
         golds=["Placebo"],
-        meta=[
-            ("d0", "correct", "Placebo"),
-            ("d1", "correct", "Placebo"),
-            ("d2", "correct", "Placebo"),
-        ],
+        meta=[("d0", "correct", "Placebo"), ("d1", "correct", "Placebo"), ("d2", "correct", "Placebo")],
     )
     mock = MockLLM(default=_mock_supports("Placebo", "X"))
     pipe = V1MadamLite(llm=mock)
@@ -135,17 +129,11 @@ def test_v1_misinfo_rejected_by_minority_penalty():
                     "rejected_doc_ids": [],
                     "reconciliation_explanation": "fallback",
                 }
-            import json
-
             from ramdocs_rag.core.llm import LLMCallResult
-
+            import json
             return LLMCallResult(
-                parsed=parsed,
-                raw_text=json.dumps(parsed),
-                cost_usd=0.0,
-                tokens_in=0,
-                tokens_out=0,
-                model=self.model,
+                parsed=parsed, raw_text=json.dumps(parsed), cost_usd=0.0,
+                tokens_in=0, tokens_out=0, model=self.model,
             )
 
     pipe = V1MadamLite(llm=_ByDocLLM())

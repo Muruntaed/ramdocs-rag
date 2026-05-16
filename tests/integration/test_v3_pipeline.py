@@ -24,7 +24,6 @@ class _Mock:
         if schema_name == "SkepticVerdicts":
             # Parse entities from user prompt and apply self.skeptic_rejects
             import re
-
             entities = re.findall(r"entity=([\"'])(.*?)\1", user)
             decisions = []
             for _, ent in entities:
@@ -35,14 +34,11 @@ class _Mock:
         elif schema_name == "IntraEntityMediator":
             # Pick the first claim's text
             import re
-
             m = re.search(r"text=([\"'])(.*?)\1", user)
             text = m.group(2) if m else "unknown"
             parsed = {
-                "answer": text,
-                "confidence": 0.8,
-                "supporting_doc_ids": ["d0"],
-                "rejected_doc_ids": [],
+                "answer": text, "confidence": 0.8,
+                "supporting_doc_ids": ["d0"], "rejected_doc_ids": [],
                 "reconciliation_explanation": "mock",
             }
 
@@ -69,21 +65,13 @@ class _Mock:
                 text = ""
                 stance = "no_answer"
             parsed = {
-                "doc_id": doc_id,
-                "entity": entity,
-                "text": text,
-                "stance": stance,
-                "confidence": 0.9,
-                "supporting_quote": "mock",
+                "doc_id": doc_id, "entity": entity, "text": text,
+                "stance": stance, "confidence": 0.9, "supporting_quote": "mock",
             }
 
         return LLMCallResult(
-            parsed=parsed,
-            raw_text=json.dumps(parsed),
-            cost_usd=0.0,
-            tokens_in=0,
-            tokens_out=0,
-            model=self.model,
+            parsed=parsed, raw_text=json.dumps(parsed),
+            cost_usd=0.0, tokens_in=0, tokens_out=0, model=self.model,
         )
 
 
@@ -91,10 +79,7 @@ def _mk_q(docs, golds, meta, qid="qt", cat="pure_correct") -> Question:
     return Question(
         question_id=qid,
         question="Who is the artist of 'Without You I'm Nothing'?",
-        category=cat,
-        disambig_entity=[],
-        gold_answers=golds,
-        wrong_answers=[],
+        category=cat, disambig_entity=[], gold_answers=golds, wrong_answers=[],
         docs=[RAMDoc(doc_id=d, text=t) for d, t in docs],
         eval_metadata=[DocEvalMeta(doc_id=d, type=t, answer=a) for d, t, a in meta],  # type: ignore[arg-type]
     )
@@ -111,14 +96,9 @@ def test_v3_keeps_all_when_skeptic_approves():
             ("d5", "Sandra Bernhard live album."),
         ],
         golds=["Placebo", "Sandra Bernhard"],
-        meta=[
-            ("d0", "correct", "Placebo"),
-            ("d1", "correct", "Placebo"),
-            ("d2", "correct", "Placebo"),
-            ("d3", "correct", "Sandra Bernhard"),
-            ("d4", "correct", "Sandra Bernhard"),
-            ("d5", "correct", "Sandra Bernhard"),
-        ],
+        meta=[("d0", "correct", "Placebo"), ("d1", "correct", "Placebo"),
+              ("d2", "correct", "Placebo"), ("d3", "correct", "Sandra Bernhard"),
+              ("d4", "correct", "Sandra Bernhard"), ("d5", "correct", "Sandra Bernhard")],
     )
     pipe = V3Skeptic(llm=_Mock())
     result = pipe.run(q)
@@ -138,12 +118,8 @@ def test_v3_skeptic_rejects_misinfo_variant():
             ("dm", "Album by The Beatles."),
         ],
         golds=["Placebo"],
-        meta=[
-            ("d0", "correct", "Placebo"),
-            ("d1", "correct", "Placebo"),
-            ("d2", "correct", "Placebo"),
-            ("dm", "misinfo", "The Beatles"),
-        ],
+        meta=[("d0", "correct", "Placebo"), ("d1", "correct", "Placebo"),
+              ("d2", "correct", "Placebo"), ("dm", "misinfo", "The Beatles")],
         cat="has_misinfo",
     )
     pipe = V3Skeptic(llm=_Mock(skeptic_rejects={"Without You I'm Nothing (Beatles album)"}))
