@@ -12,8 +12,7 @@
   <header class="page-header">
     <h1>RAMDocs Multi-Agent RAG — Research Journal</h1>
     <div class="subtitle">
-      A versioned multi-agent RAG prototype over
-      <a href="https://huggingface.co/datasets/HanNight/RAMDocs">HanNight/RAMDocs</a>.
+      A versioned multi-agent RAG prototype over the RAMDocs dataset.
       Each version is a self-contained experiment: hypothesis, frozen run, metrics, takeaways.
     </div>
   </header>
@@ -40,7 +39,7 @@
     </thead>
     <tbody>
       <tr style="background:#fafafa;font-style:italic;">
-        <td>Industry baseline <span class="qmark" title="Indicative range for typical production RAG over a noisy corpus, no adversarial verifier. Synthesised from published RAMDocs / MADAM-RAG numbers (HanNight et al., 2024) and common production-grade single-LLM RAG benchmarks. NOT measured on our exact dataset — used as an anchor for relative comparison.">?</span></td>
+        <td>Industry baseline <span class="qmark" title="Indicative range for typical production RAG over a noisy corpus, no adversarial verifier. Synthesised from published RAMDocs / MADAM-RAG numbers and common production-grade single-LLM RAG benchmarks. NOT measured on our exact dataset — used as an anchor for relative comparison.">?</span></td>
         <td style="color:var(--muted);">reference</td>
         <td class="num">~0.55</td>
         <td class="num">~0.60</td>
@@ -101,7 +100,7 @@
     Arrows show the delta relative to the <b>previous row in the table</b>.
     The first row is an indicative industry baseline (typical production
     RAG over a noisy corpus, no adversarial verifier — see the
-    <span class="qmark" title="Synthesised from published RAMDocs / MADAM-RAG numbers (HanNight et al., 2024) and common production-grade single-LLM RAG benchmarks.">?</span>
+    <span class="qmark" title="Synthesised from published RAMDocs / MADAM-RAG numbers and common production-grade single-LLM RAG benchmarks.">?</span>
     tooltip on its label). v1.0 deltas are computed against that baseline.
     <span class="delta-good">↑/↓ green</span> = improvement,
     <span class="delta-bad">↑/↓ red</span> = regression,
