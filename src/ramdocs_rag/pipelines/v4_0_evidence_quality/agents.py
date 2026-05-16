@@ -30,10 +30,12 @@ def _read_prompt(name: str) -> str:
 
 
 _CLAIM_SCHEMA = {
-    "type": "object", "additionalProperties": False,
+    "type": "object",
+    "additionalProperties": False,
     "required": ["doc_id", "entity", "text", "stance", "confidence", "supporting_quote"],
     "properties": {
-        "doc_id": {"type": "string"}, "entity": {"type": "string"},
+        "doc_id": {"type": "string"},
+        "entity": {"type": "string"},
         "text": {"type": "string"},
         "stance": {"type": "string", "enum": ["supports", "contradicts", "no_answer"]},
         "confidence": {"type": "number", "minimum": 0.0, "maximum": 1.0},
@@ -42,15 +44,25 @@ _CLAIM_SCHEMA = {
 }
 
 _RED_FLAGS = [
-    "short_stub", "self_contradiction", "off_topic",
-    "no_specifics", "category_page", "formatting_cruft",
+    "short_stub",
+    "self_contradiction",
+    "off_topic",
+    "no_specifics",
+    "category_page",
+    "formatting_cruft",
 ]
 
 _DOCTRUST_SCHEMA = {
-    "type": "object", "additionalProperties": False,
+    "type": "object",
+    "additionalProperties": False,
     "required": [
-        "doc_id", "internal_consistency", "encyclopedic_quality",
-        "specificity", "relevance", "trust_score", "red_flags",
+        "doc_id",
+        "internal_consistency",
+        "encyclopedic_quality",
+        "specificity",
+        "relevance",
+        "trust_score",
+        "red_flags",
     ],
     "properties": {
         "doc_id": {"type": "string"},
@@ -64,9 +76,15 @@ _DOCTRUST_SCHEMA = {
 }
 
 _INTRA_MEDIATOR_SCHEMA = {
-    "type": "object", "additionalProperties": False,
-    "required": ["answer", "confidence", "supporting_doc_ids", "rejected_doc_ids",
-                 "reconciliation_explanation"],
+    "type": "object",
+    "additionalProperties": False,
+    "required": [
+        "answer",
+        "confidence",
+        "supporting_doc_ids",
+        "rejected_doc_ids",
+        "reconciliation_explanation",
+    ],
     "properties": {
         "answer": {"type": "string"},
         "confidence": {"type": "number", "minimum": 0.0, "maximum": 1.0},
@@ -77,12 +95,15 @@ _INTRA_MEDIATOR_SCHEMA = {
 }
 
 _SKEPTIC_SCHEMA = {
-    "type": "object", "additionalProperties": False, "required": ["decisions"],
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["decisions"],
     "properties": {
         "decisions": {
             "type": "array",
             "items": {
-                "type": "object", "additionalProperties": False,
+                "type": "object",
+                "additionalProperties": False,
                 "required": ["entity", "verdict", "reason"],
                 "properties": {
                     "entity": {"type": "string"},
@@ -104,18 +125,21 @@ class DocTrust(BaseModel):
     specificity: float = Field(ge=0.0, le=1.0)
     relevance: float = Field(ge=0.0, le=1.0)
     trust_score: float = Field(ge=0.0, le=1.0)
-    red_flags: list[Literal[
-        "short_stub", "self_contradiction", "off_topic",
-        "no_specifics", "category_page", "formatting_cruft",
-    ]] = Field(default_factory=list)
+    red_flags: list[
+        Literal[
+            "short_stub",
+            "self_contradiction",
+            "off_topic",
+            "no_specifics",
+            "category_page",
+            "formatting_cruft",
+        ]
+    ] = Field(default_factory=list)
 
 
 def analyze_doc(llm: LLMClient, query: str, doc: RetrievedDoc) -> tuple[Claim, float, int]:
     system = _read_prompt("analyzer.txt")
-    user = (
-        f"Question: {query}\n\nDocument id: {doc.doc_id}\n"
-        f"Document text:\n---\n{doc.text}\n---\n"
-    )
+    user = f"Question: {query}\n\nDocument id: {doc.doc_id}\nDocument text:\n---\n{doc.text}\n---\n"
     out = llm.complete_json(
         system=system, user=user, schema=_CLAIM_SCHEMA, schema_name="EntityClaim"
     )
@@ -129,10 +153,7 @@ def analyze_doc(llm: LLMClient, query: str, doc: RetrievedDoc) -> tuple[Claim, f
 def evaluate_doc(llm: LLMClient, query: str, doc: RetrievedDoc) -> tuple[DocTrust, float, int]:
     """Score one document on internal qualities (no cross-doc reasoning)."""
     system = _read_prompt("evaluator.txt")
-    user = (
-        f"Question: {query}\n\nDocument id: {doc.doc_id}\n"
-        f"Document text:\n---\n{doc.text}\n---\n"
-    )
+    user = f"Question: {query}\n\nDocument id: {doc.doc_id}\nDocument text:\n---\n{doc.text}\n---\n"
     out = llm.complete_json(
         system=system, user=user, schema=_DOCTRUST_SCHEMA, schema_name="DocTrust"
     )
@@ -160,9 +181,7 @@ def _intra_group_deterministic(
         members = next(iter(by_text.values()))
         members.sort(key=lambda c: reliability.get(c.doc_id, 0.0), reverse=True)
         return members[0].text, [m.doc_id for m in members], []
-    text_weights = {
-        t: sum(reliability.get(c.doc_id, 0.0) for c in cs) for t, cs in by_text.items()
-    }
+    text_weights = {t: sum(reliability.get(c.doc_id, 0.0) for c in cs) for t, cs in by_text.items()}
     sorted_texts = sorted(text_weights.items(), key=lambda x: -x[1])
     top_t, top_w = sorted_texts[0]
     runner_w = sorted_texts[1][1] if len(sorted_texts) > 1 else 0.0
@@ -172,7 +191,7 @@ def _intra_group_deterministic(
     winners = by_text[top_t]
     losers = [c for c in claims if _norm_text(c.text) != top_t]
     winners.sort(key=lambda c: reliability.get(c.doc_id, 0.0), reverse=True)
-    return winners[0].text, [w.doc_id for w in winners], [l.doc_id for l in losers]
+    return winners[0].text, [w.doc_id for w in winners], [loser.doc_id for loser in losers]
 
 
 def _intra_group_llm(llm, query, entity, claims, reliability):
@@ -193,8 +212,10 @@ def _intra_group_llm(llm, query, entity, claims, reliability):
     )
     p = out.parsed
     variant = AnswerVariant(
-        answer=p["answer"], confidence=float(p["confidence"]),
-        supporting_doc_ids=list(p["supporting_doc_ids"]), entity=entity,
+        answer=p["answer"],
+        confidence=float(p["confidence"]),
+        supporting_doc_ids=list(p["supporting_doc_ids"]),
+        entity=entity,
     )
     return variant, list(p["rejected_doc_ids"]), out.cost_usd, 1
 
@@ -205,8 +226,10 @@ def resolve_entity_group(llm, query, entity, claims, reliability):
         text, supporting, rejected = det
         avg_rel = sum(reliability.get(d, 0.0) for d in supporting) / max(1, len(supporting))
         variant = AnswerVariant(
-            answer=text, confidence=min(1.0, max(0.1, avg_rel)),
-            supporting_doc_ids=supporting, entity=entity,
+            answer=text,
+            confidence=min(1.0, max(0.1, avg_rel)),
+            supporting_doc_ids=supporting,
+            entity=entity,
         )
         return variant, rejected, 0.0, 0
     return _intra_group_llm(llm, query, entity, claims, reliability)
@@ -233,8 +256,10 @@ def skeptic_verify(
     pool_lines = []
     for d in retrieved:
         role = (
-            "supporting" if d.doc_id in supporting_set
-            else "rejected" if d.doc_id in rejected_set
+            "supporting"
+            if d.doc_id in supporting_set
+            else "rejected"
+            if d.doc_id in rejected_set
             else "neutral"
         )
         flags = flags_by_doc.get(d.doc_id, [])
@@ -253,8 +278,7 @@ def skeptic_verify(
     user = (
         f"Question: {query}\n\n"
         f"DRAFT FINAL ANSWER (variants to verify):\n" + "\n".join(variant_lines) + "\n\n"
-        f"DOCUMENT POOL (with role, reliability, trust and red_flags):\n"
-        + "\n".join(pool_lines)
+        "DOCUMENT POOL (with role, reliability, trust and red_flags):\n" + "\n".join(pool_lines)
     )
     out = llm.complete_json(
         system=system, user=user, schema=_SKEPTIC_SCHEMA, schema_name="SkepticVerdicts"

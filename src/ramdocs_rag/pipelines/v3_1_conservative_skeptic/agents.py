@@ -44,8 +44,13 @@ _CLAIM_SCHEMA = {
 _INTRA_MEDIATOR_SCHEMA = {
     "type": "object",
     "additionalProperties": False,
-    "required": ["answer", "confidence", "supporting_doc_ids", "rejected_doc_ids",
-                 "reconciliation_explanation"],
+    "required": [
+        "answer",
+        "confidence",
+        "supporting_doc_ids",
+        "rejected_doc_ids",
+        "reconciliation_explanation",
+    ],
     "properties": {
         "answer": {"type": "string"},
         "confidence": {"type": "number", "minimum": 0.0, "maximum": 1.0},
@@ -82,12 +87,10 @@ _SKEPTIC_SCHEMA = {
 
 def analyze_doc(llm: LLMClient, query: str, doc: RetrievedDoc) -> tuple[Claim, float, int]:
     system = _read_prompt("analyzer.txt")
-    user = (
-        f"Question: {query}\n\n"
-        f"Document id: {doc.doc_id}\n"
-        f"Document text:\n---\n{doc.text}\n---\n"
+    user = f"Question: {query}\n\nDocument id: {doc.doc_id}\nDocument text:\n---\n{doc.text}\n---\n"
+    out = llm.complete_json(
+        system=system, user=user, schema=_CLAIM_SCHEMA, schema_name="EntityClaim"
     )
-    out = llm.complete_json(system=system, user=user, schema=_CLAIM_SCHEMA, schema_name="EntityClaim")
     parsed = dict(out.parsed)
     parsed["doc_id"] = doc.doc_id
     if parsed["stance"] != "supports":
@@ -121,9 +124,7 @@ def _intra_group_deterministic(
         members.sort(key=lambda c: reliability.get(c.doc_id, 0.0), reverse=True)
         return members[0].text, [m.doc_id for m in members], []
 
-    text_weights = {
-        t: sum(reliability.get(c.doc_id, 0.0) for c in cs) for t, cs in by_text.items()
-    }
+    text_weights = {t: sum(reliability.get(c.doc_id, 0.0) for c in cs) for t, cs in by_text.items()}
     sorted_texts = sorted(text_weights.items(), key=lambda x: -x[1])
     top_t, top_w = sorted_texts[0]
     runner_w = sorted_texts[1][1] if len(sorted_texts) > 1 else 0.0
@@ -134,7 +135,7 @@ def _intra_group_deterministic(
     winners = by_text[top_t]
     losers = [c for c in claims if _norm_text(c.text) != top_t]
     winners.sort(key=lambda c: reliability.get(c.doc_id, 0.0), reverse=True)
-    return winners[0].text, [w.doc_id for w in winners], [l.doc_id for l in losers]
+    return winners[0].text, [w.doc_id for w in winners], [loser.doc_id for loser in losers]
 
 
 def _intra_group_llm(
@@ -243,7 +244,7 @@ def skeptic_verify(
     user = (
         f"Question: {query}\n\n"
         f"DRAFT FINAL ANSWER (variants to verify):\n" + "\n".join(variant_lines) + "\n\n"
-        f"DOCUMENT POOL (every retrieved document, with role and reliability):\n"
+        "DOCUMENT POOL (every retrieved document, with role and reliability):\n"
         + "\n".join(pool_lines)
     )
     out = llm.complete_json(

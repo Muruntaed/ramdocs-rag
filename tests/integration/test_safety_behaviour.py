@@ -31,7 +31,6 @@ from ramdocs_rag.core.llm import LLMCallResult
 from ramdocs_rag.core.safety import _SAFETY_MARKER
 from ramdocs_rag.core.types import DocEvalMeta, Question, RAMDoc
 
-
 # ---------- shared mocks ----------
 
 
@@ -68,8 +67,7 @@ class _CapturingMock:
             entities = re.findall(r"entity=([\"'])(.*?)\1", user)
             parsed = {
                 "decisions": [
-                    {"entity": ent, "verdict": "keep", "reason": "mock"}
-                    for _, ent in entities
+                    {"entity": ent, "verdict": "keep", "reason": "mock"} for _, ent in entities
                 ]
             }
         elif schema_name == "IntraEntityMediator":
@@ -229,7 +227,7 @@ def test_injection_payload_in_doc_text_cannot_strip_safety_block():
     pipe.run(q)
 
     # (a) safety marker present in every system prompt
-    for i, (system, user, schema_name) in enumerate(mock.calls):
+    for i, (system, _user, schema_name) in enumerate(mock.calls):
         assert _SAFETY_MARKER in system, (
             f"call #{i} (schema={schema_name}) lost the safety marker after an "
             "injection-laden document was passed through the pipeline"
@@ -320,8 +318,11 @@ def test_v4_1_partial_no_answer_keeps_supporting_docs_rejects_unrelated():
                 else:
                     self.all_no_answer = False
             return super().complete_json(
-                system=system, user=user, schema=schema,
-                schema_name=schema_name, temperature=temperature,
+                system=system,
+                user=user,
+                schema=schema,
+                schema_name=schema_name,
+                temperature=temperature,
             )
 
     mock = _MixedMock(all_no_answer=False)

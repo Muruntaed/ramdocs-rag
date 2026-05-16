@@ -16,6 +16,7 @@ Pipelines register themselves via ``register(...)`` inside
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import subprocess
 import sys
@@ -45,17 +46,21 @@ def list_pipelines() -> list[str]:
 
 
 def _ensure_registry_loaded() -> None:
-    try:
+    # ``registry`` may pull optional deps (OpenAIClient, etc.) — keep the
+    # import suppressed so that tests which do not touch the real OpenAI
+    # SDK can still import the runner.
+    with contextlib.suppress(Exception):
         from ..pipelines import registry  # noqa: F401
-    except Exception:  # noqa: BLE001 — registry may pull optional deps
-        pass
 
 
 def _git_sha() -> str | None:
     try:
         out = subprocess.run(
             ["git", "rev-parse", "--short", "HEAD"],
-            capture_output=True, text=True, check=True, timeout=5,
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=5,
         )
         return out.stdout.strip() or None
     except Exception:
@@ -71,7 +76,9 @@ def _run_dir(pipeline_name: str, git_sha: str | None, tag: str = "") -> Path:
     return base
 
 
-def run_pipeline(pipeline: Pipeline, questions: list[Question]) -> tuple[PipelineRun, list[tuple[Question, RunResult]]]:
+def run_pipeline(
+    pipeline: Pipeline, questions: list[Question]
+) -> tuple[PipelineRun, list[tuple[Question, RunResult]]]:
     """Run the pipeline over a list of questions. All exceptions are caught here."""
     started = datetime.now(UTC)
     results: list[RunResult] = []
@@ -83,7 +90,9 @@ def run_pipeline(pipeline: Pipeline, questions: list[Question]) -> tuple[Pipelin
         except Exception as e:  # noqa: BLE001 — the runner deliberately swallows every exception
             res = RunResult(
                 question_id=q.question_id,
-                final_answer=__import__("ramdocs_rag.core.types", fromlist=["FinalAnswer"]).FinalAnswer(abstained=True, explanation=f"runner error: {e!r}"),
+                final_answer=__import__(
+                    "ramdocs_rag.core.types", fromlist=["FinalAnswer"]
+                ).FinalAnswer(abstained=True, explanation=f"runner error: {e!r}"),
                 error=f"{type(e).__name__}: {e}",
             )
         res.latency_s = res.latency_s or (time.perf_counter() - t0)
@@ -121,9 +130,7 @@ def _dump_artifacts(
             fh.write(json.dumps(r.model_dump(mode="json"), ensure_ascii=False, default=str) + "\n")
 
     metrics = compute_metrics(pairs)
-    (out / "metrics.json").write_text(
-        metrics.model_dump_json(indent=2), encoding="utf-8"
-    )
+    (out / "metrics.json").write_text(metrics.model_dump_json(indent=2), encoding="utf-8")
     return out
 
 

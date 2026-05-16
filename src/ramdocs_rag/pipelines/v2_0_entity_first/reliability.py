@@ -25,9 +25,7 @@ DEFAULT_RECENCY = 0.5
 DEFAULT_AUTHORITY = 0.5
 
 
-def score_doc(
-    doc: RetrievedDoc, claim: Claim | None, *, in_minority: bool
-) -> float:
+def score_doc(doc: RetrievedDoc, claim: Claim | None, *, in_minority: bool) -> float:
     conf = claim.confidence if claim is not None else 0.5
     penalty = 1.0 if in_minority else 0.0
     s = (
@@ -40,15 +38,10 @@ def score_doc(
     return max(0.0, min(1.0, s))
 
 
-def initial_reliability(
-    docs: list[RetrievedDoc], claims: list[Claim]
-) -> dict[str, float]:
+def initial_reliability(docs: list[RetrievedDoc], claims: list[Claim]) -> dict[str, float]:
     """First pass (no penalty) — needed for intra-group voting."""
     claim_by_doc = {c.doc_id: c for c in claims}
-    return {
-        d.doc_id: score_doc(d, claim_by_doc.get(d.doc_id), in_minority=False)
-        for d in docs
-    }
+    return {d.doc_id: score_doc(d, claim_by_doc.get(d.doc_id), in_minority=False) for d in docs}
 
 
 def final_reliability(
@@ -59,8 +52,6 @@ def final_reliability(
     """Final pass — applies the penalty to intra-group losers."""
     claim_by_doc = {c.doc_id: c for c in claims}
     return {
-        d.doc_id: score_doc(
-            d, claim_by_doc.get(d.doc_id), in_minority=d.doc_id in minority_doc_ids
-        )
+        d.doc_id: score_doc(d, claim_by_doc.get(d.doc_id), in_minority=d.doc_id in minority_doc_ids)
         for d in docs
     }

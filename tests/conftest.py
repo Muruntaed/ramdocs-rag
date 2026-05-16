@@ -14,7 +14,6 @@ from ramdocs_rag.core.types import (
     RunResult,
 )
 
-
 # ---------- Fixtures sourced from the real dataset ----------
 
 

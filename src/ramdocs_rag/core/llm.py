@@ -143,6 +143,7 @@ class OpenAIClient:
 
     def __post_init__(self) -> None:
         from openai import OpenAI  # noqa: F401  — fail-fast presence check
+
         self._client = None  # actual instantiation happens in _ensure_client
 
     def _ensure_client(self) -> Any:
@@ -152,9 +153,7 @@ class OpenAIClient:
             # trace. Enabled only when both Langfuse keys are present in env.
             import os
 
-            if os.environ.get("LANGFUSE_PUBLIC_KEY") and os.environ.get(
-                "LANGFUSE_SECRET_KEY"
-            ):
+            if os.environ.get("LANGFUSE_PUBLIC_KEY") and os.environ.get("LANGFUSE_SECRET_KEY"):
                 from langfuse.openai import OpenAI
             else:
                 from openai import OpenAI

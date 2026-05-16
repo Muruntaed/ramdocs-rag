@@ -7,8 +7,6 @@ but can be opted out via ``pytest -m "not slow"`` if needed.
 
 from __future__ import annotations
 
-import pytest
-
 from ramdocs_rag.core.types import Claim, RetrievedDoc
 from ramdocs_rag.pipelines.v1_0_madam_lite.conflict import (
     MAJORITY_RATIO,
@@ -17,13 +15,11 @@ from ramdocs_rag.pipelines.v1_0_madam_lite.conflict import (
 )
 from ramdocs_rag.pipelines.v1_0_madam_lite.reliability import (
     W_AUTHORITY,
-    W_MINORITY_PENALTY,
     W_RECENCY,
     W_RETRIEVAL,
     W_SELF_CONFIDENCE,
     compute_reliability,
 )
-
 
 # ---------- Reliability ----------
 
@@ -93,7 +89,9 @@ def test_detect_conflict_two_clusters_dominant():
     claims = [
         Claim(doc_id="d0", text="Placebo", stance="supports", confidence=0.9, supporting_quote="q"),
         Claim(doc_id="d1", text="Placebo", stance="supports", confidence=0.9, supporting_quote="q"),
-        Claim(doc_id="d2", text="The Beatles", stance="supports", confidence=0.9, supporting_quote="q"),
+        Claim(
+            doc_id="d2", text="The Beatles", stance="supports", confidence=0.9, supporting_quote="q"
+        ),
     ]
     rel = {"d0": 0.9, "d1": 0.9, "d2": 0.3}
     report = detect_conflict(claims, rel)
@@ -107,7 +105,9 @@ def test_detect_conflict_two_clusters_inconclusive():
     """Clusters tied on weight → no deterministic winner, fall through to the LLM mediator."""
     claims = [
         Claim(doc_id="d0", text="Placebo", stance="supports", confidence=0.9, supporting_quote="q"),
-        Claim(doc_id="d1", text="The Beatles", stance="supports", confidence=0.9, supporting_quote="q"),
+        Claim(
+            doc_id="d1", text="The Beatles", stance="supports", confidence=0.9, supporting_quote="q"
+        ),
     ]
     rel = {"d0": 0.5, "d1": 0.5}
     report = detect_conflict(claims, rel)
@@ -143,7 +143,9 @@ def test_property_adding_minority_misinfo_doesnt_steal_win():
     assert win0 is not None
 
     extended = base_claims + [
-        Claim(doc_id="dm", text="The Beatles", stance="supports", confidence=0.9, supporting_quote="q"),
+        Claim(
+            doc_id="dm", text="The Beatles", stance="supports", confidence=0.9, supporting_quote="q"
+        ),
     ]
     rel_ext = {**rel_base, "dm": 0.3}
     win1 = detect_conflict(extended, rel_ext).winner

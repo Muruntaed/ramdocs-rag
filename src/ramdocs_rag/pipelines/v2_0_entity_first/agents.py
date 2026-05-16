@@ -52,7 +52,10 @@ _INTRA_MEDIATOR_SCHEMA = {
     "type": "object",
     "additionalProperties": False,
     "required": [
-        "answer", "confidence", "supporting_doc_ids", "rejected_doc_ids",
+        "answer",
+        "confidence",
+        "supporting_doc_ids",
+        "rejected_doc_ids",
         "reconciliation_explanation",
     ],
     "properties": {
@@ -68,16 +71,10 @@ _INTRA_MEDIATOR_SCHEMA = {
 # ---------- Analyzer ----------
 
 
-def analyze_doc(
-    llm: LLMClient, query: str, doc: RetrievedDoc
-) -> tuple[Claim, float, int]:
+def analyze_doc(llm: LLMClient, query: str, doc: RetrievedDoc) -> tuple[Claim, float, int]:
     """One document → one ``Claim`` with an entity. Returns ``(claim, cost, calls=1)``."""
     system = _read_prompt("analyzer.txt")
-    user = (
-        f"Question: {query}\n\n"
-        f"Document id: {doc.doc_id}\n"
-        f"Document text:\n---\n{doc.text}\n---\n"
-    )
+    user = f"Question: {query}\n\nDocument id: {doc.doc_id}\nDocument text:\n---\n{doc.text}\n---\n"
     out = llm.complete_json(
         system=system, user=user, schema=_CLAIM_SCHEMA, schema_name="EntityClaim"
     )
@@ -125,10 +122,7 @@ def _intra_group_deterministic(
         members.sort(key=lambda c: reliability.get(c.doc_id, 0.0), reverse=True)
         return members[0].text, [m.doc_id for m in members], []
 
-    text_weights = {
-        t: sum(reliability.get(c.doc_id, 0.0) for c in cs)
-        for t, cs in by_text.items()
-    }
+    text_weights = {t: sum(reliability.get(c.doc_id, 0.0) for c in cs) for t, cs in by_text.items()}
     sorted_texts = sorted(text_weights.items(), key=lambda x: -x[1])
     top_t, top_w = sorted_texts[0]
     runner_w = sorted_texts[1][1] if len(sorted_texts) > 1 else 0.0
@@ -139,7 +133,7 @@ def _intra_group_deterministic(
     winners = by_text[top_t]
     losers = [c for c in claims if _norm_text(c.text) != top_t]
     winners.sort(key=lambda c: reliability.get(c.doc_id, 0.0), reverse=True)
-    return winners[0].text, [w.doc_id for w in winners], [l.doc_id for l in losers]
+    return winners[0].text, [w.doc_id for w in winners], [loser.doc_id for loser in losers]
 
 
 def _intra_group_llm(
@@ -164,11 +158,12 @@ def _intra_group_llm(
     user = (
         f"Question: {query}\n\n"
         f"Entity: {entity}\n\n"
-        f"Conflicting claims (all about this entity):\n"
-        + "\n".join(claim_lines)
+        f"Conflicting claims (all about this entity):\n" + "\n".join(claim_lines)
     )
     out = llm.complete_json(
-        system=system, user=user, schema=_INTRA_MEDIATOR_SCHEMA,
+        system=system,
+        user=user,
+        schema=_INTRA_MEDIATOR_SCHEMA,
         schema_name="IntraEntityMediator",
     )
     p = out.parsed
@@ -197,9 +192,7 @@ def resolve_entity_group(
     if det is not None:
         text, supporting, rejected = det
         # confidence = average reliability of the winners, clipped to [0.1, 1.0].
-        avg_rel = (
-            sum(reliability.get(d, 0.0) for d in supporting) / max(1, len(supporting))
-        )
+        avg_rel = sum(reliability.get(d, 0.0) for d in supporting) / max(1, len(supporting))
         variant = AnswerVariant(
             answer=text,
             confidence=min(1.0, max(0.1, avg_rel)),

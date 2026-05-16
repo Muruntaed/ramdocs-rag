@@ -66,14 +66,8 @@ _MEDIATOR_SCHEMA = {
 def analyze_doc(llm: LLMClient, query: str, doc: RetrievedDoc) -> tuple[Claim, float, int]:
     """One document → one ``Claim``. Returns ``(claim, cost_usd, n_calls=1)``."""
     system = _read_prompt("analyzer.txt")
-    user = (
-        f"Question: {query}\n\n"
-        f"Document id: {doc.doc_id}\n"
-        f"Document text:\n---\n{doc.text}\n---\n"
-    )
-    out = llm.complete_json(
-        system=system, user=user, schema=_CLAIM_SCHEMA, schema_name="Claim"
-    )
+    user = f"Question: {query}\n\nDocument id: {doc.doc_id}\nDocument text:\n---\n{doc.text}\n---\n"
+    out = llm.complete_json(system=system, user=user, schema=_CLAIM_SCHEMA, schema_name="Claim")
     parsed = dict(out.parsed)
     # Guard against a hallucinated ``doc_id``.
     parsed["doc_id"] = doc.doc_id

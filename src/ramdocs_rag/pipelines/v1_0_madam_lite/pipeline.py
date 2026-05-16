@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import time
 
+from ramdocs_rag.core.retrieval import RetrievalConfig, retrieve
+
 from ...core.llm import LLMClient
 from ...core.types import Question, RunResult
 from ..base import Pipeline
 from .agents import analyze_doc, mediate
-from ramdocs_rag.core.retrieval import RetrievalConfig, retrieve
 
 
 class V1MadamLite(Pipeline):

@@ -14,7 +14,7 @@ install:
 
 ## test — fast tests with no API spend (unit + contract + integration with mocks)
 test:
-	$(PYTEST) tests/unit tests/contract tests/integration -m "not e2e and not benchmark"
+	$(PYTEST) tests/unit tests/integration -m "not e2e and not benchmark"
 
 ## test-e2e — real-OpenAI smoke (requires OPENAI_API_KEY)
 test-e2e:

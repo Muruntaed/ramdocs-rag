@@ -108,13 +108,17 @@ class V41PromptFix(Pipeline):
                     abstained=True,
                     explanation="No documents support an answer to the question.",
                 ),
-                cost_usd=cost, latency_s=time.perf_counter() - t0, llm_calls=calls,
+                cost_usd=cost,
+                latency_s=time.perf_counter() - t0,
+                llm_calls=calls,
             )
 
         rel = initial_reliability(retrieved, claims, trust_by_doc)
 
         from collections import Counter
+
         from .agents import _norm_text
+
         all_minority: set[str] = set()
         for group_claims in groups.values():
             if len(group_claims) < 2:
@@ -163,8 +167,13 @@ class V41PromptFix(Pipeline):
         )
 
         verified, _decisions, s_cost, s_calls = skeptic_verify(
-            self.skeptic_llm, question.question, draft, retrieved, rel,
-            trust_by_doc=trust_by_doc, flags_by_doc=flags_by_doc,
+            self.skeptic_llm,
+            question.question,
+            draft,
+            retrieved,
+            rel,
+            trust_by_doc=trust_by_doc,
+            flags_by_doc=flags_by_doc,
         )
         cost += s_cost
         calls += s_calls
@@ -200,5 +209,7 @@ class V41PromptFix(Pipeline):
         }
         base["min_relative_weight"] = self._min_relative_weight
         base["abstention_fallback"] = True
-        base["reliability_formula"] = "0.40·retrieval + 0.25·confidence + 0.35·trust − 0.10·minority"
+        base["reliability_formula"] = (
+            "0.40·retrieval + 0.25·confidence + 0.35·trust − 0.10·minority"
+        )
         return base

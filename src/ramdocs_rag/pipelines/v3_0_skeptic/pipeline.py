@@ -82,7 +82,9 @@ class V3Skeptic(Pipeline):
                     abstained=True,
                     explanation="No documents support an answer to the question.",
                 ),
-                cost_usd=cost, latency_s=time.perf_counter() - t0, llm_calls=calls,
+                cost_usd=cost,
+                latency_s=time.perf_counter() - t0,
+                llm_calls=calls,
             )
 
         # 4. Initial reliability
@@ -90,7 +92,9 @@ class V3Skeptic(Pipeline):
 
         # 5. Intra-group minority for second reliability pass
         from collections import Counter
+
         from .agents import _norm_text
+
         all_minority: set[str] = set()
         for group_claims in groups.values():
             if len(group_claims) < 2:

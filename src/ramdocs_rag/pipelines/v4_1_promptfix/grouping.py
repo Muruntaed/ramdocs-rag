@@ -66,9 +66,7 @@ def group_by_entity(claims: list[Claim]) -> dict[str, list[Claim]]:
                 # putting the wrong homonym into the wrong cluster. Leave it
                 # as its own group instead. Saves multi-place / multi-homonym
                 # docs whose analyzer was unable to recover a disambiguator.
-                candidates = [
-                    kk for kk in keys if kk != other and other in kk
-                ]
+                candidates = [kk for kk in keys if kk != other and other in kk]
                 if len(candidates) > 1:
                     continue
                 bucket.extend(raw_groups[other])

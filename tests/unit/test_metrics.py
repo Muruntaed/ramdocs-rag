@@ -20,7 +20,6 @@ from ramdocs_rag.eval.metrics import (
     recall_all_gold,
 )
 
-
 # ---------- EM ----------
 
 

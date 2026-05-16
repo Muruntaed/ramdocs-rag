@@ -12,8 +12,12 @@ from ramdocs_rag.pipelines.v2_0_entity_first.grouping import (
 
 def _c(doc_id: str, entity: str, text: str, stance: str = "supports") -> Claim:
     return Claim(
-        doc_id=doc_id, entity=entity, text=text, stance=stance,  # type: ignore[arg-type]
-        confidence=0.9, supporting_quote="q",
+        doc_id=doc_id,
+        entity=entity,
+        text=text,
+        stance=stance,  # type: ignore[arg-type]
+        confidence=0.9,
+        supporting_quote="q",
     )
 
 
