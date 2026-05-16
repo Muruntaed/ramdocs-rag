@@ -49,7 +49,7 @@ def _ensure_registry_loaded() -> None:
     # ``registry`` may pull optional deps (OpenAIClient, etc.) — keep the
     # import suppressed so that tests which do not touch the real OpenAI
     # SDK can still import the runner.
-    with contextlib.suppress(Exception):
+    with contextlib.suppress(ImportError):
         from ..pipelines import registry  # noqa: F401
 
 

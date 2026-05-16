@@ -112,17 +112,9 @@ class MockLLM:
 
 # ---------- OpenAI client ----------
 
-# Pricing per 1M tokens, current as of 2026-05. Update by hand when OpenAI
-# rev the rates; cost-tracking is best-effort, not used for routing.
-_PRICING: dict[str, tuple[float, float]] = {
-    "gpt-4o-mini": (0.15, 0.60),
-    "gpt-4o": (2.50, 10.00),
-}
-
-
-def _estimate_cost(model: str, tokens_in: int, tokens_out: int) -> float:
-    p_in, p_out = _PRICING.get(model, (0.0, 0.0))
-    return (tokens_in * p_in + tokens_out * p_out) / 1_000_000
+# Pricing lives in a sibling module so this file stays small and the
+# table can be updated without touching the SDK wrapper.
+from .pricing import estimate_cost as _estimate_cost  # noqa: E402
 
 
 @dataclass

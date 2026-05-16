@@ -83,16 +83,16 @@ class V31ConservativeSkeptic(Pipeline):
 
         from collections import Counter
 
-        from .agents import _norm_text
+        from .agents import norm_text
 
         all_minority: set[str] = set()
         for group_claims in groups.values():
             if len(group_claims) < 2:
                 continue
-            counts = Counter(_norm_text(c.text) for c in group_claims)
+            counts = Counter(norm_text(c.text) for c in group_claims)
             top_text = counts.most_common(1)[0][0]
             for c in group_claims:
-                if _norm_text(c.text) != top_text:
+                if norm_text(c.text) != top_text:
                     all_minority.add(c.doc_id)
         rel = final_reliability(retrieved, claims, all_minority)
 

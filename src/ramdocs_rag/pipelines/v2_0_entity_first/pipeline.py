@@ -101,12 +101,12 @@ class V2EntityFirst(Pipeline):
             # claim that does NOT belong to the top-text cluster is a loser.
             from collections import Counter
 
-            from .agents import _norm_text
+            from .agents import norm_text
 
-            counts = Counter(_norm_text(c.text) for c in group_claims)
+            counts = Counter(norm_text(c.text) for c in group_claims)
             top_text = counts.most_common(1)[0][0]
             for c in group_claims:
-                if _norm_text(c.text) != top_text:
+                if norm_text(c.text) != top_text:
                     all_minority.add(c.doc_id)
 
         # 6. Final reliability (with intra-group minority penalty)

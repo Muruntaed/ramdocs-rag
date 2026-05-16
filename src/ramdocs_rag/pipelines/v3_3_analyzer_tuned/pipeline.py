@@ -8,13 +8,14 @@ abstention fallback — is byte-identical to v3.2.
 from __future__ import annotations
 
 import time
+from collections import Counter
 
 from ramdocs_rag.core.llm import LLMClient
 from ramdocs_rag.core.retrieval import RetrievalConfig, retrieve
 from ramdocs_rag.core.types import FinalAnswer, Question, RunResult
 from ramdocs_rag.pipelines.base import Pipeline
 
-from .agents import analyze_doc, resolve_entity_group, skeptic_verify
+from .agents import analyze_doc, norm_text, resolve_entity_group, skeptic_verify
 from .grouping import display_entity, group_by_entity
 from .reliability import final_reliability, initial_reliability
 
@@ -78,19 +79,14 @@ class V33AnalyzerTuned(Pipeline):
             )
 
         rel = initial_reliability(retrieved, claims)
-
-        from collections import Counter
-
-        from .agents import _norm_text
-
         all_minority: set[str] = set()
         for group_claims in groups.values():
             if len(group_claims) < 2:
                 continue
-            counts = Counter(_norm_text(c.text) for c in group_claims)
+            counts = Counter(norm_text(c.text) for c in group_claims)
             top_text = counts.most_common(1)[0][0]
             for c in group_claims:
-                if _norm_text(c.text) != top_text:
+                if norm_text(c.text) != top_text:
                     all_minority.add(c.doc_id)
         rel = final_reliability(retrieved, claims, all_minority)
 

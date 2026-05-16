@@ -162,7 +162,7 @@ def evaluate_doc(llm: LLMClient, query: str, doc: RetrievedDoc) -> tuple[DocTrus
     return DocTrust.model_validate(parsed), out.cost_usd, 1
 
 
-def _norm_text(t: str) -> str:
+def norm_text(t: str) -> str:
     return " ".join(t.lower().split())
 
 
@@ -176,7 +176,7 @@ def _intra_group_deterministic(
         return c.text, [c.doc_id], []
     by_text: dict[str, list[Claim]] = defaultdict(list)
     for c in claims:
-        by_text[_norm_text(c.text)].append(c)
+        by_text[norm_text(c.text)].append(c)
     if len(by_text) == 1:
         members = next(iter(by_text.values()))
         members.sort(key=lambda c: reliability.get(c.doc_id, 0.0), reverse=True)
@@ -189,7 +189,7 @@ def _intra_group_deterministic(
     if ratio < INTRA_MAJORITY_RATIO:
         return None
     winners = by_text[top_t]
-    losers = [c for c in claims if _norm_text(c.text) != top_t]
+    losers = [c for c in claims if norm_text(c.text) != top_t]
     winners.sort(key=lambda c: reliability.get(c.doc_id, 0.0), reverse=True)
     return winners[0].text, [w.doc_id for w in winners], [loser.doc_id for loser in losers]
 
