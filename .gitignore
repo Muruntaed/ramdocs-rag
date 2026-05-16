@@ -1,0 +1,36 @@
+# Run artefacts: commit only _baseline and _reports; everything else stays local.
+runs/*
+!runs/_baseline/
+!runs/_reports/
+!runs/.gitkeep
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environment
+.venv/
+
+# HuggingFace / sentence-transformers caches (any depth, any name).
+hf_cache/
+**/hf_cache/
+.cache/huggingface/
+~/.cache/huggingface/
+
+# Secrets
+.env
+.env.local
+*.pem
+*.key
+
+# Editors
+.idea/
+.vscode/
+.DS_Store

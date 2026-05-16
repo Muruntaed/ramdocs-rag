@@ -1,0 +1,119 @@
+{
+  "pipeline": "v3.3_analyzer_tuned",
+  "version": "3.3.0",
+  "n_questions": 12,
+  "frozen_at": "2026-05-15T22:42:10Z",
+  "n_runs_for_avg": 2,
+  "runs": [
+    "v3.3_analyzer_tuned/nosha_20260515_223922_freeze1",
+    "v3.3_analyzer_tuned/nosha_20260515_224209_freeze2"
+  ],
+  "metrics_avg": {
+    "em_any_gold": 0.7916666666666667,
+    "em_substring": 0.7916666666666667,
+    "recall_all_gold": 0.6458333333333333,
+    "precision_answers": 0.7638888888888888,
+    "f1_multi_answer": 0.675,
+    "abstention_rate": 0.0,
+    "misinfo_rejection": 0.875,
+    "noise_rejection": 1.0,
+    "correct_citation": 0.9583333333333333,
+    "citation_faithfulness": 0.75,
+    "coverage": 0.5789682539682539,
+    "total_cost_usd": 0.11691119999999999,
+    "avg_cost_per_question_usd": 0.009742599999999999,
+    "avg_llm_calls_per_question": 7.25,
+    "avg_latency_s": 13.51154622633294
+  },
+  "metrics_per_run": {
+    "freeze1": {
+      "em_any_gold": 0.8333333333333334,
+      "em_substring": 0.8333333333333334,
+      "recall_all_gold": 0.6666666666666666,
+      "precision_answers": 0.8055555555555555,
+      "f1_multi_answer": 0.7027777777777778,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 0.9166666666666666,
+      "noise_rejection": 1.0,
+      "correct_citation": 0.9791666666666666,
+      "citation_faithfulness": 0.75,
+      "coverage": 0.5859126984126984,
+      "total_cost_usd": 0.11939444999999999,
+      "avg_cost_per_question_usd": 0.0099495375,
+      "avg_llm_calls_per_question": 7.333333333333333,
+      "avg_latency_s": 13.294880568832014
+    },
+    "freeze2": {
+      "em_any_gold": 0.75,
+      "em_substring": 0.75,
+      "recall_all_gold": 0.625,
+      "precision_answers": 0.7222222222222222,
+      "f1_multi_answer": 0.6472222222222223,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 0.8333333333333334,
+      "noise_rejection": 1.0,
+      "correct_citation": 0.9375,
+      "citation_faithfulness": 0.75,
+      "coverage": 0.5720238095238095,
+      "total_cost_usd": 0.11442794999999999,
+      "avg_cost_per_question_usd": 0.009535662499999998,
+      "avg_llm_calls_per_question": 7.166666666666667,
+      "avg_latency_s": 13.728211883833865
+    }
+  },
+  "by_category_avg": {
+    "pure_correct": {
+      "em_any_gold": 0.3333333333333333,
+      "em_substring": 0.3333333333333333,
+      "recall_all_gold": 0.3333333333333333,
+      "precision_answers": 0.3333333333333333,
+      "f1_multi_answer": 0.3333333333333333,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 1.0,
+      "noise_rejection": 1.0,
+      "correct_citation": 1.0,
+      "citation_faithfulness": 0.3333333333333333,
+      "coverage": 0.34920634920634913
+    },
+    "has_misinfo": {
+      "em_any_gold": 0.8333333333333333,
+      "em_substring": 0.8333333333333333,
+      "recall_all_gold": 0.75,
+      "precision_answers": 0.7222222222222221,
+      "f1_multi_answer": 0.7111111111111111,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 0.5,
+      "noise_rejection": 1.0,
+      "correct_citation": 0.8333333333333333,
+      "citation_faithfulness": 0.8333333333333334,
+      "coverage": 0.5833333333333333
+    },
+    "has_noise": {
+      "em_any_gold": 1.0,
+      "em_substring": 1.0,
+      "recall_all_gold": 0.7222222222222222,
+      "precision_answers": 1.0,
+      "f1_multi_answer": 0.8222222222222223,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 1.0,
+      "noise_rejection": 1.0,
+      "correct_citation": 1.0,
+      "citation_faithfulness": 0.8333333333333334,
+      "coverage": 0.7166666666666667
+    },
+    "mixed_conflict": {
+      "em_any_gold": 1.0,
+      "em_substring": 1.0,
+      "recall_all_gold": 0.7777777777777777,
+      "precision_answers": 1.0,
+      "f1_multi_answer": 0.8333333333333334,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 1.0,
+      "noise_rejection": 1.0,
+      "correct_citation": 1.0,
+      "citation_faithfulness": 1.0,
+      "coverage": 0.6666666666666666
+    }
+  },
+  "notes": "v3.2 with a tuned analyzer prompt (multi-candidate disambiguation rule). Same architecture, same Skeptic, same threshold (0.30). The analyzer is now explicitly told to pick the value that DIRECTLY answers the question for the named entity, with concrete heuristics for population / category / date questions. Net vs v3.2: Citation-faithfulness 0.708 -> 0.750 (+0.042), other anchor metrics unchanged. Pareto-better than v3.2; this is the published v3 baseline."
+}

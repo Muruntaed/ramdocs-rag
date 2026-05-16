@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ramdocs-rag"
+version = "0.2.0"
+description = "Multi-agent RAG over RAMDocs — versioned pipelines + measurement harness."
+requires-python = ">=3.13"
+readme = "README.md"
+dependencies = [
+    "openai>=2.0",
+    "langfuse>=4.0",
+    "pydantic>=2.10",
+    "pydantic-settings>=2.10",
+    "python-dotenv>=1.0",
+    "tenacity>=9.0",
+    "rank-bm25>=0.2",
+    "sentence-transformers>=5.0",
+    "datasets>=4.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=9.0", "ruff>=0.15", "pytest-cov>=6.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra -q --strict-markers"
+markers = [
+    "e2e: end-to-end tests that hit the real OpenAI API (opt-in)",
+    "benchmark: full-sweep benchmark runs (opt-in, real API)",
+]

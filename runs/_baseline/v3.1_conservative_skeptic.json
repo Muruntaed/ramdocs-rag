@@ -1,0 +1,119 @@
+{
+  "pipeline": "v3.1_conservative_skeptic",
+  "version": "3.1.0",
+  "n_questions": 12,
+  "frozen_at": "2026-05-15T21:54:45Z",
+  "n_runs_for_avg": 2,
+  "runs": [
+    "v3.1_conservative_skeptic/nosha_20260515_215202_freeze1",
+    "v3.1_conservative_skeptic/nosha_20260515_215443_freeze2"
+  ],
+  "metrics_avg": {
+    "em_any_gold": 0.75,
+    "em_substring": 0.75,
+    "recall_all_gold": 0.625,
+    "precision_answers": 0.7222222222222222,
+    "f1_multi_answer": 0.6472222222222223,
+    "abstention_rate": 0.0,
+    "misinfo_rejection": 0.8333333333333334,
+    "noise_rejection": 0.9583333333333333,
+    "correct_citation": 0.9270833333333333,
+    "citation_faithfulness": 0.7395833333333333,
+    "coverage": 0.6047619047619047,
+    "total_cost_usd": 0.10379075,
+    "avg_cost_per_question_usd": 0.008649229166666666,
+    "avg_llm_calls_per_question": 7.083333333333333,
+    "avg_latency_s": 13.34896606591792
+  },
+  "metrics_per_run": {
+    "freeze1": {
+      "em_any_gold": 0.75,
+      "em_substring": 0.75,
+      "recall_all_gold": 0.625,
+      "precision_answers": 0.7222222222222222,
+      "f1_multi_answer": 0.6472222222222223,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 0.8333333333333334,
+      "noise_rejection": 0.9166666666666666,
+      "correct_citation": 0.9166666666666666,
+      "citation_faithfulness": 0.7291666666666666,
+      "coverage": 0.6047619047619047,
+      "total_cost_usd": 0.1035775,
+      "avg_cost_per_question_usd": 0.008631458333333333,
+      "avg_llm_calls_per_question": 7.083333333333333,
+      "avg_latency_s": 13.481191066166502
+    },
+    "freeze2": {
+      "em_any_gold": 0.75,
+      "em_substring": 0.75,
+      "recall_all_gold": 0.625,
+      "precision_answers": 0.7222222222222222,
+      "f1_multi_answer": 0.6472222222222223,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 0.8333333333333334,
+      "noise_rejection": 1.0,
+      "correct_citation": 0.9375,
+      "citation_faithfulness": 0.75,
+      "coverage": 0.6047619047619047,
+      "total_cost_usd": 0.104004,
+      "avg_cost_per_question_usd": 0.008667,
+      "avg_llm_calls_per_question": 7.083333333333333,
+      "avg_latency_s": 13.21674106566934
+    }
+  },
+  "by_category_avg": {
+    "pure_correct": {
+      "em_any_gold": 0.3333333333333333,
+      "em_substring": 0.3333333333333333,
+      "recall_all_gold": 0.3333333333333333,
+      "precision_answers": 0.3333333333333333,
+      "f1_multi_answer": 0.3333333333333333,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 1.0,
+      "noise_rejection": 1.0,
+      "correct_citation": 1.0,
+      "citation_faithfulness": 0.3333333333333333,
+      "coverage": 0.3968253968253968
+    },
+    "has_misinfo": {
+      "em_any_gold": 0.6666666666666666,
+      "em_substring": 0.6666666666666666,
+      "recall_all_gold": 0.6666666666666666,
+      "precision_answers": 0.5555555555555555,
+      "f1_multi_answer": 0.6,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 0.3333333333333333,
+      "noise_rejection": 1.0,
+      "correct_citation": 0.75,
+      "citation_faithfulness": 0.8333333333333334,
+      "coverage": 0.638888888888889
+    },
+    "has_noise": {
+      "em_any_gold": 1.0,
+      "em_substring": 1.0,
+      "recall_all_gold": 0.7222222222222222,
+      "precision_answers": 1.0,
+      "f1_multi_answer": 0.8222222222222223,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 1.0,
+      "noise_rejection": 0.8333333333333333,
+      "correct_citation": 0.9583333333333333,
+      "citation_faithfulness": 0.7916666666666667,
+      "coverage": 0.7166666666666667
+    },
+    "mixed_conflict": {
+      "em_any_gold": 1.0,
+      "em_substring": 1.0,
+      "recall_all_gold": 0.7777777777777777,
+      "precision_answers": 1.0,
+      "f1_multi_answer": 0.8333333333333334,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 1.0,
+      "noise_rejection": 1.0,
+      "correct_citation": 1.0,
+      "citation_faithfulness": 1.0,
+      "coverage": 0.6666666666666666
+    }
+  },
+  "notes": "Minor over v3.0: (1) Skeptic prompt now explicitly tolerates homonyms / namesakes and defaults to KEEP when uncertain; (2) pipeline-level abstention fallback restores the draft if Skeptic rejects every variant. Result vs v3.0: EM +0.083, F1 +0.058, Recall +0.04, Citation-faith +0.12, abstention 0.167 -> 0.000. Cost: Misinfo-rejection -0.087 (a more lenient Skeptic lets some misinfo through). Net Pareto-better than v3.0 on most axes, sits between v2.0 (best EM) and v3.0 (best misinfo)."
+}

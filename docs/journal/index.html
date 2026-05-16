@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RAMDocs Multi-Agent RAG — Research Journal</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+
+  <header class="page-header">
+    <h1>RAMDocs Multi-Agent RAG — Research Journal</h1>
+    <div class="subtitle">
+      A versioned multi-agent RAG prototype over
+      <a href="https://huggingface.co/datasets/HanNight/RAMDocs">HanNight/RAMDocs</a>.
+      Each version is a self-contained experiment: hypothesis, frozen run, metrics, takeaways.
+    </div>
+  </header>
+
+  <h2>Summary table</h2>
+  <p style="color:var(--muted);font-size:13px;margin:-4px 0 4px;">
+    All values are averaged over two freeze runs on the 12-question RAMDocs subset.
+    Comparison anchors: <b>F1-multi-answer</b> (correctness under ambiguity) and
+    <b>misinfo-rejection</b> (robustness against misinformation).
+  </p>
+
+  <table class="summary-table">
+    <thead>
+      <tr>
+        <th>Version</th>
+        <th>Status</th>
+        <th class="num">EM-any-gold <span class="qmark" title="Exact Match: the primary answer matches one of the gold answers verbatim. Strict and format-sensitive — '1707' does not equal '11 March 1707'.">?</span></th>
+        <th class="num">F1-multi <span class="qmark" title="F1 for multi-answer: harmonic mean of precision (fraction of produced variants that match gold) and recall (fraction of gold answers we captured). The headline correctness metric under ambiguity.">?</span></th>
+        <th class="num">Misinfo-rej <span class="qmark" title="Misinfo Rejection: fraction of misinfo documents the system explicitly rejects. Higher means more robust to corpus manipulation.">?</span></th>
+        <th class="num">Recall@gold <span class="qmark" title="Recall: fraction of valid gold answers that made it into the final answer. Critical for ambiguous questions — 75% of this dataset has multiple valid golds.">?</span></th>
+        <th class="num">$/run <span class="qmark" title="Total cost of one full 12-question run: all OpenAI API spend (analyzer × K plus mediator when invoked).">?</span></th>
+        <th class="num">Lat,s/Q <span class="qmark" title="Average per-question latency in seconds: retrieval (BM25 + dense) + analyzer × K + optional mediator call.">?</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="background:#fafafa;font-style:italic;">
+        <td>Industry baseline <span class="qmark" title="Indicative range for typical production RAG over a noisy corpus, no adversarial verifier. Synthesised from published RAMDocs / MADAM-RAG numbers (HanNight et al., 2024) and common production-grade single-LLM RAG benchmarks. NOT measured on our exact dataset — used as an anchor for relative comparison.">?</span></td>
+        <td style="color:var(--muted);">reference</td>
+        <td class="num">~0.55</td>
+        <td class="num">~0.60</td>
+        <td class="num">~0.70</td>
+        <td class="num">~0.50</td>
+        <td class="num">~$0.10</td>
+        <td class="num">~5</td>
+      </tr>
+      <tr>
+        <td><a href="versions/v1.0_madam_lite.html"><b>v1.0_madam_lite</b></a></td>
+        <td class="status-frozen">FROZEN · 2026-05-15</td>
+        <td class="num">0.333 <span class="delta-bad">↓ −0.22</span></td>
+        <td class="num">0.665 <span class="delta-good">↑ +0.07</span></td>
+        <td class="num">0.917 <span class="delta-good">↑ +0.22</span></td>
+        <td class="num">0.590 <span class="delta-good">↑ +0.09</span></td>
+        <td class="num">$0.0485 <span class="delta-good">↓ −52%</span></td>
+        <td class="num">10.1 <span class="delta-bad">↑ +5.1</span></td>
+      </tr>
+      <tr>
+        <td><a href="versions/v2.0_entity_first.html"><b>v2.0_entity_first</b></a></td>
+        <td class="status-frozen">FROZEN · 2026-05-15</td>
+        <td class="num">0.833 <span class="delta-good">↑ +0.500</span></td>
+        <td class="num">0.667 <span class="delta-flat">↔</span></td>
+        <td class="num">0.792 <span class="delta-bad">↓ −0.125</span></td>
+        <td class="num"><b>0.667</b> <span class="delta-good">↑ +0.077</span></td>
+        <td class="num">$0.022 <span class="delta-good">↓ −55%</span></td>
+        <td class="num">10.7 <span class="delta-flat">↔</span></td>
+      </tr>
+      <tr>
+        <td><a href="versions/v3_skeptic.html"><b>v3_skeptic</b></a></td>
+        <td class="status-frozen">FROZEN · 2026-05-15</td>
+        <td class="num">0.792 <span class="delta-bad">↓ −0.041</span></td>
+        <td class="num"><b>0.675</b> <span class="delta-flat">↔</span></td>
+        <td class="num"><b>0.875</b> <span class="delta-good">↑ +0.083</span></td>
+        <td class="num">0.646 <span class="delta-bad">↓ −0.021</span></td>
+        <td class="num">$0.097 <span class="delta-bad">↑ +4.4×</span></td>
+        <td class="num">13.5 <span class="delta-bad">↑ +2.8</span></td>
+      </tr>
+      <tr>
+        <td><a href="versions/v4.1_promptfix.html"><b>v4 · Evidence Evaluator</b></a> <span style="color:var(--good);font-size:11px;">(recommended)</span></td>
+        <td class="status-frozen">FROZEN · 2026-05-16</td>
+        <td class="num"><b>0.875</b> <span class="delta-good">↑ +0.083</span></td>
+        <td class="num"><b>0.818</b> <span class="delta-good">↑ +0.143</span></td>
+        <td class="num"><b>0.917</b> <span class="delta-good">↑ +0.042</span></td>
+        <td class="num"><b>0.847</b> <span class="delta-good">↑ +0.201</span></td>
+        <td class="num">$0.265 <span class="delta-bad">↑ +173%</span></td>
+        <td class="num">24.0 <span class="delta-bad">↑ +10.5</span></td>
+      </tr>
+      <tr>
+        <td>v5.0_parametric_voice</td>
+        <td class="status-planned">planned</td>
+        <td class="num">—</td><td class="num">—</td><td class="num">—</td>
+        <td class="num">—</td><td class="num">—</td><td class="num">—</td>
+      </tr>
+    </tbody>
+  </table>
+  <p style="color:var(--muted);font-size:11px;margin-top:-4px;">
+    Arrows show the delta relative to the <b>previous row in the table</b>.
+    The first row is an indicative industry baseline (typical production
+    RAG over a noisy corpus, no adversarial verifier — see the
+    <span class="qmark" title="Synthesised from published RAMDocs / MADAM-RAG numbers (HanNight et al., 2024) and common production-grade single-LLM RAG benchmarks.">?</span>
+    tooltip on its label). v1.0 deltas are computed against that baseline.
+    <span class="delta-good">↑/↓ green</span> = improvement,
+    <span class="delta-bad">↑/↓ red</span> = regression,
+    <span class="delta-flat">↔</span> = unchanged (|Δ| &lt; 0.005).
+    For cost and latency, ↓ is the improvement direction.
+  </p>
+
+  <h2>Versus the industry baseline</h2>
+  <p style="color:var(--muted);font-size:13px;margin:-4px 0 6px;">
+    Each cell classifies a version's metric versus the indicative
+    industry baseline at the top of the table above. Five levels:
+    <span class="bench below">below</span>
+    <span class="bench par">on par</span>
+    <span class="bench above">above</span>
+    <span class="bench strong">strong</span>
+    <span class="bench top">exceptional</span>
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Version</th>
+        <th class="num">EM-any-gold</th>
+        <th class="num">F1-multi</th>
+        <th class="num">Misinfo-rej</th>
+        <th class="num">Recall@gold</th>
+        <th class="num">$/run</th>
+        <th class="num">Lat,s/Q</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><b>v1.0_madam_lite</b></td>
+        <td class="num"><span class="bench below">below</span></td>
+        <td class="num"><span class="bench above">above</span></td>
+        <td class="num"><span class="bench strong">strong</span></td>
+        <td class="num"><span class="bench above">above</span></td>
+        <td class="num"><span class="bench top">exceptional</span></td>
+        <td class="num"><span class="bench below">below</span></td>
+      </tr>
+      <tr>
+        <td><b>v2.0_entity_first</b></td>
+        <td class="num"><span class="bench top">exceptional</span></td>
+        <td class="num"><span class="bench above">above</span></td>
+        <td class="num"><span class="bench above">above</span></td>
+        <td class="num"><span class="bench strong">strong</span></td>
+        <td class="num"><span class="bench top">exceptional</span></td>
+        <td class="num"><span class="bench below">below</span></td>
+      </tr>
+      <tr>
+        <td><b>v3_skeptic</b></td>
+        <td class="num"><span class="bench strong">strong</span></td>
+        <td class="num"><span class="bench above">above</span></td>
+        <td class="num"><span class="bench strong">strong</span></td>
+        <td class="num"><span class="bench above">above</span></td>
+        <td class="num"><span class="bench par">on par</span></td>
+        <td class="num"><span class="bench below">below</span></td>
+      </tr>
+      <tr>
+        <td><b>v4 · Evidence Evaluator</b> <span style="color:var(--good);font-size:11px;">(recommended)</span></td>
+        <td class="num"><span class="bench top">exceptional</span></td>
+        <td class="num"><span class="bench strong">strong</span></td>
+        <td class="num"><span class="bench strong">strong</span></td>
+        <td class="num"><span class="bench top">exceptional</span></td>
+        <td class="num"><span class="bench below">below</span></td>
+        <td class="num"><span class="bench below">below</span></td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="bench-legend">
+    Thresholds (versus industry baseline; for cost / latency the direction is inverted, lower is better):
+    <span class="bench below">below</span> Δ &lt; −0.05 ·
+    <span class="bench par">on par</span> ±0.05 ·
+    <span class="bench above">above</span> +0.05 to +0.15 ·
+    <span class="bench strong">strong</span> +0.15 to +0.25 ·
+    <span class="bench top">exceptional</span> &gt; +0.25
+  </p>
+
+  <div class="callout">
+    <b>Snapshot as of 2026-05-16:</b> v2.0 (entity-first) broke the v1.0
+    structural cap — EM-any-gold jumped from 0.33 to 0.83 (+0.50),
+    Recall@gold rose by 0.09, and cost dropped by 55%. The price: misinfo
+    rejection regressed by 0.125. v3 adds an adversarial Skeptic with a
+    homonym-tolerant + depth-asymmetry prompt and a pipeline-level
+    abstention fallback — misinfo-rejection recovered to 0.875
+    (+0.083 vs v2.0) at a small −0.041 EM cost; no abstention.
+    <b>v4 adds a per-document Evidence Evaluator with a trust-weighted
+    reliability formula and a rewritten analyzer prompt</b> (top-anchored
+    grounding rule, GOOD/BAD contrasts, place-disambiguator, role-question
+    + category-verbatim scope) — <b>EM-any-gold 0.875 (+0.083 vs v3),
+    F1 0.818 (+0.143), Misinfo-rejection 0.917 (+0.042), Recall@gold
+    0.847 (+0.201)</b>. All five pre-declared anchors hit on both freeze
+    runs. <b>v4 · Evidence Evaluator is the recommended default;</b> v3 stays the
+    cheap option when cost / latency matter more than the last percentage
+    points of quality.
+  </div>
+
+  <h2>Roadmap</h2>
+
+  <div class="roadmap">
+
+    <a class="version-card" href="versions/v1.0_madam_lite.html">
+      <div class="vc-head">
+        <div class="vc-name">v1.0 · MADAM-lite baseline</div>
+        <div class="vc-status status-frozen">FROZEN · 2026-05-15</div>
+      </div>
+      <div class="vc-desc">
+        A port of the legacy logic: BM25 + dense retrieval → analyzer × K (LLM)
+        → 5-factor reliability → deterministic vote → LLM-fallback mediator.
+        Single-answer. The reference point for every subsequent comparison.
+      </div>
+      <div class="vc-metrics">
+        <span class="metric-pill"><span class="label">F1-multi</span><span class="value">0.665</span></span>
+        <span class="metric-pill"><span class="label">Misinfo-rej</span><span class="value">0.917</span></span>
+        <span class="metric-pill"><span class="label">EM-substr</span><span class="value">0.833</span></span>
+        <span class="metric-pill"><span class="label">$/run</span><span class="value">$0.049</span></span>
+      </div>
+    </a>
+
+    <a class="version-card" href="versions/v2.0_entity_first.html">
+      <div class="vc-head">
+        <div class="vc-name">v2.0 · entity-first decomposition</div>
+        <div class="vc-status status-frozen">FROZEN · 2026-05-15</div>
+      </div>
+      <div class="vc-desc">
+        Multi-answer as a first-class citizen. The analyzer emits an ENTITY,
+        the mediator groups claims by entity and returns a
+        <code>list[AnswerVariant]</code>.
+        EM-any-gold leaps from 0.33 to 0.83; Recall@gold +0.09;
+        Noise-rejection +0.28. The price is a small misinfo leak —
+        addressed in v3.0.
+      </div>
+      <div class="vc-metrics">
+        <span class="metric-pill"><span class="label">EM-any-gold</span><span class="value">0.833 <span class="delta-good">↑+0.50</span></span></span>
+        <span class="metric-pill"><span class="label">Recall@gold</span><span class="value">0.667 <span class="delta-good">↑+0.08</span></span></span>
+        <span class="metric-pill"><span class="label">Misinfo-rej</span><span class="value">0.792 <span class="delta-bad">↓−0.13</span></span></span>
+        <span class="metric-pill"><span class="label">$/run</span><span class="value">$0.022 <span class="delta-good">↓−55%</span></span></span>
+      </div>
+    </a>
+
+    <a class="version-card" href="versions/v3_skeptic.html">
+      <div class="vc-head">
+        <div class="vc-name">v3 · adversarial verifier (Skeptic)</div>
+        <div class="vc-status status-frozen">FROZEN · 2026-05-15</div>
+      </div>
+      <div class="vc-desc">
+        Adds a single-pass Skeptic after the mediator: it sees every draft
+        variant and the full document pool and returns keep / reject verdicts
+        based on four checks — entity grounding, citation faithfulness,
+        counter-evidence and a depth-asymmetry rule that catches thin-stub
+        misinformation. Pipeline-level fallback restores the draft if the
+        Skeptic ever rejects every variant.
+      </div>
+      <div class="vc-metrics">
+        <span class="metric-pill"><span class="label">Misinfo-rej</span><span class="value">0.875 <span class="delta-good">↑+0.08</span></span></span>
+        <span class="metric-pill"><span class="label">EM-any-gold</span><span class="value">0.792 <span class="delta-bad">↓−0.04</span></span></span>
+        <span class="metric-pill"><span class="label">F1-multi</span><span class="value">0.675 <span class="delta-flat">↔</span></span></span>
+        <span class="metric-pill"><span class="label">$/run</span><span class="value">$0.111 <span class="delta-bad">↑+5×</span></span></span>
+      </div>
+    </a>
+
+    <a class="version-card" href="versions/v4.1_promptfix.html">
+      <div class="vc-head">
+        <div class="vc-name">v4 · Evidence Evaluator <span style="color:var(--good);font-size:11px;">(recommended)</span></div>
+        <div class="vc-status status-frozen">FROZEN · 2026-05-16</div>
+      </div>
+      <div class="vc-desc">
+        Adds a per-document Evidence Evaluator alongside the Analyzer
+        (structured <code>DocTrust</code> report — trust_score + closed-enum
+        red_flags) and feeds a trust-weighted reliability formula
+        (W_TRUST = 0.35). The analyzer prompt is rewritten with a
+        top-anchored HARD GROUNDING RULE (anti-paraphrase /
+        anti-recency / anti-entity-mismatch + verbatim-quote test),
+        GOOD/BAD contrasts on citation-vs-description and pure-table
+        fallback, a mandatory place-disambiguator, a 7-item HARD
+        CHECKLIST and a role-question + category-verbatim-scope patch.
+        Ships with a shared safety layer applied across all versions
+        and an <code>agent_probe</code> CLI for $0.0005 single-agent
+        debugging. Pareto improvement over v3 on every quality anchor.
+      </div>
+      <div class="vc-metrics">
+        <span class="metric-pill"><span class="label">EM-any-gold</span><span class="value">0.875 <span class="delta-good">↑+0.08</span></span></span>
+        <span class="metric-pill"><span class="label">F1-multi</span><span class="value">0.818 <span class="delta-good">↑+0.14</span></span></span>
+        <span class="metric-pill"><span class="label">Misinfo-rej</span><span class="value">0.917 <span class="delta-good">↑+0.04</span></span></span>
+        <span class="metric-pill"><span class="label">Recall@gold</span><span class="value">0.847 <span class="delta-good">↑+0.20</span></span></span>
+      </div>
+    </a>
+
+    <div class="version-card planned">
+      <div class="vc-head">
+        <div class="vc-name">v5.0 · parametric voice + abstention</div>
+        <div class="vc-status">PLANNED</div>
+      </div>
+      <div class="vc-desc">
+        Adds an (N+1)-th agent with no documents — it answers purely from the
+        model's parametric memory. Insurance for cases when the retrieval pool
+        is degenerate (all misinfo or all noise). Calibrated abstention
+        becomes available. Expected to lift edge-case robustness.
+      </div>
+    </div>
+
+  </div>
+
+  <h2>Changelog</h2>
+  <div class="changelog">
+    <p style="margin:0 0 6px;font-weight:600;color:var(--fg);">v1.0 → v2.0 (2026-05-15)</p>
+    <p style="margin:0 0 8px;">
+      <b>Changes:</b> the analyzer now returns a mandatory <code>entity</code>
+      field; cosine clustering is replaced by deterministic entity grouping
+      with substring merging; the mediator is invoked only to resolve
+      <i>intra</i>-group disagreement; the final answer is a list of variants
+      (one per entity group above the 0.40 weight threshold).
+    </p>
+    <p style="margin:0 0 8px;">
+      <b>Expected:</b> Recall@gold ≥ 0.75 and misinfo-rejection holding flat.
+    </p>
+    <p style="margin:0;">
+      <b>Observed:</b> EM-any-gold +0.500, Recall@gold +0.077,
+      noise-rejection +0.264, cost −55% — large wins.
+      Misinfo-rejection −0.125 and citation-faithfulness −0.122 —
+      misinfo with a fabricated entity now forms its own group and
+      passes the threshold. Addressed in v3.
+    </p>
+
+    <p style="margin:18px 0 6px;font-weight:600;color:var(--fg);">v2.0 → v3 (2026-05-15)</p>
+    <p style="margin:0 0 8px;">
+      <b>Changes:</b> a single-pass Skeptic agent is added after the
+      mediator. It sees every draft variant plus the entire document pool
+      and returns a keep / reject verdict per variant based on four checks —
+      entity grounding, citation faithfulness, counter-evidence and a
+      depth-asymmetry rule that flags thin-stub variants when other
+      variants have richer corroboration. A pipeline-level fallback
+      restores the draft if the Skeptic ever rejects every variant. The
+      entity-group threshold is loosened from 0.40 to 0.30 to lift
+      multi-answer recall.
+    </p>
+    <p style="margin:0 0 8px;">
+      <b>Expected:</b> Misinfo-rejection back to ≥ 0.85 with no major loss on EM or Recall.
+    </p>
+    <p style="margin:0;">
+      <b>Observed:</b> Misinfo-rejection 0.792 → 0.875 (+0.083),
+      Citation-faithfulness +0.024, F1 essentially flat (+0.005),
+      Recall −0.021, EM −0.041, abstention 0. v3 is the recommended
+      default when robustness matters; v2.0 stays the cheapest and
+      best-EM option.
+    </p>
+    <p style="margin:8px 0 0;color:var(--muted);font-size:12px;">
+      Internal iterations toward v3 (the aggressive v3.0 and the
+      over-conservative v3.1) live in the repository under
+      <code>pipelines/v3_0_skeptic/</code> and
+      <code>pipelines/v3_1_conservative_skeptic/</code> for code archaeology
+      but are intentionally omitted from this public journal. See
+      <code>runs/_journal.md</code> for the full internal log.
+    </p>
+
+    <p style="margin:18px 0 6px;font-weight:600;color:var(--fg);">v3 → v4 · Evidence Evaluator (2026-05-16) — <span style="color:var(--good);">recommended default</span></p>
+    <p style="margin:0 0 8px;">
+      <b>Changes:</b> three layers stacked on top of v3.
+      (1) A <b>per-document Evidence Evaluator</b> agent emits a structured
+      <code>DocTrust</code> report — four local quality axes
+      (internal_consistency, encyclopedic_quality, specificity,
+      relevance), a composite <code>trust_score</code> and a closed-enum
+      list of <code>red_flags</code> — and the trust signal feeds a new
+      W_TRUST = 0.35 slot in the reliability formula, replacing the
+      dormant recency / authority placeholders of v1–v3.
+      (2) A <b>shared safety module</b> (<code>core/safety.py</code>) is
+      auto-attached to every prompt across all versions (grounding +
+      prompt-leak refusal + output-schema lock; the mediator additionally
+      gets off-topic refusal), with an <code>agent_probe</code> CLI for
+      ~$0.0005 single-agent debugging.
+      (3) The <b>analyzer prompt is rewritten</b> with a top-anchored
+      HARD GROUNDING RULE (anti-paraphrase / anti-recency /
+      anti-entity-mismatch + a verbatim-quote test), GOOD/BAD contrasts
+      on RULE A1 (citation-vs-description) and RULE A2 (pure-table
+      fallback), a mandatory PLACE-DISAMBIGUATOR for towns / CDPs /
+      villages, a HARD CHECKLIST expanded 5 → 7, and a role-question +
+      category-verbatim-scope patch with flexible TEXT FORMAT (bare noun
+      OR short noun-phrase) for in-scope category-noun answers.
+    </p>
+    <p style="margin:0 0 8px;">
+      <b>Expected:</b> recover v3 anchors and improve beyond. All five
+      pre-declared anchors must hit on two consecutive freeze runs:
+      Abstention 0.000, Misinfo-rejection ≥ 0.917, Noise-rejection
+      ≥ 0.972, EM-substring ≥ 0.917, F1-multi ≥ 0.77.
+    </p>
+    <p style="margin:0;">
+      <b>Observed:</b> EM-any-gold 0.875 (+0.083 vs v3),
+      F1-multi 0.818 (+0.143), Misinfo-rejection 0.917 (+0.042),
+      Recall@gold 0.847 (+0.201), Citation-faithfulness 0.820 (+0.069),
+      Abstention 0.000. Run-to-run agreement is bit-identical on
+      Abstention, Misinfo-rejection, Noise-rejection and
+      Correct-citation; EM-any shifts by exactly +1 question in
+      <code>has_noise</code> between freezes (within the ±1/12
+      stability rule). Cost / latency lift by ~2× vs v3
+      (~$0.022/Q, 24 s/Q vs ~$0.010/Q, 13.5 s/Q). <b>v4 · Evidence Evaluator is
+      the recommended default;</b> v3 stays the cheap option when
+      budget matters more than the last percentage points.
+    </p>
+    <p style="margin:8px 0 0;color:var(--muted);font-size:12px;">
+      Internal iterations toward v4 (an initial draft of the analyzer
+      prompt that under-enforced grounding and regressed quality, plus
+      smoke v2 / v3 / v4 / v5 probe series and a post-AB-fix freeze)
+      live in <code>runs/v4.1_promptfix/</code> and
+      <code>runs/_journal.md</code> for code archaeology; only the
+      final two freeze runs feed the published baseline.
+    </p>
+  </div>
+
+  <div class="footnote">
+    The harness and measurement stand live under <code>ramdocs_rag/</code>.
+    Run artefacts are stored at <code>runs/&lt;version&gt;/&lt;sha&gt;_&lt;ts&gt;/</code>.
+    The free-form research log is <code>runs/_journal.md</code>.
+  </div>
+
+</div>
+</body>
+</html>

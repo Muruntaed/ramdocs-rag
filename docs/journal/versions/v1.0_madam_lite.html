@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>v1.0 MADAM-lite — Research Journal</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div class="container">
+
+  <nav class="crumbs">
+    <a href="../index.html">← Journal index</a>
+  </nav>
+
+  <header class="page-header">
+    <h1>v1.0 · MADAM-lite baseline</h1>
+    <div class="subtitle">
+      <span class="status-frozen">FROZEN · 2026-05-15</span> ·
+      reference baseline for every subsequent version
+    </div>
+  </header>
+
+  <dl class="kv">
+    <dt>Version</dt><dd><code>1.0.0</code></dd>
+    <dt>Retrieval parameters</dt><dd>BM25 + dense, weights 0.5 / 0.5, top_k = 8</dd>
+    <dt>Reliability weights</dt><dd>0.40 / 0.25 / 0.20 / 0.15 / −0.10</dd>
+    <dt>Conflict parameters</dt><dd>cosine similarity threshold 0.75, majority ratio 1.5</dd>
+    <dt>Freeze cost</dt><dd>$0.097 across both runs ($0.0485 per run)</dd>
+  </dl>
+
+  <h2>Hypothesis</h2>
+  <p>
+    Porting the legacy logic into the new harness without architectural changes
+    should reproduce its measured behavior: EM-substring ≈ 0.83 and
+    misinfo-rejection ≥ 0.90. The goal is to lock down a reference point
+    against which every future version will be measured.
+  </p>
+
+  <h2>Architecture</h2>
+
+  <div class="diagram">
+    <svg viewBox="0 0 760 780" xmlns="http://www.w3.org/2000/svg"
+         style="max-width:760px;width:100%;height:auto;display:block;margin:0 auto;font-family:system-ui,sans-serif">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#6b7280"/>
+        </marker>
+        <style>
+          .box   { fill:#ffffff; stroke:#cbd5e1; stroke-width:1.5; }
+          .box.input    { fill:#f1f5f9; stroke:#94a3b8; }
+          .box.analyzer { fill:#eff6ff; stroke:#93c5fd; }
+          .box.det      { fill:#f0fdf4; stroke:#86efac; }
+          .box.llm      { fill:#fffbeb; stroke:#fcd34d; }
+          .box.output   { fill:#ecfeff; stroke:#67e8f9; }
+          .diamond      { fill:#fef9c3; stroke:#eab308; stroke-width:1.5; }
+          .ttl  { fill:#0f172a; font-size:13px; font-weight:600; }
+          .sub  { fill:#64748b; font-size:11px; }
+          .edge { fill:#64748b; font-size:11px; font-style:italic; }
+          .arr  { stroke:#6b7280; stroke-width:1.5; fill:none; }
+        </style>
+      </defs>
+
+      <rect class="box input" x="240" y="20" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="44" text-anchor="middle">Question + RAMDocs candidate pool</text>
+      <text class="sub" x="380" y="63" text-anchor="middle">3–8 documents per question</text>
+      <path class="arr" d="M 380 76 L 380 108" marker-end="url(#arr)"/>
+
+      <rect class="box" x="240" y="110" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="134" text-anchor="middle">Retriever</text>
+      <text class="sub" x="380" y="153" text-anchor="middle">BM25 + dense MiniLM · top_k = 8</text>
+      <path class="arr" d="M 380 166 L 380 185 L 140 185 L 140 208" marker-end="url(#arr)"/>
+      <path class="arr" d="M 380 166 L 380 208" marker-end="url(#arr)"/>
+      <path class="arr" d="M 380 166 L 380 185 L 620 185 L 620 208" marker-end="url(#arr)"/>
+
+      <rect class="box analyzer" x="40"  y="210" width="200" height="64" rx="8"/>
+      <text class="ttl" x="140" y="234" text-anchor="middle">Analyzer 1</text>
+      <text class="sub" x="140" y="252" text-anchor="middle">per-doc claim extractor</text>
+      <text class="sub" x="140" y="267" text-anchor="middle">gpt-4o-mini · strict JSON</text>
+
+      <rect class="box analyzer" x="280" y="210" width="200" height="64" rx="8"/>
+      <text class="ttl" x="380" y="234" text-anchor="middle">Analyzer 2</text>
+      <text class="sub" x="380" y="252" text-anchor="middle">per-doc claim extractor</text>
+      <text class="sub" x="380" y="267" text-anchor="middle">gpt-4o-mini · strict JSON</text>
+
+      <rect class="box analyzer" x="520" y="210" width="200" height="64" rx="8"/>
+      <text class="ttl" x="620" y="234" text-anchor="middle">Analyzer K</text>
+      <text class="sub" x="620" y="252" text-anchor="middle">per-doc claim extractor</text>
+      <text class="sub" x="620" y="267" text-anchor="middle">gpt-4o-mini · strict JSON</text>
+
+      <path class="arr" d="M 140 274 L 140 300 L 380 300 L 380 320" marker-end="url(#arr)"/>
+      <path class="arr" d="M 380 274 L 380 320" marker-end="url(#arr)"/>
+      <path class="arr" d="M 620 274 L 620 300 L 380 300 L 380 320" marker-end="url(#arr)"/>
+
+      <rect class="box" x="240" y="320" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="344" text-anchor="middle">Cluster claims</text>
+      <text class="sub" x="380" y="363" text-anchor="middle">cosine similarity ≥ 0.75 · weight = Σ reliability</text>
+      <path class="arr" d="M 380 376 L 380 408" marker-end="url(#arr)"/>
+
+      <rect class="box" x="240" y="410" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="434" text-anchor="middle">Reliability scoring</text>
+      <text class="sub" x="380" y="453" text-anchor="middle">5 factors · 2-pass with minority penalty</text>
+      <path class="arr" d="M 380 466 L 380 498" marker-end="url(#arr)"/>
+
+      <polygon class="diamond" points="380,498 490,558 380,618 270,558"/>
+      <text class="ttl" x="380" y="552" text-anchor="middle">Majority ratio</text>
+      <text class="ttl" x="380" y="570" text-anchor="middle">≥ 1.5 ?</text>
+
+      <path class="arr" d="M 270 558 L 200 558 L 200 638" marker-end="url(#arr)"/>
+      <text class="edge" x="232" y="552" text-anchor="middle">yes</text>
+
+      <path class="arr" d="M 490 558 L 560 558 L 560 638" marker-end="url(#arr)"/>
+      <text class="edge" x="528" y="552" text-anchor="middle">no</text>
+
+      <rect class="box det" x="80"  y="640" width="240" height="60" rx="8"/>
+      <text class="ttl" x="200" y="664" text-anchor="middle">Deterministic vote</text>
+      <text class="sub" x="200" y="682" text-anchor="middle">no LLM · cheap &amp; explainable</text>
+
+      <rect class="box llm" x="440" y="640" width="240" height="60" rx="8"/>
+      <text class="ttl" x="560" y="664" text-anchor="middle">LLM mediator</text>
+      <text class="sub" x="560" y="682" text-anchor="middle">gpt-4o · strict JSON · cites evidence</text>
+
+      <path class="arr" d="M 200 700 L 200 728 L 380 728 L 380 748" marker-end="url(#arr)"/>
+      <path class="arr" d="M 560 700 L 560 728 L 380 728 L 380 748" marker-end="url(#arr)"/>
+
+      <rect class="box output" x="240" y="750" width="280" height="26" rx="8"/>
+      <text class="ttl" x="380" y="768" text-anchor="middle">FinalAnswer (single variant)</text>
+    </svg>
+  </div>
+
+  <p style="color:var(--muted);font-size:13px;">
+    A linear pipeline (no LangGraph). Analyzer agents run sequentially —
+    parallelisation is deliberately deferred for the baseline. The mediator
+    only takes the LLM path when the deterministic weighted vote fails to
+    identify a dominant cluster.
+  </p>
+
+  <h2>Prompts</h2>
+  <p style="color:var(--muted);font-size:13px;margin-top:-4px;">
+    Click a card to reveal the full prompt text.
+  </p>
+
+  <div class="prompt-cards">
+    <button class="prompt-card" onclick="document.getElementById('dlg-analyzer').showModal()">
+      <span class="pc-name">📄 Analyzer system prompt</span>
+      <span class="pc-meta">per-document extractor · output: Claim (strict JSON)</span>
+    </button>
+    <button class="prompt-card" onclick="document.getElementById('dlg-mediator').showModal()">
+      <span class="pc-name">🧑‍⚖️ Mediator system prompt</span>
+      <span class="pc-meta">conflict reconciliation · output: FinalAnswer (strict JSON)</span>
+    </button>
+  </div>
+
+  <dialog id="dlg-analyzer">
+    <div class="dlg-head">
+      <h3>Analyzer system prompt</h3>
+      <button class="close-btn" onclick="document.getElementById('dlg-analyzer').close()">✕</button>
+    </div>
+    <div class="dlg-body">
+<pre>You are the per-document Analyzer in a multi-agent RAG pipeline.
+
+Your job: given a USER QUESTION and ONE DOCUMENT, decide whether the document
+provides an answer to the question, and if so extract it.
+
+Output strictly the JSON object matching the `Claim` schema, with these fields:
+
+- `doc_id`        — copy the `doc_id` from the input verbatim.
+- `text`          — the candidate answer the document supports. A short noun
+                    phrase or sentence (≤ 25 words). Empty string when stance
+                    is `no_answer`.
+- `stance`        — one of:
+                      * `supports`    — the document directly answers the question.
+                      * `contradicts` — the document explicitly states the
+                                        question's premise is false, or denies
+                                        a specific answer it cites.
+                      * `no_answer`   — the document is irrelevant, off-topic,
+                                        or merely mentions the topic without
+                                        addressing the question.
+- `confidence`    — float in [0, 1]. How sure are you that `text` is what
+                    the document says? Penalise hedged or unclear sources.
+- `supporting_quote` — a verbatim span (≤ 200 chars) copied from the document
+                       that grounds `text`. Use an empty string when stance is
+                       `no_answer`.
+
+Rules:
+
+- Use ONLY the document text. Do not invoke outside knowledge.
+- If the document mentions the entity but does not actually answer the
+  question, choose `no_answer` (not `supports`).
+- If multiple plausible answers appear in the same document, return the one
+  the document most clearly endorses; if there is no clear endorsement, choose
+  `no_answer`.
+- The supporting quote must be a substring of the document, not a paraphrase.</pre>
+    </div>
+  </dialog>
+
+  <dialog id="dlg-mediator">
+    <div class="dlg-head">
+      <h3>Mediator system prompt</h3>
+      <button class="close-btn" onclick="document.getElementById('dlg-mediator').close()">✕</button>
+    </div>
+    <div class="dlg-body">
+<pre>You are the Mediator in a multi-agent RAG pipeline.
+
+Inputs you receive:
+- The user QUESTION.
+- A list of CLAIMS extracted from individual documents. Each claim carries:
+  `doc_id`, `text` (candidate answer), `stance`, `confidence`,
+  `supporting_quote`, and a `reliability` score in [0, 1] computed by the
+  pipeline from retrieval rank, analyzer confidence, recency and source
+  authority.
+- A CLUSTERING SUMMARY listing groups of claims that point at the same
+  answer, with the summed reliability of each cluster. A weighted-majority
+  vote was attempted but was inconclusive (no cluster dominated by the
+  required ratio), which is why you were called.
+
+Your job: produce the final answer.
+
+Output strictly the JSON object with these fields:
+
+- `answer` — the answer entity ONLY, as a bare string. No surrounding prose,
+  no full sentence, no leading phrase like "The answer is" or "X died on".
+  Just the value itself.
+    * For a person: "Placebo", not "The artist is Placebo".
+    * For a date: "11 March 1707", not "George Horner died on 11 March 1707."
+    * For a place: "Glasgow", not "He was born in Glasgow."
+  When the question is genuinely ambiguous (e.g., two different entities share
+  the same name and both are correct), join both with " | " — e.g. "Placebo |
+  Sandra Bernhard", "11 March 1707 | 9 February 1677". Still no prose.
+- `confidence` — float in [0, 1]. Lower it when evidence is thin or conflicts
+  remain.
+- `supporting_doc_ids` — IDs of the documents whose claims you relied on.
+- `rejected_doc_ids` — IDs of documents you explicitly judged wrong or
+  irrelevant (misinformation, noise, contradicted by stronger evidence).
+- `reconciliation_explanation` — 2–4 sentences. Explain which cluster you
+  picked, why competing claims were rejected, and how reliability informed
+  the call.
+
+Rules:
+
+- Prefer the cluster with the highest summed reliability unless its
+  supporting quotes are obviously weaker than a runner-up's. Justify
+  deviations in `reconciliation_explanation`.
+- Quotes are the strongest evidence. Treat a claim whose `supporting_quote`
+  clearly contains the answer phrase as more credible than one without.
+- Do not invent answers absent from the claims.
+- Never include any `doc_id` in BOTH `supporting_doc_ids` and
+  `rejected_doc_ids`.</pre>
+    </div>
+  </dialog>
+
+  <h2>Results</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Metric</th>
+        <th class="num">freeze1</th>
+        <th class="num">freeze2</th>
+        <th class="num">avg</th>
+        <th>Comment</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><b>F1-multi-answer</b> 🎯</td>
+        <td class="num">0.650</td>
+        <td class="num">0.681</td>
+        <td class="num"><b>0.665</b></td>
+        <td>Primary anchor for cross-version comparison</td>
+      </tr>
+      <tr>
+        <td><b>Misinfo-rejection</b> 🎯</td>
+        <td class="num">0.917</td>
+        <td class="num">0.917</td>
+        <td class="num"><b>0.917</b></td>
+        <td>Secondary anchor; the ≥ 0.90 target is met</td>
+      </tr>
+      <tr>
+        <td>EM-substring</td>
+        <td class="num">0.833</td>
+        <td class="num">0.833</td>
+        <td class="num">0.833</td>
+        <td>10 / 12 — the real answer quality</td>
+      </tr>
+      <tr>
+        <td>EM-any-gold</td>
+        <td class="num">0.333</td>
+        <td class="num">0.333</td>
+        <td class="num">0.333</td>
+        <td>Artefact: <code>"X | Y"</code> string-equals no single gold</td>
+      </tr>
+      <tr>
+        <td>Recall-all-gold</td>
+        <td class="num">0.569</td>
+        <td class="num">0.611</td>
+        <td class="num">0.590</td>
+        <td>Structural cap of single-answer on ambiguous questions</td>
+      </tr>
+      <tr>
+        <td>Precision-answers</td>
+        <td class="num">0.833</td>
+        <td class="num">0.833</td>
+        <td class="num">0.833</td>
+        <td>Almost no spurious answers</td>
+      </tr>
+      <tr>
+        <td>Citation faithfulness</td>
+        <td class="num">0.806</td>
+        <td class="num">0.806</td>
+        <td class="num">0.806</td>
+        <td>Quote ↔ answer alignment holds for most variants</td>
+      </tr>
+      <tr>
+        <td>Correct citation (precision)</td>
+        <td class="num">0.917</td>
+        <td class="num">0.917</td>
+        <td class="num">0.917</td>
+        <td>Almost always cites correct-typed documents</td>
+      </tr>
+      <tr>
+        <td>Coverage (correct-doc recall)</td>
+        <td class="num">0.422</td>
+        <td class="num">0.422</td>
+        <td class="num">0.422</td>
+        <td>Less than half the correct docs are surfaced — by design</td>
+      </tr>
+      <tr>
+        <td>Noise rejection</td>
+        <td class="num">0.500</td>
+        <td class="num">0.500</td>
+        <td class="num">0.500</td>
+        <td>Half the noise docs are not explicitly rejected</td>
+      </tr>
+      <tr>
+        <td>Abstention rate</td>
+        <td class="num">0.000</td>
+        <td class="num">0.000</td>
+        <td class="num">0.000</td>
+        <td>Never abstains — may become an issue downstream</td>
+      </tr>
+      <tr>
+        <td>Avg cost / question</td>
+        <td class="num">$0.0040</td>
+        <td class="num">$0.0041</td>
+        <td class="num">$0.0041</td>
+        <td>$0.05 per run, very cheap</td>
+      </tr>
+      <tr>
+        <td>Avg LLM calls / question</td>
+        <td class="num">6.6</td>
+        <td class="num">6.6</td>
+        <td class="num">6.6</td>
+        <td>≈ N_docs (analyzers) + occasional mediator</td>
+      </tr>
+      <tr>
+        <td>Avg latency / question</td>
+        <td class="num">9.9 s</td>
+        <td class="num">10.2 s</td>
+        <td class="num">10.1 s</td>
+        <td>Could be cut by running analyzers in parallel</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>By category (averaged over both freeze runs)</h3>
+  <p style="color:var(--muted);font-size:12px;margin:0 0 -6px;">
+    * — the category contains no misinfo documents, so the metric is trivially 1.0.
+  </p>
+  <table>
+    <thead>
+      <tr>
+        <th>Category</th>
+        <th class="num">n</th>
+        <th class="num">F1-multi</th>
+        <th class="num">EM-substr</th>
+        <th class="num">Misinfo-rej</th>
+        <th class="num">Recall@gold</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>pure_correct</td><td class="num">3</td><td class="num">0.33</td><td class="num">0.33</td><td class="num">1.00*</td><td class="num">0.33</td></tr>
+      <tr><td>has_misinfo</td><td class="num">3</td><td class="num">0.83</td><td class="num">1.00</td><td class="num"><b>0.67</b></td><td class="num">0.75</td></tr>
+      <tr><td>has_noise</td><td class="num">3</td><td class="num">0.72</td><td class="num">1.00</td><td class="num">1.00*</td><td class="num">0.61</td></tr>
+      <tr><td>mixed_conflict</td><td class="num">3</td><td class="num">0.77</td><td class="num">1.00</td><td class="num">1.00</td><td class="num">0.67</td></tr>
+    </tbody>
+  </table>
+
+  <h2>What works / what doesn't</h2>
+
+  <div class="pros-cons">
+    <section>
+      <h4 class="good-title">✅ Strengths</h4>
+      <ul>
+        <li><b>Misinfo-rejection 0.917</b> overall; in <code>mixed_conflict</code> it sits at a perfect 1.00.</li>
+        <li><b>Precision-answers 0.833</b> — virtually no spurious or invented answers.</li>
+        <li><b>Correct citation 0.917</b> — the cited documents are almost always the correct-typed ones, not misinfo or noise.</li>
+        <li><b>Reproducibility:</b> 11 / 12 questions produce identical answers across both freeze runs.</li>
+        <li><b>Cost:</b> $0.05 for a 12-question run — negligible relative to the insight gained.</li>
+        <li><b>Transparency:</b> the deterministic vote handles the easy cases; the LLM mediator is invoked only when it's actually needed.</li>
+      </ul>
+    </section>
+    <section>
+      <h4 class="bad-title">⚠ Weaknesses</h4>
+      <ul>
+        <li><b>Recall-all-gold 0.59</b> — the structural cap of single-answer architecture. On questions with 2–3 valid gold answers we surface at most one.</li>
+        <li><b>pure_correct is the worst category</b> by F1 (0.33). Paradoxically the "clean" subset is full of homonyms (e.g. <i>Without You I'm Nothing</i> — Placebo / Sandra Bernhard), and v1.0 picks just one — half the gold is lost.</li>
+        <li><b>Noise rejection 0.50</b> — half the noise docs remain silent rather than being explicitly rejected. Not catastrophic (faithfulness still holds), but worth restoring in v2+.</li>
+        <li><b>Abstention 0.00</b> — there's no "I don't know" pathway. On a degenerate retrieval pool the model will still answer.</li>
+        <li><b>Coverage 0.42</b> — fewer than half of the useful documents are used. The mediator picks the strongest evidence rather than aggregating it.</li>
+        <li><b>EM-any-gold is a weak metric</b> here — it penalises the correct multi-answer format <code>"X | Y"</code>. Do not use it as an anchor.</li>
+      </ul>
+    </section>
+  </div>
+
+  <div class="callout warn">
+    <b>Bottom line:</b> v1.0 handles <i>misinfo and noise</i> well, but <i>ambiguity</i>
+    is structurally beyond reach. Nine out of twelve RAMDocs questions admit ≥ 2 valid
+    gold answers; a single-answer architecture systematically discards half of that.
+    This is the motivation for v2.0 (entity-first decomposition).
+  </div>
+
+  <div class="footnote">
+    Run artefacts are immutable: no changes to logic or prompts of v1.0 after freeze.
+    Any change spawns a new minor version (v1.1) with its own freeze run.
+  </div>
+
+</div>
+</body>
+</html>

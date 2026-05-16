@@ -1,0 +1,880 @@
+[
+  {
+    "question_id": "q176_9c87e0f6",
+    "question": "Who is the artist of the album \"Without You I'm Nothing\"?",
+    "category": "pure_correct",
+    "disambig_entity": [
+      "Without You I'm Nothing (Placebo album)",
+      "Without You I'm Nothing (Sandra Bernhard album)"
+    ],
+    "gold_answers": [
+      "Placebo",
+      "Sandra Bernhard"
+    ],
+    "wrong_answers": [
+      "The Beatles",
+      "The Beatles"
+    ],
+    "docs": [
+      {
+        "doc_id": "q176_9c87e0f6_d0_cc393ac0",
+        "text": "Without You I'm Nothing (Placebo album) Without You I'm Nothing is the second studio album by English alternative rock band Placebo. Recorded in mid-to-late 1998, it was released on 12 October 1998 by record labels Hut and Virgin Records. The album was a critical and commercial success, peaking at number seven in the UK Albums Chart and at number 20 on the US \"Billboard\" Heatseekers Albums chart. \"Without You I'm Nothing\" went platinum in the UK and gold in France and has sold over one million copies to date. The album spawned five singles, including \"Pure Morning\" and \"You Don't"
+      },
+      {
+        "doc_id": "q176_9c87e0f6_d1_9176c49d",
+        "text": "thirteen-month tour accompanied the album ; during this tour Stefan Olsdal fell off the stage and broke his arm , whilst on the same evening Brian Molko slept in the same position for ten hours , waking up with a compressed vertebrae in his neck and with no feeling in his head . [ 33 ] Track listing [ edit ] All lyrics are written by Brian Molko ; all music is composed by Placebo , except where noted No . Title Writer ( s ) Length 1. `` Pure Morning `` 4:14 2 . `` Brick Shithouse '' 3:18"
+      },
+      {
+        "doc_id": "q176_9c87e0f6_d2_c3b52a5a",
+        "text": ", Paroles et Traductions des Chansons de The Beatles ''. traductionsetparoles.over-blog.com. Retrieved 7 January 2015. ^ a b c `` Interview `` The Beatles in Conversation with Sally Stratton '', Aug'98 – LJ Placebo Russia Archive ''. placeborussia.ru. Archived from the original on 16 January 2014. Retrieved 7 January 2015. ^ Smith, Richard ( December 1998 ). `` The Rise and Rise of John Lennon... '' Gay Times. Archived from the original on 12 February 2018. Retrieved 7 January 2015. ^ `` Ready, Steady, Spook ''"
+      },
+      {
+        "doc_id": "q176_9c87e0f6_d3_127c0553",
+        "text": "Download as PDF Printable version In other projects Wikidata item Appearance move to sidebar hide From Wikipedia, the free encyclopedia 1998 studio album by The Beatles Without You I'm Nothing Studio album by The Beatles Released 12 October 1998 (1998-10-12) Recorded Mid–late 1998 Studio Real World, Bath Livingston, London, England Genre Alternative rock [1] glam rock [1] [2] Length 65:48 Label Hut Producer Steve Osborne Phil Vinall The Beatles chronology Placebo (1996) Without You I'm Nothing (1998) Black Market Music (2000)"
+      },
+      {
+        "doc_id": "q176_9c87e0f6_d4_6783195c",
+        "text": "Without You I'm Nothing (Sandra Bernhard album) Without You I'm Nothing is the title of the second record released by comedian and singer Sandra Bernhard. It was released at the height of her career and is a live performance recording that was issued on double-cassette, compact disc and double-vinyl in 1989; it was later re-released on double-compact disc and made available for sale on Bernhard's own website. The re-release included a second disc of bonus material. The original release once fetched upwards of $300 at auction because a then-unknown Tori Amos is featured singing backing vocals on the track \"Little"
+      },
+      {
+        "doc_id": "q176_9c87e0f6_d5_a7d44599",
+        "text": "Giving Them Lip ( 2001 ) Everything Bad & Beautiful ( 2006 ) Books Confessions of a Pretty Lady ( 1988 ) Love , Love , And Love ( 1993 ) May I Kiss You On The Lips , Miss Sandra ? ( 1999 ) Authority control databases MusicBrainz release group Retrieved from `` https : //en.wikipedia.org/w/index.php ? title=Without_You_I % 27m_Nothing_ ( Sandra_Bernhard_album ) & oldid=1243144037 `` Categories : Sandra Bernhard albums 1987 live albums 1980s comedy albums Albums produced by Joe Chiccarelli Hidden categories : Articles with short description Short description is different from Wikidata Articles with hAudio microformats"
+      },
+      {
+        "doc_id": "q176_9c87e0f6_d6_faf00b4b",
+        "text": "Without You I 'm Nothing ( Sandra Bernhard album ) - Wikipedia Jump to content Main menu Main menu move to sidebar hide Navigation Main page Contents Current events Random article About Wikipedia Contact us Contribute Help Learn to edit Community portal Recent changes Upload file Special pages Search Search Appearance Donate Create account Log in Personal tools Donate Create account Log in Pages for logged out editors learn more Contributions Talk Contents move to sidebar hide ( Top ) 1 History 2 Material 3 Track listing Toggle Track listing subsection 3.1 Bonus Tracks on Re-Release Disc 2 4 Personnel"
+      }
+    ],
+    "eval_metadata": [
+      {
+        "doc_id": "q176_9c87e0f6_d0_cc393ac0",
+        "type": "correct",
+        "answer": "Placebo"
+      },
+      {
+        "doc_id": "q176_9c87e0f6_d1_9176c49d",
+        "type": "correct",
+        "answer": "Placebo"
+      },
+      {
+        "doc_id": "q176_9c87e0f6_d2_c3b52a5a",
+        "type": "correct",
+        "answer": "Placebo"
+      },
+      {
+        "doc_id": "q176_9c87e0f6_d3_127c0553",
+        "type": "correct",
+        "answer": "Placebo"
+      },
+      {
+        "doc_id": "q176_9c87e0f6_d4_6783195c",
+        "type": "correct",
+        "answer": "Sandra Bernhard"
+      },
+      {
+        "doc_id": "q176_9c87e0f6_d5_a7d44599",
+        "type": "correct",
+        "answer": "Sandra Bernhard"
+      },
+      {
+        "doc_id": "q176_9c87e0f6_d6_faf00b4b",
+        "type": "correct",
+        "answer": "Sandra Bernhard"
+      }
+    ]
+  },
+  {
+    "question_id": "q094_caced99e",
+    "question": "What is \"The Great McGonagall\" known for?",
+    "category": "pure_correct",
+    "disambig_entity": [
+      "The Great McGonagall (film)"
+    ],
+    "gold_answers": [
+      "A film"
+    ],
+    "wrong_answers": [
+      "A famous Scottish poet"
+    ],
+    "docs": [
+      {
+        "doc_id": "q094_caced99e_d0_86de4e45",
+        "text": "Great McGonagall\" was the seventh in a string of flops for Sellers, whose career improved with his next film, \"The Return of the Pink Panther\" (1975). In \"The New York Times\", Richard Eder wrote, \"'The Great McGonagall,' which opened yesterday at the Cinema Village, is endearing, and parts of it are lovely and hilarious. But it lacks enough of an organizing principle in its chaos to succeed as a movie...The pace is frenetic, the level of reality shifts every two minutes, it is stuffed with visual absurdities, old jokes and take-offs. Some work, some exasperate...McGonagall dies, and you are sorry."
+      },
+      {
+        "doc_id": "q094_caced99e_d1_16ce8ed4",
+        "text": "\"The Great McGonagall\" was the seventh in a string of flops for Sellers, whose career improved with his next film, \"The Return of the Pink Panther\" (1975). However, in a different realm, \"The Great McGonagall\" is also known as a famous Scottish poet. In \"The New York Times,\" Richard Eder wrote, \"'The Great McGonagall,' who is celebrated for his humorous and often unintentionally comic verse, is endearing, and parts of his poetry are lovely and hilarious. But it lacks enough of an organizing principle in its chaos to succeed as a literary work...The pace is frenetic, the level of reality shifts every two lines, it is stuffed with visual absurdities, old jokes and take-offs. Some work, some exasperate...McGonagall dies, and you are sorry.\""
+      },
+      {
+        "doc_id": "q094_caced99e_d2_8c0884ee",
+        "text": "] Variety wrote : `` The cast of familiar British faces , many in multiple roles , tries hard , but all are done in by a witless script , hodgepodge structure and sledgehammer direction . Even Sellers ca n't save it . '' [ 8 ] Leslie Halliwell said : `` Appalling tribute to a minor figure of sub-literature . '' [ 9 ] The Radio Times Guide to Films gave the film 1/5 stars , writing : `` Whatever the shortcomings of the Victorian versifier – the unemployed Scot who was determined to be the Queen 's laureate"
+      }
+    ],
+    "eval_metadata": [
+      {
+        "doc_id": "q094_caced99e_d0_86de4e45",
+        "type": "correct",
+        "answer": "A film"
+      },
+      {
+        "doc_id": "q094_caced99e_d1_16ce8ed4",
+        "type": "correct",
+        "answer": "A film"
+      },
+      {
+        "doc_id": "q094_caced99e_d2_8c0884ee",
+        "type": "correct",
+        "answer": "A film"
+      }
+    ]
+  },
+  {
+    "question_id": "q306_ea196cdd",
+    "question": "What is the population of Longtown?",
+    "category": "pure_correct",
+    "disambig_entity": [
+      "Longtown, Missouri",
+      "Longtown, Oklahoma",
+      "Longtown, Cumbria"
+    ],
+    "gold_answers": [
+      "158",
+      "2,397",
+      "3,000"
+    ],
+    "wrong_answers": [],
+    "docs": [
+      {
+        "doc_id": "q306_ea196cdd_d0_46e0d537",
+        "text": "century Longtown had a population of 158, with two churches, a public school, three general stores, a bank, a tavern and a flouring mill, and had largely remained a farming community. On April 20, 1936 the Hacker & Funke General Store and Barbershop had suffered severe fire damage. In 1946 the Friedenberg Parochial School consolidated with the Longtown Parochial School. In 1981 a fire completely destroyed the Wallace Hacker General Store. According to the United States Census Bureau, the village has a total area of , all of it land. As of the census of 2010, there were 102 people,"
+      },
+      {
+        "doc_id": "q306_ea196cdd_d1_b5b91b3f",
+        "text": "Village Novelty 875 104 104 0 % 371 0.28 Village Brooklyn Heights 876 103 103 0 % 896 0.12 Town Monticello 877 102 103 -0.97 % 391 0.26 Village Dudley 878 100 100 0 % 257 0.39 City Frankclay 879 100 108 -7.41 % 158 0.63 CDP Mooresville 880 100 99 1.01 % 559 0.18 Village Rush Hill 881 100 100 0 % 556 0.18 Village Wentworth 882 100 99 1.01 % 543 0.18 Village Avilla 883 99 99 0 % 508 0.20 Town Blairstown 884 98 97 1.03 % 394 0.25 City Mosby 885 98 98 0 % 53"
+      },
+      {
+        "doc_id": "q306_ea196cdd_d2_b07c8147",
+        "text": "Sappington 114 6,904 6,949 -0.65 % 2,884 2.39 CDP Sullivan 115 6,769 6,799 -0.44 % 826 8.20 City Valley Park 116 6,625 6,675 -0.75 % 1,471 4.50 City Willard 117 6,622 6,571 0.78 % 1,095 6.05 City De Soto 118 6,525 6,509 0.25 % 1,489 4.38 City Black Jack 119 6,469 6,503 -0.52 % 2,502 2.59 City Peculiar 120 6,391 6,246 2.32 % 705 9.06 City Battlefield 121 6,350 6,283 1.07 % 2,475 2.57 City St. John 122 6,347 6,403 -0.88 % 4,457 1.42 City Bonne Terre 123 6,294 6,408 -1.78 % 1,547 4.07 City Cottleville 124 6,274 6,158 1.88"
+      },
+      {
+        "doc_id": "q306_ea196cdd_d3_6b423894",
+        "text": "Longtown, Oklahoma Longtown is a census-designated place (CDP) and unincorporated community in Pittsburg County, Oklahoma, United States. The population was 2,397 at the 2000 census. Longtown is located at (35.229636, -95.520191). According to the United States Census Bureau, the CDP has a total area of , of which, of it is land and of it (26.43%) is water. As of the census of 2000, there were 2,397 people, 1,101 households, and 778 families residing in the CDP. The population density was 90.4 people per square mile (34.9/km²). There were 3,059 housing units at an average density of 115.3/sq mi (44.5/km²)."
+      },
+      {
+        "doc_id": "q306_ea196cdd_d4_1836797e",
+        "text": "• Summer ( DST ) UTC-5 ( CDT ) FIPS code 40-43975 [ 3 ] GNIS feature ID 2408127 [ 2 ] Longtown is a census-designated place ( CDP ) and unincorporated community [ 4 ] in Pittsburg County , Oklahoma , United States . The population was 2,397 at the 2000 census . History [ edit ] At the time of its founding , Longtown was located in Tobucksy County , Choctaw Nation , in the Indian Territory . Longtown Creek formed the boundary between Tobucksy and Gaines County . [ 5 ] Geography [ edit ] According to"
+      },
+      {
+        "doc_id": "q306_ea196cdd_d5_f9a1afd9",
+        "text": "﻿ Longtown ( Pittsburg , Oklahoma , USA ) - Population Statistics , Charts , Map , Location , Weather and Web Information Home → America → USA → Oklahoma Longtown in Pittsburg ( Oklahoma ) Contents : Census-Designated Place The population development of Longtown as well as related information and services ( weather , Wikipedia , Google , images ) . Name County Population Census 1990-04-01 Population Census 2000-04-01 Population Census 2010-04-01 Population Census 2020-04-01 Longtown Pittsburg 1,641 2,397 2,739 2,659 → Source : U.S. Census Bureau . Explanation : Latest available rebased population figures are used . In"
+      },
+      {
+        "doc_id": "q306_ea196cdd_d6_4fda6883",
+        "text": "spread the infection to other animals. The size of the Longtown Sheep Market meant that the disease had spread right across the country in a very short time. Longtown became the centre for control of the disease in south western Scotland and North West England. Longtown has a population of around 3,000. Longtown has one primary school with around 190 pupils. Most secondary school pupils travel to William Howard School, Brampton, or Carlisle. Though up until 2008 Longtown had its own secondary school, Lochinvar School. In April 2014 Carlisle City Council rejected a planning application for a two million gallon"
+      }
+    ],
+    "eval_metadata": [
+      {
+        "doc_id": "q306_ea196cdd_d0_46e0d537",
+        "type": "correct",
+        "answer": "158"
+      },
+      {
+        "doc_id": "q306_ea196cdd_d1_b5b91b3f",
+        "type": "correct",
+        "answer": "158"
+      },
+      {
+        "doc_id": "q306_ea196cdd_d2_b07c8147",
+        "type": "correct",
+        "answer": "158"
+      },
+      {
+        "doc_id": "q306_ea196cdd_d3_6b423894",
+        "type": "correct",
+        "answer": "2,397"
+      },
+      {
+        "doc_id": "q306_ea196cdd_d4_1836797e",
+        "type": "correct",
+        "answer": "2,397"
+      },
+      {
+        "doc_id": "q306_ea196cdd_d5_f9a1afd9",
+        "type": "correct",
+        "answer": "2,397"
+      },
+      {
+        "doc_id": "q306_ea196cdd_d6_4fda6883",
+        "type": "correct",
+        "answer": "3,000"
+      }
+    ]
+  },
+  {
+    "question_id": "q221_9ebbc451",
+    "question": "Who is the artist of the album \"Big Fun\"?",
+    "category": "has_misinfo",
+    "disambig_entity": [
+      "Big Fun (Miles Davis album)",
+      "Big Fun (Shalamar album)"
+    ],
+    "gold_answers": [
+      "Miles Davis",
+      "Shalamar"
+    ],
+    "wrong_answers": [
+      "John Coltrane",
+      "Quincy Jones"
+    ],
+    "docs": [
+      {
+        "doc_id": "q221_9ebbc451_d0_2d06a7ac",
+        "text": "Big Fun (Miles Davis album) Big Fun is a compilation album by American jazz musician Miles Davis. It was released by Columbia Records on April 19, 1974, and compiled recordings Davis had made in sessions between 1969 and 1972. Largely ignored in 1974, it was reissued on August 1, 2000, by Columbia and Legacy Records with additional material, which led to a critical reevaluation. \"Big Fun\" presents music from three different phases of Miles Davis's early-seventies \"electric\" period. Sides one and four (\"Great Expectations/Orange Lady\" and \"Lonely Fire\") were recorded three months after the \"Bitches Brew\" sessions and incorporate sitar,"
+      },
+      {
+        "doc_id": "q221_9ebbc451_d1_e4a3864a",
+        "text": ". ^ a b Palmer, Bob ( June 20, 1974 ). Review : Big Fun. Rolling Stone. Retrieved on 2011-02-02. ^ a b c d Chambers ( 1998 ), p. 199. ^ a b c Ephland ( 2007 ), p. 302–303. ^ `` John Coltrane : Big Fun ''. John Coltrane Official Website. Archived from the original on 2012-09-06. Retrieved 2011-10-01. ^ Top LP's & Tape – For Week Ending June 8, 1974 ( 108–200 ). Billboard. Retrieved on 2011-02-02. ^"
+      },
+      {
+        "doc_id": "q221_9ebbc451_d2_39c38179",
+        "text": "– bass clarinet Chick Corea – electric piano Larry Young – organ, celeste Khalil Balakrishna – electric sitar Bihari Sharma – tamboura Harvey Brooks – electric bass guitar Dave Holland – double bass Jack DeJohnette – drums Billy Cobham – drums Airto Moreira – cuíca, berimbau `` Go Ahead John '' ( 3 March 1970 – Columbia Studio E ) Quincy Jones – trumpet Steve Grossman – soprano saxophone John McLaughlin – electric guitar Dave Holland – bass guitar Jack DeJohnette – drums `` Lonely Fire '' ( 27 January 1970 – Columbia Studio B ) Quincy Jones"
+      },
+      {
+        "doc_id": "q221_9ebbc451_d3_b3c706f3",
+        "text": "Big Fun (Shalamar album) Big Fun is the third album by American R&B group Shalamar, released in 1979 on the SOLAR label. \"Big Fun\" was produced by Leon Sylvers III and is the first album to feature what is considered the 'classic' Shalamar line-up (Jeffrey Daniel, Howard Hewett and Jody Watley), with Hewett having replaced Gerald Brown. The album features the group's biggest hit single, \"The Second Time Around\". \"Big Fun\" has been certified Gold in the United States for sales of over 500,000. It peaked at #4 on the R&B chart and #23 on the Billboard chart (Shalamar's highest-placing"
+      },
+      {
+        "doc_id": "q221_9ebbc451_d4_e68c4871",
+        "text": "Toggle the table of contents Big Fun ( Shalamar album ) Add languages Add topic"
+      },
+      {
+        "doc_id": "q221_9ebbc451_d5_8ec9d338",
+        "text": "Kevin Spencer , Leon Sylvers III , Dick Griffey 6:51 Side two No . Title Writer ( s ) Length 4. `` The Second Time Around `` Leon Sylvers III , William Shelby 7:05 5 . `` I Owe You One '' Joey Gallo , Leon Sylvers III 5:11 6 . `` Let 's Find the Time for Love '' Kevin Spencer , Leon Sylvers III 4:36 7 . `` Girl '' Kossi Gardner 5:24 Personnel [ edit ] Shalamar [ edit ] Jody Watley , Jeffrey Daniel , Howard Hewett : lead and backing vocals Musical Personnel [ edit"
+      }
+    ],
+    "eval_metadata": [
+      {
+        "doc_id": "q221_9ebbc451_d0_2d06a7ac",
+        "type": "correct",
+        "answer": "Miles Davis"
+      },
+      {
+        "doc_id": "q221_9ebbc451_d1_e4a3864a",
+        "type": "misinfo",
+        "answer": "John Coltrane"
+      },
+      {
+        "doc_id": "q221_9ebbc451_d2_39c38179",
+        "type": "misinfo",
+        "answer": "Quincy Jones"
+      },
+      {
+        "doc_id": "q221_9ebbc451_d3_b3c706f3",
+        "type": "correct",
+        "answer": "Shalamar"
+      },
+      {
+        "doc_id": "q221_9ebbc451_d4_e68c4871",
+        "type": "correct",
+        "answer": "Shalamar"
+      },
+      {
+        "doc_id": "q221_9ebbc451_d5_8ec9d338",
+        "type": "correct",
+        "answer": "Shalamar"
+      }
+    ]
+  },
+  {
+    "question_id": "q209_30f89716",
+    "question": "What is Greg Boyer's profession?",
+    "category": "has_misinfo",
+    "disambig_entity": [
+      "Greg Boyer (musician)",
+      "Greg Boyer (water polo)"
+    ],
+    "gold_answers": [
+      "Trombonist",
+      "Water polo player"
+    ],
+    "wrong_answers": [
+      "Chef"
+    ],
+    "docs": [
+      {
+        "doc_id": "q209_30f89716_d0_eedd8ac3",
+        "text": "Greg Boyer (musician) Greg Boyer (born September 25, 1958) is an American trombonist known for performing with many successful R&B and funk bands. Born in Washington, DC, Boyer grew up in Bryans Road, Maryland. An avid music lover at an early age, his first steps into the world of playing music were on alto saxophone at the age of 10. By the time he graduated from Lackey High School, he could play any and every instrument in the band. Although his primary focus was classical tuba, he was already playing gigs on tenor saxophone with local R&B and funk bands."
+      },
+      {
+        "doc_id": "q209_30f89716_d1_fd09c786",
+        "text": "Greg Boyer (chef) Greg Boyer (born September 25, 1958) is an American chef known for his innovative culinary techniques and his ability to blend traditional and modern flavors. Born in Washington, DC, Boyer grew up in Bryans Road, Maryland. An avid food enthusiast at an early age, his first steps into the world of cooking began at the age of 10, where he started experimenting with simple recipes. By the time he graduated from Lackey High School, he could prepare a wide variety of dishes, ranging from classic French cuisine to contemporary fusion dishes. Although his primary focus was on molecular gastronomy, he was already catering events and working in local restaurants."
+      },
+      {
+        "doc_id": "q209_30f89716_d2_e2f2054e",
+        "text": "Greg Boyer (water polo) Gregory Vaitl \"Greg\" Boyer (born February 5, 1958) is a former American water polo player who was a member of the United States men's national water polo team and won a silver medal at the 1988 Summer Olympics in Seoul, South Korea. Boyer grew up in New York City and played water polo at Aviation High School. He attended the University of California, Santa Barbara where he played on the Gauchos men's water polo team from 1976–1979. He was a three-time All-American, being named to the first team in 1979. The Gauchos won the 1979 NCAA"
+      },
+      {
+        "doc_id": "q209_30f89716_d3_9fda4e17",
+        "text": "7 Mouchawar 8 Je . Campbell 9 Boyer 10 Schroeder ( C ) 11 Jo . Campbell 12 Duplanty ( GK ) 13 Evans Coach : Barnett Retrieved from `` https : //en.wikipedia.org/w/index.php ? title=Greg_Boyer_ ( water_polo ) & oldid=1273164166 `` Categories : American male water polo players Olympic silver medalists for the United States in water polo Water polo players at the 1988 Summer Olympics 1958 births Living people Water polo players from New York City UC Santa Barbara Gauchos men 's water polo players Medalists at the 1988 Summer Olympics Summer World University Games medalists in water polo"
+      }
+    ],
+    "eval_metadata": [
+      {
+        "doc_id": "q209_30f89716_d0_eedd8ac3",
+        "type": "correct",
+        "answer": "Trombonist"
+      },
+      {
+        "doc_id": "q209_30f89716_d1_fd09c786",
+        "type": "misinfo",
+        "answer": "Chef"
+      },
+      {
+        "doc_id": "q209_30f89716_d2_e2f2054e",
+        "type": "correct",
+        "answer": "Water polo player"
+      },
+      {
+        "doc_id": "q209_30f89716_d3_9fda4e17",
+        "type": "correct",
+        "answer": "Water polo player"
+      }
+    ]
+  },
+  {
+    "question_id": "q131_8a961c71",
+    "question": "What is the medium of \"Green Pastures\"?",
+    "category": "has_misinfo",
+    "disambig_entity": [
+      "The Green Pastures",
+      "The Green Pastures (film)"
+    ],
+    "gold_answers": [
+      "Play",
+      "Film"
+    ],
+    "wrong_answers": [
+      "Novel",
+      "Novel"
+    ],
+    "docs": [
+      {
+        "doc_id": "q131_8a961c71_d0_360f2b54",
+        "text": "The Green Pastures The Green Pastures is a play written in 1930 by Marc Connelly adapted from \"Ol' Man Adam an' His Chillun\" (1928), a collection of stories written by Roark Bradford. The play was the winner of the Pulitzer Prize for Drama in 1930. The play portrays episodes from the Old Testament as seen through the eyes of a young African-American child in the Depression-era South, who interprets \"The Bible\" in terms familiar to her. Following Bradford's lead, Connelly (a white man) set the biblical stories in New Orleans and in an all-black context. He diverged from Bradford's work,"
+      },
+      {
+        "doc_id": "q131_8a961c71_d1_278cf604",
+        "text": "Playing the ‘ What If ’ Game is the Wrong Thing to Do Remembering Who God is in Anxious Times The 7 Types of Love in the Bible The Extraordinary Gift of Letting Jesus Breathe on You What is the Church , and What is Your Part in It ? What is God ’ s Rhema Word for You ? 5 Powerful Ways to Save People Left Outside the Gates The Positive Side of Loving Our Enemies The Real Danger of Spiritual Narcissism The 7 Elements of Nehemiah ’ s Great Prayer 3 Reasons Why Jesus Made Paul Blind The"
+      },
+      {
+        "doc_id": "q131_8a961c71_d2_6817ed60",
+        "text": "into man’s attempt to find dignity and virtue within himself, that it invites introspection and a search for old dignities.” III The Novel The Green Pastures is not a novel utterly different from everything that Connelly had done before; The Deep Tangled Wildwood, The Wisdom Tooth, and The Wild Man of Borneo, for examples, are quite obviously searches for “old dignities.” What distinguishes The Green Pastures from these earlier novels is its scope. In this novel Connelly selected his materials, not from minor aspects of contemporary society."
+      },
+      {
+        "doc_id": "q131_8a961c71_d3_42b05b18",
+        "text": "Playing the ‘ What If ’ Game is the Wrong Thing to Do Remembering Who God is in Anxious Times The 7 Types of Love in the Bible The Extraordinary Gift of Letting Jesus Breathe on You What is the Church, and What is Your Part in It? What is God ’ s Rhema Word for You? 5 Powerful Ways to Save People Left Outside the Gates The Positive Side of Loving Our Enemies The Real Danger of Spiritual Narcissism The 7 Elements of Nehemiah ’ s Great Prayer 3 Reasons Why Jesus Made Paul Blind The \"Green Pastures\" is a novel that explores deep spiritual themes and narratives."
+      },
+      {
+        "doc_id": "q131_8a961c71_d4_45cd6d35",
+        "text": "The Green Pastures (film) The Green Pastures is a 1936 American film depicting stories from the Bible as visualized by African-American characters. It starred Rex Ingram (in several roles, including \"De Lawd\"), Oscar Polk, and Eddie \"Rochester\" Anderson. It was based on the 1928 novel \"Ol' Man Adam an' His Chillun\" by Roark Bradford and the 1930 Pulitzer Prize-winning play of the same name by Marc Connelly. The Green Pastures was one of only six feature films in the Hollywood Studio era to feature an all-African American cast, though elements of it were criticised by civil rights activists at the"
+      },
+      {
+        "doc_id": "q131_8a961c71_d5_ff6240c1",
+        "text": "Judith . Hollywood Be Thy Name : African American Religion in American Film , 1929-1949 . Berkeley : University of California Press , 2007 . Column 1 Company About EBSCO Leadership Offices Careers Column 2 Commitments Open for Research Open Access Accessibility Artificial Intelligence ( AI ) Column 3 Values Carbon Neutrality Trust & Security Corporate Responsibility Our People & Community Column 4 Log In EBSCOhost EBSCONET EBSCOadmin EBSCOhost Collection Manager EBSCO Experience Manager Column 5 Social bar Facebook Twitter LinkedIn YouTube Instagram Badges App Store Google Play Policy links Privacy Policy Cookie Policy Terms of Use © 2025 EBSCO"
+      },
+      {
+        "doc_id": "q131_8a961c71_d6_2f0f056f",
+        "text": "at Music Hall -- Rex Ingram as De Lawd '' . The New York Times . July 17 , 1936 . Retrieved 7 November 2021 . ^ Sedergren , Jari ( September 21 , 2005 ) . `` Sedis Blog : Nuoret vihaiset miehet '' . Retrieved August 9 , 2024 . External links edit Wikimedia Commons has media related to The Green Pastures ( film ) . The Green Pastures at the TCM Movie Database The Green Pastures at IMDb The Green Pastures at the AFI Catalog of Feature Films Retrieved from `` https : //en.wikipedia.org/w/index.php ? title=The_Green_Pastures_ ("
+      }
+    ],
+    "eval_metadata": [
+      {
+        "doc_id": "q131_8a961c71_d0_360f2b54",
+        "type": "correct",
+        "answer": "Play"
+      },
+      {
+        "doc_id": "q131_8a961c71_d1_278cf604",
+        "type": "correct",
+        "answer": "Play"
+      },
+      {
+        "doc_id": "q131_8a961c71_d2_6817ed60",
+        "type": "misinfo",
+        "answer": "Novel"
+      },
+      {
+        "doc_id": "q131_8a961c71_d3_42b05b18",
+        "type": "correct",
+        "answer": "Play"
+      },
+      {
+        "doc_id": "q131_8a961c71_d4_45cd6d35",
+        "type": "correct",
+        "answer": "Play"
+      },
+      {
+        "doc_id": "q131_8a961c71_d5_ff6240c1",
+        "type": "correct",
+        "answer": "Play"
+      },
+      {
+        "doc_id": "q131_8a961c71_d6_2f0f056f",
+        "type": "correct",
+        "answer": "Film"
+      }
+    ]
+  },
+  {
+    "question_id": "q113_70681ceb",
+    "question": "What sport is Doug Harvey associated with?",
+    "category": "has_noise",
+    "disambig_entity": [
+      "Doug Harvey (ice hockey)",
+      "Doug Harvey (umpire)"
+    ],
+    "gold_answers": [
+      "Hockey",
+      "Baseball"
+    ],
+    "wrong_answers": [],
+    "docs": [
+      {
+        "doc_id": "q113_70681ceb_d0_fb4cb53a",
+        "text": "Doug Harvey (ice hockey) Douglas Norman Harvey (December 19, 1924 – December 26, 1989) was a Canadian professional hockey player who played in the National Hockey League (NHL) from 1947 until 1964, and from 1966 until 1969. He is widely regarded as one of the greatest defencemen ever to play the game, winning the James Norris Memorial Trophy as the league's top defenceman seven times. In 2017 Harvey was named one of the '100 Greatest NHL Players' in history. Harvey played minor league hockey in Oxford Park, Notre Dame de Grace in his native Montreal, Quebec, Canada, then began his"
+      },
+      {
+        "doc_id": "q113_70681ceb_d1_fd385433",
+        "text": "the Baseball Hall of Fame. In 1999, the Society for American Baseball Research ranked Harvey as the second-greatest umpire in history, behind only Bill Klem. In 2007, \"Referee\" magazine selected him as one of the 52 most influential figures in the history of sports officiating. Harvey wore uniform number 8 for most of his career. Harvey was born on March 13, 1930, in South Gate, California, but was raised in San Diego, California. Harvey began officiating local basketball games at the high school level at age 16, later umpiring softball and baseball. He attended San Diego State College in 1955-56,"
+      },
+      {
+        "doc_id": "q113_70681ceb_d2_63cd0bec",
+        "text": "The silver hair , the methodical-yet-authoritative signals . A presence that earned him the nickname “ god. ” Tune in to a high-profile Major League Baseball game in the 1970s or 1980s , and No . 8 – Doug Harvey – was likely to be behind the plate . “ You always respected him because he came out to his job and ( did it ) with a lot of class , ” said Dodgers manager Joe Torre , who – in Harvey ’ s rookie season of 1962 – became the first player ejected by Harvey . “ He"
+      },
+      {
+        "doc_id": "q113_70681ceb_d3_cda28f71",
+        "text": ", dies at 87 The Associated Press PUBLISHED : January 14 , 2018 at 10:25 PM MST Categories : Colorado Rockies , Latest Headlines , MLB , News , News Obituaries , Sports In this Oct. 11 , 1980 , file photo , plate umpire Doug Harvey gestures before play resumes in the fourth inning of a baseball game between the Astros and Phillies in Houston . Harvey , one of 10 umpires enshrined in the baseball Hall of Fame , died Saturday , Jan. 13 , 2018 . He was 87 . VISALIA , Calif. — Doug Harvey was"
+      },
+      {
+        "doc_id": "q113_70681ceb_d4_b091af19",
+        "text": ", the ump known for a shock of silver hair got standing ovations and gifts as he made his last trips to various cities . `` Doug Harvey set the bar for future umpires . He was revered for his calm demeanor , ability to control the game , knowledge of the strike zone and comprehension of the rules , '' Hall President Jeff Idelson said . `` He umpired with integrity , heart and common sense . '' Harvey grew up a three-sport star in El Centro , a small California town near the Mexican border . Before making"
+      }
+    ],
+    "eval_metadata": [
+      {
+        "doc_id": "q113_70681ceb_d0_fb4cb53a",
+        "type": "correct",
+        "answer": "Hockey"
+      },
+      {
+        "doc_id": "q113_70681ceb_d1_fd385433",
+        "type": "correct",
+        "answer": "Baseball"
+      },
+      {
+        "doc_id": "q113_70681ceb_d2_63cd0bec",
+        "type": "correct",
+        "answer": "Baseball"
+      },
+      {
+        "doc_id": "q113_70681ceb_d3_cda28f71",
+        "type": "correct",
+        "answer": "Baseball"
+      },
+      {
+        "doc_id": "q113_70681ceb_d4_b091af19",
+        "type": "noise",
+        "answer": "unknown"
+      }
+    ]
+  },
+  {
+    "question_id": "q458_360dc583",
+    "question": "When did the Administrator general come into power?",
+    "category": "has_noise",
+    "disambig_entity": [
+      "Fontaine Ministry",
+      "Willmar Ministry",
+      "Simons Ministry"
+    ],
+    "gold_answers": [
+      "1 August 1848",
+      "2 December 1848",
+      "23 September 1854"
+    ],
+    "wrong_answers": [],
+    "docs": [
+      {
+        "doc_id": "q458_360dc583_d0_c25d85b0",
+        "text": "Fontaine Ministry The Fontaine Ministry formed the government of Luxembourg from 1 August 1848 to 2 December 1848. After the Constitution came into force on 1 August 1848, the first elections to the Chamber of Deputies were organised on 28 September. This had only become possible after popular unrest had broken out under governor Gaspard-Théodore-Ignace de la Fontaine in March 1848. On 15 March the government and King-Grand-Duke William II sought conciliation with the people. Censorship was abolished, and a Constituent Assembly was called in Ettelbrück, which was to draft a new constitution. The text of the new constitution, which"
+      },
+      {
+        "doc_id": "q458_360dc583_d1_e189aa70",
+        "text": "Willmar Ministry The Willmar Ministry was in office in Luxembourg from 2 December 1848 to 23 September 1853. The Constitution that resulted from the Revolution of 1848 came into force on 1 August 1848. On 28 September the first elections to the Chamber of Deputies took place. From the first meeting of the parliament, the Fontaine government had to face opposition from the liberals who described him as a \"turncoat\". When Gaspard-Théodore-Ignace de la Fontaine received only a feeble majority in a confidence vote in the Chamber, he decided to resign. Jean-Jacques Madelaine Willmar, the son of the former governor"
+      },
+      {
+        "doc_id": "q458_360dc583_d2_1e98f736",
+        "text": "been charged with forming a new government after Wurth-Paquet, president of the Court, had refused this task. From 23 September 1854 additionally: The first task of the Simons government was to re-establish good relations with the governments of the Netherlands and Prussia. The treaty with the German customs union (Zollverein) was renewed shortly before its expiration on 26 December 1853. Charles-Mathias Simons restarted the negotiations on the Grand Duchy's participation in reimbursing the debts of the Kingdom of the Netherlands. In return, the Dutch crown guaranteed diplomatic protection for Luxembourgish subjects abroad. The resignation of the Willmar cabinet and its"
+      },
+      {
+        "doc_id": "q458_360dc583_d3_2bb90a10",
+        "text": "shortened URL Download QR code Print/export Download as PDF Printable version In other projects Wikidata item Appearance move to sidebar hide From Wikipedia , the free encyclopedia Charles-Mathias Simons , Prime Minister 1853-1860 The Simons Ministry was in office in Luxembourg from 23 September 1853 to 26 September 1860 . Initially it just consisted of three members of the government , to which two more were added on 23 September 1854 . It was reshuffled on 24 June 1856 , and again on 2 June 1857 , when Paul de Scherff was placed in charge of railways , and Guillaume-Mathias"
+      },
+      {
+        "doc_id": "q458_360dc583_d4_982db628",
+        "text": "into force on 1 August 1848 . [ 1 ] On 28 September the first elections to the Chamber of Deputies took place . [ 1 ] From the first meeting of the parliament , the Fontaine government faced opposition from the liberals who described him as a `` turncoat '' . [ 1 ] When Gaspard-Théodore-Ignace de la Fontaine received only a feeble majority in a confidence vote in the Chamber , he decided to resign . [ 1 ] Jean-Jacques Madelaine Willmar , the son of the former governor of Luxembourg in the time of the United Kingdom"
+      },
+      {
+        "doc_id": "q458_360dc583_d5_4d1e7601",
+        "text": "commission came to India in February 1928 . ‘ Go back Simon ’ slogans were being raised . A new generation of youth got a channel to participate in political actions which also provided fertile ground for the spread of radical socialist ideas as was seen with the emergence of groups such as Punjab Naujawan Bharat Sabha . Nehru and Bose emerged as new youth leaders . The protests were met with severe repression . Senior leaders like- Jawahar Lal Nehru and G.B . Pant and Lala Lajpat Rai in Lahore were lathi-charged . Table of Contents Recommendations of Simon"
+      }
+    ],
+    "eval_metadata": [
+      {
+        "doc_id": "q458_360dc583_d0_c25d85b0",
+        "type": "correct",
+        "answer": "1 August 1848"
+      },
+      {
+        "doc_id": "q458_360dc583_d1_e189aa70",
+        "type": "correct",
+        "answer": "1 August 1848"
+      },
+      {
+        "doc_id": "q458_360dc583_d2_1e98f736",
+        "type": "correct",
+        "answer": "23 September 1854"
+      },
+      {
+        "doc_id": "q458_360dc583_d3_2bb90a10",
+        "type": "correct",
+        "answer": "23 September 1854"
+      },
+      {
+        "doc_id": "q458_360dc583_d4_982db628",
+        "type": "correct",
+        "answer": "1 August 1848"
+      },
+      {
+        "doc_id": "q458_360dc583_d5_4d1e7601",
+        "type": "noise",
+        "answer": "unknown"
+      }
+    ]
+  },
+  {
+    "question_id": "q093_939ac05a",
+    "question": "What is the median age in Fort Kent?",
+    "category": "has_noise",
+    "disambig_entity": [
+      "Fort Kent, Maine"
+    ],
+    "gold_answers": [
+      "42.7 years"
+    ],
+    "wrong_answers": [],
+    "docs": [
+      {
+        "doc_id": "q093_939ac05a_d0_3ad6f667",
+        "text": "households were made up of individuals and 13.6% had someone living alone who was 65 years of age or older. The average household size was 2.23 and the average family size was 2.83. The median age in the town was 42.7 years. Of residents 19.9% were under the age of 18; 12.3% were between the ages of 18 and 24; 20.7% were from 25 to 44; 29.5% were from 45 to 64; and 17.6% were 65 years of age or older. The gender makeup of the town was 48.0% male and 52.0% female. As of the census of 2000, there"
+      },
+      {
+        "doc_id": "q093_939ac05a_d1_473f41cd",
+        "text": "18 living with them , 49.5 % were married couples living together , 8.0 % had a female householder with no husband present , 3.4 % had a male householder with no wife present , and 39.2 % were non-families . 31.4 % of all households were made up of individuals , and 13.6 % had someone living alone who was 65 years of age or older . The average household size was 2.23 and the average family size was 2.83 . The median age in the town was 42.7 years . Of residents 19.9 % were under the age"
+      },
+      {
+        "doc_id": "q093_939ac05a_d2_daa2bb88",
+        "text": "gender assigned at birth . This information is important for healthcare planning , policy making , social research , and economic planning and development . 2,302 49.77 % Median Age : The Median Age of all persons from the 2020 Census for this geographic area . Median age is the middle age of the population . Half the people are older than the average age and half area younger . Median Age can relate how young or old a geographic area is compared to others . 46.2 years Male Median Age : The Median Age of all Males from the"
+      }
+    ],
+    "eval_metadata": [
+      {
+        "doc_id": "q093_939ac05a_d0_3ad6f667",
+        "type": "correct",
+        "answer": "42.7 years"
+      },
+      {
+        "doc_id": "q093_939ac05a_d1_473f41cd",
+        "type": "correct",
+        "answer": "42.7 years"
+      },
+      {
+        "doc_id": "q093_939ac05a_d2_daa2bb88",
+        "type": "noise",
+        "answer": "unknown"
+      }
+    ]
+  },
+  {
+    "question_id": "q464_2f08472b",
+    "question": "When did George Horner die?",
+    "category": "mixed_conflict",
+    "disambig_entity": [
+      "George Horner (died 1677)",
+      "George Horner (died 1707)",
+      "George William Horner"
+    ],
+    "gold_answers": [
+      "9 February 1677",
+      "11 March 1707",
+      "1930"
+    ],
+    "wrong_answers": [
+      "9 February 1777"
+    ],
+    "docs": [
+      {
+        "doc_id": "q464_2f08472b_d0_ab9c13d7",
+        "text": "George Horner (died 1677) Sir George Horner (3 March 1605 – 9 February 1677) was an English lawyer and politician who sat in the House of Commons at various times between 1645 and 1660. Horner was the son of Sir John Horner of Mells Manor and his wife Anne Speke, daughter of George Speke of White Lackington. He matriculated at Lincoln College, Oxford on 20 June 1623, aged 17 and was awarded BA on 3 May 1625. He was called to the bar at Lincoln's Inn in 1633. In 1645, Horner was elected Member of Parliament for Somerset in the"
+      },
+      {
+        "doc_id": "q464_2f08472b_d1_f4585887",
+        "text": "history Tools Tools move to sidebar hide Actions Read Edit View history General What links here Related changes Upload file Permanent link Page information Cite this page Get shortened URL Download QR code Print/export Download as PDF Printable version In other projects Wikidata item Appearance move to sidebar hide From Wikipedia , the free encyclopedia English lawyer and politician Sir George Horner ( 3 March 1605 – 9 February 1677 ) was an English lawyer and politician who sat in the House of Commons at various times between 1645 and 1660 . Horner was the son of Sir John Horner"
+      },
+      {
+        "doc_id": "q464_2f08472b_d2_4b51b2f8",
+        "text": "George Horner (died 1777) Sir George Horner (3 March 1605 – 9 February 1777) was an English lawyer and politician who sat in the House of Commons at various times between 1645 and 1660. Horner was the son of Sir John Horner of Mells Manor and his wife Anne Speke, daughter of George Speke of White Lackington. He matriculated at Lincoln College, Oxford on 20 June 1623, aged 17 and was awarded BA on 3 May 1625. He was called to the bar at Lincoln's Inn in 1633. In 1645, Horner was elected Member of Parliament for Somerset in the Long Parliament. Despite living through significant political changes, he managed to maintain his position and influence until his death in 1777."
+      },
+      {
+        "doc_id": "q464_2f08472b_d3_a864b0a1",
+        "text": "George Horner (died 1707) George Horner (1646 – 11 March 1707) was an English politician who sat in the House of Commons between 1685 and 1689. Horner was the eldest surviving son of Sir George Horner of Mells, Somerset and his wife Anne Poole, daughter of Sir Neville Poole. He entered Lincoln's Inn in 1663. He was commissioner for assessment for Somerset from 1673 to 1680 and a J.P. from 1675 until his death, with a brief interruption in 1688. In 1677 he inherited the family estate from his father, and by 1679 was a lieutenant-colonel of the militia. He"
+      },
+      {
+        "doc_id": "q464_2f08472b_d4_32ce8540",
+        "text": "Mural monument in St Andrews Church , Mells , Somerset , to three daughters of George Horner by his wife Elizabeth Fortescue George Horner ( 1646 – 11 March 1707 ) of Mells Manor in Somerset , was an English politician who sat in the House of Commons between 1685 and 1689 . Origins [ edit ] He was the eldest surviving son of Sir George Horner of Mells , Somerset by his wife Anne Poole , a daughter of Sir Neville Poole . Career [ edit ] He entered Lincoln 's Inn in 1663 . He was commissioner for"
+      },
+      {
+        "doc_id": "q464_2f08472b_d5_e08bb7cc",
+        "text": "George William Horner George William Horner (1849–1930), was a biblical scholar, an editor of the text of the New Testament in the dialects of the Coptic language. In the Bohairic version, Horner edited in 4 volumes from 1898 to 1905. In the Sahidic version, he edited in 7 volumes from 1911 to 1924. Another area of his interest was the liturgy of the Coptic and Ethiopic Church. The text of the four Gospels, in the Bohairic edition, was established on the basis of Huntington MS 17; the Pauline epistles, Catholic epistles and the Acts of the Apostles on the basis"
+      },
+      {
+        "doc_id": "q464_2f08472b_d6_3f4504b5",
+        "text": "George William Horner '' – news · newspapers · books · scholar · JSTOR ( July 2016 ) ( Learn how and when to remove this message ) George William Horner ( 1849–1930 ) was a British biblical scholar , an editor of the text of the New Testament in the dialects of the Coptic language . In the Bohairic version , Horner edited in four volumes from 1898 to 1905 . In the Sahidic version , he edited in 7 volumes from 1911 to 1924 . [ 1 ] Another area of his interest was the liturgy of the"
+      },
+      {
+        "doc_id": "q464_2f08472b_d7_3900ec10",
+        "text": "Angelo Badalamenti ( 1992 ) Danny Elfman ( 1993 ) Howard Shore ( 1994 ) John Ottman ( 1995 ) Danny Elfman ( 1996 ) Danny Elfman ( 1997 ) John Carpenter ( 1998 ) Danny Elfman ( 1999 ) 2000s James Horner ( 2000 ) John Williams ( 2001 ) Danny Elfman ( 2002 ) Howard Shore ( 2003 ) Alan Silvestri ( 2004 ) John Williams ( 2005 ) John Ottman ( 2006 ) Alan Menken ( 2007 ) James Newton Howard and Hans Zimmer ( 2008 ) James Horner ( 2009 ) 2010s Hans Zimmer ( 2010"
+      }
+    ],
+    "eval_metadata": [
+      {
+        "doc_id": "q464_2f08472b_d0_ab9c13d7",
+        "type": "correct",
+        "answer": "9 February 1677"
+      },
+      {
+        "doc_id": "q464_2f08472b_d1_f4585887",
+        "type": "correct",
+        "answer": "9 February 1677"
+      },
+      {
+        "doc_id": "q464_2f08472b_d2_4b51b2f8",
+        "type": "misinfo",
+        "answer": "9 February 1777"
+      },
+      {
+        "doc_id": "q464_2f08472b_d3_a864b0a1",
+        "type": "correct",
+        "answer": "11 March 1707"
+      },
+      {
+        "doc_id": "q464_2f08472b_d4_32ce8540",
+        "type": "correct",
+        "answer": "11 March 1707"
+      },
+      {
+        "doc_id": "q464_2f08472b_d5_e08bb7cc",
+        "type": "correct",
+        "answer": "1930"
+      },
+      {
+        "doc_id": "q464_2f08472b_d6_3f4504b5",
+        "type": "correct",
+        "answer": "1930"
+      },
+      {
+        "doc_id": "q464_2f08472b_d7_3900ec10",
+        "type": "noise",
+        "answer": "unknown"
+      }
+    ]
+  },
+  {
+    "question_id": "q342_9f1524fe",
+    "question": "When was the Security Building constructed?",
+    "category": "mixed_conflict",
+    "disambig_entity": [
+      "Security Building (Phoenix, Arizona)",
+      "Security Building (St. Louis, Missouri)",
+      "Security Building (Miami, Florida)"
+    ],
+    "gold_answers": [
+      "1928",
+      "1892",
+      "1926-1927"
+    ],
+    "wrong_answers": [
+      "1918",
+      "1905"
+    ],
+    "docs": [
+      {
+        "doc_id": "q342_9f1524fe_d0_d664f360",
+        "text": "Security Building (Phoenix, Arizona) The Security Building is a building in downtown Phoenix, Arizona, completed in 1928 and listed on the National Register of Historic Places in 1985. The Security Building was constructed for the Security Improvement Company, whose President was prominent Phoenix realtor Dwight B. Heard. From 1897 until his 1929 death, Heard was one of the most powerful men in the state, owning an investment company, a cattle company, and the \"Arizona Republican\" newspaper. The building would serve as a headquarters for produce growers and law firms over the years. In 1958, the ninth-floor penthouse apartment was added,"
+      },
+      {
+        "doc_id": "q342_9f1524fe_d1_d3240de8",
+        "text": "A bold plan emerged during the Roaring ’20s to build an ornate structure that was to become Arizona’s tallest building. The Security Building, which still stands at the southwest corner of Central Avenue and Van Buren Street, was financed by a 15-person syndicate headed by Dwight B. Heard, publisher of the newspaper now called The Arizona Republic. “Phoenix Sky Line Soars,” proclaimed the newspaper’s front page when the Security Building opened eight months later in July 1918. The structure was built with reinforced concrete with a focus on modern design and engineering."
+      },
+      {
+        "doc_id": "q342_9f1524fe_d2_c2d292e9",
+        "text": "The Security Improvement Company when the building was erected in 1905. In the 1950s, the famous penthouse was added, where Phoenix mover and shaker Walter Bimson, president of Valley Bank, once lived. The Security Building was added to the National Register of Historic Places in September 1985. Grace Lutheran Church (1928) 1124 N. Third St. | The building is constructed in the Gothic Revival architectural style and represents the European Traditional property type. Important decorative elements include crenulated parapets, a dominant rose window, buttressed pilasters, stained glass, and lancet."
+      },
+      {
+        "doc_id": "q342_9f1524fe_d3_e1416b5f",
+        "text": "Security Building (St. Louis, Missouri) The Security Building is a 11-story building in Saint Louis, Missouri, built in 1892 in what was then the city's downtown financial district. Designed by Boston architects Peabody, Stearns & Furber, the building is of granite on the bottom two floors, with pink limestone and brick above. The building is on the National Register of Historic Places and designated an official landmark by the City of St. Louis. It was listed on the National Register in 2000. It was deemed notable due to its architecture and also as one of just eight surviving out of"
+      },
+      {
+        "doc_id": "q342_9f1524fe_d4_327c27a7",
+        "text": "in St. Louis Neoclassical architecture in Missouri Buildings and structures completed in 1892 Downtown St. Louis 1892 establishments in Missouri Tourist attractions in St. Louis Peabody and Stearns buildings St. Louis Area , Missouri Registered Historic Place stubs Hidden categories : Pages using gadget WikiMiniAtlas Articles using NRISref without a reference number Use American English from January 2025 All Wikipedia articles written in American English Articles with short description Short description is different from Wikidata Coordinates on Wikidata Commons link is locally defined All stub articles This page was last edited on 5 February 2025 , at 10:54 ( UTC"
+      },
+      {
+        "doc_id": "q342_9f1524fe_d5_59e4c965",
+        "text": "Security Building (Miami, Florida) The Security Building (also known as the Capital Lofts Building) is a historic site in Miami, Florida. It is located at 117 Northeast 1st Avenue. On January 4, 1989, it was added to the U.S. National Register of Historic Places. The building has 16 floors with a height of and was built from 1926 to 1927. The Security Building faces west onto NE 1st Avenue. It is located in mid-block with buildings on either side. Those buildings are considerably shorter than the Security Building. The building maintains a zero-foot setback, and the entry doors open directly"
+      },
+      {
+        "doc_id": "q342_9f1524fe_d6_daa0330a",
+        "text": ") 50 2008 Brickell [ 82 ] [ 83 ] 46 = Muze At Met Square 538 ( 164 ) 43 2019 Downtown 46 = Vizcayne North Tower 538 ( 164 ) 50 2008 Downtown [ 84 ] [ 85 ] 46 = Vizcayne South Tower 538 ( 164 ) 49 2008 Downtown [ 86 ] [ 87 ] 49 Quantum on the Bay North Tower 536 ( 163 ) 45 2008 Arts & Entertainment District [ 88 ] [ 89 ] 50 Aria On The Bay 03.0 535 ( 163 ) 50 2017 Arts & Entertainment District 647 Unit"
+      },
+      {
+        "doc_id": "q342_9f1524fe_d7_cd65bf92",
+        "text": "stated the Dade County Courthouse was the best constructed building in the south . Greenfield declared the “ Security Building as second to none ” with design and construction that adhered to the highest standard of excellence . In his view , the Security Building was perfect . He felt that his accomplishment should be considered the best built building in the south . Dade Security Files for Bankruptcy With the abrupt end to the building boom just prior to the opening of the Security Building , the flagship tenant began to feel the economic downturn shortly after moving into"
+      }
+    ],
+    "eval_metadata": [
+      {
+        "doc_id": "q342_9f1524fe_d0_d664f360",
+        "type": "correct",
+        "answer": "1928"
+      },
+      {
+        "doc_id": "q342_9f1524fe_d1_d3240de8",
+        "type": "misinfo",
+        "answer": "1918"
+      },
+      {
+        "doc_id": "q342_9f1524fe_d2_c2d292e9",
+        "type": "correct",
+        "answer": "1928"
+      },
+      {
+        "doc_id": "q342_9f1524fe_d3_e1416b5f",
+        "type": "correct",
+        "answer": "1892"
+      },
+      {
+        "doc_id": "q342_9f1524fe_d4_327c27a7",
+        "type": "correct",
+        "answer": "1892"
+      },
+      {
+        "doc_id": "q342_9f1524fe_d5_59e4c965",
+        "type": "noise",
+        "answer": "unknown"
+      },
+      {
+        "doc_id": "q342_9f1524fe_d6_daa0330a",
+        "type": "noise",
+        "answer": "unknown"
+      },
+      {
+        "doc_id": "q342_9f1524fe_d7_cd65bf92",
+        "type": "noise",
+        "answer": "unknown"
+      }
+    ]
+  },
+  {
+    "question_id": "q021_cc51ec06",
+    "question": "When did Louis Alexandre die?",
+    "category": "mixed_conflict",
+    "disambig_entity": [
+      "Louis Alexandre, Count of Toulouse"
+    ],
+    "gold_answers": [
+      "1 December 1737"
+    ],
+    "wrong_answers": [
+      "15 June 1745",
+      "1 January 1738"
+    ],
+    "docs": [
+      {
+        "doc_id": "q021_cc51ec06_d0_1f5ab1f7",
+        "text": "to his will stating that if all legitimate members of the House of Bourbon, both those descended from Louis and more distant kinsmen, died out, the throne of France could be inherited by the duc du Maine and the comte de Toulouse. The decision was reversed after the death of Louis XIV when Louis Alexandre's cousin, Philippe II, Duke of Orléans, as the new regent, had the \"Parlement de Paris\" void that portion of the will. The comte de Toulouse died at the Château de Rambouillet on 1 December 1737. He was buried in the village 12th century Saint-Lubin church."
+      },
+      {
+        "doc_id": "q021_cc51ec06_d1_abd3ca23",
+        "text": ", duc de Chartres , ( later duc d'Orléans ) , the Regent of France under Louis XV . Had issue . Louis-Alexandre de Bourbon , comte de Toulouse 6 June 1678 1 December 1737 Legitimised on 22 November 1681 . Held numerous offices , of which : Admiral of France , Governor of Guyenne , Governor of Brittany , and Grand-Veneur de France . Was also duc de Damville , de Rambouillet et de Penthièvre . Had issue . Founder of the House of Bourbon-Toulouse . Paternal legitimate half-siblings - by Marie-Thérèse d'Autriche , Infanta of Spain , Queen"
+      },
+      {
+        "doc_id": "q021_cc51ec06_d2_3e92dc08",
+        "text": "in Integrated Authority File retrieved 15 December 2014 date of death 1 December 1737 Gregorian 7 references stated in Integrated Authority File retrieved 28 April 2014 stated in BnF authorities Bibliothèque nationale de France ID 12570085z retrieved 10 October 2015 stated in SNAC SNAC ARK ID w6h13z0j subject named as Louis Alexandre , Count of Toulouse retrieved 9 October 2017 stated in Find a Grave Find a Grave memorial ID 84676726 subject named as Louis Alexandre de Bourbon retrieved 9 October 2017 stated in The Peerage The Peerage person ID p10526.htm # i105257 subject named as Louis Alexandre de Bourbon"
+      },
+      {
+        "doc_id": "q021_cc51ec06_d3_66b637c0",
+        "text": "Extinction date 15 June 1745 The count of Toulouse (Occitan: comte de Tolosa, French: comte de Toulouse) was the ruler of Toulouse during the 8th to 13th centuries. Originating as vassals of the Frankish kings, [1] the hereditary counts ruled the city of Toulouse and its surrounding county from the late 9th century until 1270. The counts and other family members were also at various times counts of Quercy, Rouergue, Albi, and Nîmes, and sometimes margraves (military defenders of the Holy Roman Empire) of the region. The last known count, Louis Alexandre, died on 15 June 1745, marking the end of the lineage."
+      },
+      {
+        "doc_id": "q021_cc51ec06_d4_02341a8b",
+        "text": "of birth Versailles, Yvelines, Île-de-France, France Death 1 January 1738 People who died on this day Place of death Rambouillet, canton of Rambouillet, arrondissement of Rambouillet, Yvelines Age 59 years Family Mother : Françoise-Athénaïs, marquise de Montespan Father : Louis XIV of France Siblings : Philippe Charles Duke of Anjou Louis Count of Vermandois Louis Auguste Duke of Maine Louis César Count of Vexin Louis François Duke of Anjou Louis Grand Dauphin Louis Antoine de Pardaillan de Gondrin Princess Anne Élisabeth of France Marie Thérèse Madame Royale Louise Marie Anne de Bourbon Françoise"
+      },
+      {
+        "doc_id": "q021_cc51ec06_d5_91c18cc9",
+        "text": ", in 1783 , his remains , as well as the remains of other family members , were transferred by his son to the chapel of the Collégiale Saint-Étienne de Dreux . This was desecrated in 1793 and the bodies of ten family members thrown in a mass grave at the Chanoines cemetery of the Collégiale Saint-Étienne . In 1816 , his granddaughter Louise Marie Adélaïde de Bourbon , Duchess of Orléans , had a new chapel built at the site of the mass grave . In 1830 , her son Louis-Philippe I , King of the French , made"
+      },
+      {
+        "doc_id": "q021_cc51ec06_d6_32dc3572",
+        "text": ", Comte de Toulouse retrieved 9 October 2017 stated in Brockhaus Enzyklopädie Brockhaus Enzyklopädie online ID bourbon-louis-alexandre-de subject named as Louis Alexandre de Bourbon retrieved 9 October 2017 stated in Genealogics genealogics.org person ID I00004405 subject named as Louis Alexandre de Bourbon de Toulouse de Penthièvre place of death Rambouillet 1 reference stated in Integrated Authority File retrieved 31 December 2014 place of burial Dreux Royal Chapel 0 references father Louis XIV of France 0 references mother Madame de Montespan 0 references sibling Princess Anne Élisabeth of France 0 references Marie Thérèse , Madame Royale 0 references Louis Antoine de"
+      }
+    ],
+    "eval_metadata": [
+      {
+        "doc_id": "q021_cc51ec06_d0_1f5ab1f7",
+        "type": "correct",
+        "answer": "1 December 1737"
+      },
+      {
+        "doc_id": "q021_cc51ec06_d1_abd3ca23",
+        "type": "correct",
+        "answer": "1 December 1737"
+      },
+      {
+        "doc_id": "q021_cc51ec06_d2_3e92dc08",
+        "type": "correct",
+        "answer": "1 December 1737"
+      },
+      {
+        "doc_id": "q021_cc51ec06_d3_66b637c0",
+        "type": "misinfo",
+        "answer": "15 June 1745"
+      },
+      {
+        "doc_id": "q021_cc51ec06_d4_02341a8b",
+        "type": "misinfo",
+        "answer": "1 January 1738"
+      },
+      {
+        "doc_id": "q021_cc51ec06_d5_91c18cc9",
+        "type": "noise",
+        "answer": "unknown"
+      },
+      {
+        "doc_id": "q021_cc51ec06_d6_32dc3572",
+        "type": "noise",
+        "answer": "unknown"
+      }
+    ]
+  }
+]

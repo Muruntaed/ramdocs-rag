@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>v4.0 Evidence Quality — Research Journal</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div class="container">
+
+  <nav class="crumbs">
+    <a href="../index.html">← Journal index</a>
+  </nav>
+
+  <header class="page-header">
+    <h1>v4.0 · Evidence Quality scoring <span style="color:var(--bad);font-size:18px">(negative result)</span></h1>
+    <div class="subtitle">
+      <span class="status-frozen">FROZEN · 2026-05-16</span> ·
+      v3 plus a per-document Evidence Evaluator — published as an honest regression
+    </div>
+  </header>
+
+  <div class="callout warn" style="margin-top:8px;">
+    <b>TL;DR — this version is a regression.</b> v4.0 adds a per-doc
+    Evaluator agent that emits a structured <code>DocTrust</code> report
+    (trust_score + red_flags). The hypothesis was that a structured
+    per-doc evidence-quality signal would let the Skeptic prune misinfo
+    more sharply. In practice every quality metric ticked down (EM −0.042,
+    F1 −0.025, <b>Misinfo-rejection −0.042</b>) while LLM calls per question
+    jumped +81% and latency +71%. <b>v3.3_analyzer_tuned remains the
+    recommended default.</b> v4.0 is shipped frozen so that the negative
+    result is reproducible and the design lesson is recorded, not
+    forgotten.
+  </div>
+
+  <dl class="kv">
+    <dt>Version</dt><dd><code>4.0.0</code></dd>
+    <dt>Retrieval parameters</dt><dd>BM25 + dense, weights 0.5 / 0.5, top_k = 8 (same as v3)</dd>
+    <dt>Reliability formula</dt><dd><b>0.40·retrieval + 0.25·confidence + 0.35·trust − 0.10·minority</b> (NEW — replaces the dormant recency / authority slots of v1–v3)</dd>
+    <dt>Grouping parameters</dt><dd>min_relative_weight = 0.30 (same as v3)</dd>
+    <dt>Models</dt><dd>analyzer = <code>gpt-4o-mini</code>, evaluator = <code>gpt-4o-mini</code>, mediator = <code>gpt-4o</code>, skeptic = <code>gpt-4o</code></dd>
+    <dt>Freeze cost</dt><dd>$0.269 across both runs ($0.134 per run, +15% vs v3.3)</dd>
+  </dl>
+
+  <h2>Hypothesis</h2>
+  <p>
+    v3 successfully recovered misinfo-rejection to 0.875 but capped EM at
+    0.792 because the Skeptic uses corpus-level signals only (depth, counter-evidence,
+    homonyms). A structured per-document quality signal — independent of
+    other documents — should let the pipeline (a) sharpen
+    <code>reliability</code> ordering inside each entity group and (b) give
+    the Skeptic an additional axis to discriminate fabricated stubs from
+    legitimate short answers, lifting Misinfo-rejection ≥ 0.90 without
+    losing EM or recall.
+  </p>
+
+  <h2>Architecture</h2>
+  <p style="color:var(--muted);font-size:13px;margin-bottom:6px;">
+    <span style="display:inline-block;width:14px;height:14px;background:#fef9c3;border:2px dashed #d97706;border-radius:3px;vertical-align:middle;margin-right:4px"></span>
+    <b>NEW</b> — added in v4 ·
+    everything else is identical to v3
+  </p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 760 1040" xmlns="http://www.w3.org/2000/svg"
+         style="max-width:760px;width:100%;height:auto;display:block;margin:0 auto;font-family:system-ui,sans-serif">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#6b7280"/>
+        </marker>
+        <style>
+          .box     { fill:#ffffff; stroke:#cbd5e1; stroke-width:1.5; }
+          .box.input    { fill:#f1f5f9; stroke:#94a3b8; }
+          .box.analyzer { fill:#eff6ff; stroke:#93c5fd; }
+          .box.evaluator{ fill:#fef9c3; stroke:#d97706; stroke-width:2.5; stroke-dasharray:5 3; }
+          .box.entity   { fill:#eff6ff; stroke:#93c5fd; stroke-width:1.5; }
+          .box.det      { fill:#f0fdf4; stroke:#86efac; }
+          .box.llm      { fill:#fffbeb; stroke:#fcd34d; }
+          .box.draft    { fill:#fef3c7; stroke:#d97706; stroke-width:1.5; }
+          .box.skeptic  { fill:#fef3c7; stroke:#d97706; stroke-width:1.5; }
+          .box.output   { fill:#ecfeff; stroke:#67e8f9; stroke-width:2; }
+          .diamond      { fill:#fef9c3; stroke:#eab308; stroke-width:1.5; }
+          .ttl   { fill:#0f172a; font-size:13px; font-weight:600; }
+          .sub   { fill:#64748b; font-size:11px; }
+          .edge  { fill:#64748b; font-size:11px; font-style:italic; }
+          .arr   { stroke:#6b7280; stroke-width:1.5; fill:none; }
+          .badge    { fill:#d97706; }
+          .badgetxt { fill:#ffffff; font-size:9px; font-weight:700; }
+          .grp-label { fill:#92400e; font-size:11px; font-style:italic; font-weight:600; }
+        </style>
+      </defs>
+
+      <rect class="box input" x="240" y="20" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="44" text-anchor="middle">Question + RAMDocs candidate pool</text>
+      <text class="sub" x="380" y="63" text-anchor="middle">3–8 documents per question</text>
+      <path class="arr" d="M 380 76 L 380 108" marker-end="url(#arr)"/>
+
+      <rect class="box" x="240" y="110" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="134" text-anchor="middle">Retriever</text>
+      <text class="sub" x="380" y="153" text-anchor="middle">BM25 + dense MiniLM · top_k = 8</text>
+      <path class="arr" d="M 380 166 L 380 185 L 140 185 L 140 208" marker-end="url(#arr)"/>
+      <path class="arr" d="M 380 166 L 380 208" marker-end="url(#arr)"/>
+      <path class="arr" d="M 380 166 L 380 185 L 620 185 L 620 208" marker-end="url(#arr)"/>
+
+      <rect class="box analyzer" x="40"  y="210" width="200" height="64" rx="8"/>
+      <text class="ttl" x="140" y="234" text-anchor="middle">Analyzer 1</text>
+      <text class="sub" x="140" y="252" text-anchor="middle">claim + entity</text>
+      <text class="sub" x="140" y="267" text-anchor="middle">gpt-4o-mini</text>
+
+      <rect class="box analyzer" x="280" y="210" width="200" height="64" rx="8"/>
+      <text class="ttl" x="380" y="234" text-anchor="middle">Analyzer 2</text>
+      <text class="sub" x="380" y="252" text-anchor="middle">claim + entity</text>
+      <text class="sub" x="380" y="267" text-anchor="middle">gpt-4o-mini</text>
+
+      <rect class="box analyzer" x="520" y="210" width="200" height="64" rx="8"/>
+      <text class="ttl" x="620" y="234" text-anchor="middle">Analyzer K</text>
+      <text class="sub" x="620" y="252" text-anchor="middle">claim + entity</text>
+      <text class="sub" x="620" y="267" text-anchor="middle">gpt-4o-mini</text>
+
+      <rect class="box evaluator" x="40"  y="290" width="200" height="64" rx="8"/>
+      <rect class="badge" x="200" y="294" width="36" height="14" rx="3"/>
+      <text class="badgetxt" x="218" y="305" text-anchor="middle">NEW</text>
+      <text class="ttl" x="140" y="316" text-anchor="middle">Evaluator 1</text>
+      <text class="sub" x="140" y="332" text-anchor="middle">DocTrust + red_flags</text>
+      <text class="sub" x="140" y="347" text-anchor="middle">gpt-4o-mini</text>
+
+      <rect class="box evaluator" x="280"  y="290" width="200" height="64" rx="8"/>
+      <rect class="badge" x="440" y="294" width="36" height="14" rx="3"/>
+      <text class="badgetxt" x="458" y="305" text-anchor="middle">NEW</text>
+      <text class="ttl" x="380" y="316" text-anchor="middle">Evaluator 2</text>
+      <text class="sub" x="380" y="332" text-anchor="middle">DocTrust + red_flags</text>
+      <text class="sub" x="380" y="347" text-anchor="middle">gpt-4o-mini</text>
+
+      <rect class="box evaluator" x="520" y="290" width="200" height="64" rx="8"/>
+      <rect class="badge" x="680" y="294" width="36" height="14" rx="3"/>
+      <text class="badgetxt" x="698" y="305" text-anchor="middle">NEW</text>
+      <text class="ttl" x="620" y="316" text-anchor="middle">Evaluator K</text>
+      <text class="sub" x="620" y="332" text-anchor="middle">DocTrust + red_flags</text>
+      <text class="sub" x="620" y="347" text-anchor="middle">gpt-4o-mini</text>
+
+      <path class="arr" d="M 140 354 L 140 380 L 380 380 L 380 400" marker-end="url(#arr)"/>
+      <path class="arr" d="M 380 354 L 380 400" marker-end="url(#arr)"/>
+      <path class="arr" d="M 620 354 L 620 380 L 380 380 L 380 400" marker-end="url(#arr)"/>
+
+      <rect class="box entity" x="240" y="400" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="424" text-anchor="middle">Group by entity (deterministic)</text>
+      <text class="sub" x="380" y="443" text-anchor="middle">canonicalize + substring-merge · no LLM</text>
+      <path class="arr" d="M 380 456 L 380 488" marker-end="url(#arr)"/>
+
+      <rect class="box evaluator" x="240" y="490" width="280" height="56" rx="8"/>
+      <rect class="badge" x="478" y="494" width="36" height="14" rx="3"/>
+      <text class="badgetxt" x="496" y="505" text-anchor="middle">NEW</text>
+      <text class="ttl" x="380" y="514" text-anchor="middle">Reliability scoring (trust-weighted)</text>
+      <text class="sub" x="380" y="533" text-anchor="middle">0.40·retr + 0.25·conf + 0.35·trust − 0.10·minority</text>
+      <path class="arr" d="M 380 546 L 380 580" marker-end="url(#arr)"/>
+
+      <rect x="40" y="570" width="680" height="200" rx="10"
+            fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="6 4" opacity="0.55"/>
+      <text class="grp-label" x="60" y="590" style="fill:#475569">for each entity group above the 0.30 threshold:</text>
+
+      <polygon class="diamond" points="380,590 500,645 380,700 260,645"/>
+      <text class="ttl" x="380" y="638" text-anchor="middle">Intra-group</text>
+      <text class="ttl" x="380" y="656" text-anchor="middle">winner ratio</text>
+      <text class="ttl" x="380" y="674" text-anchor="middle">≥ 1.5 ?</text>
+
+      <path class="arr" d="M 260 645 L 180 645 L 180 715" marker-end="url(#arr)"/>
+      <text class="edge" x="218" y="639" text-anchor="middle">yes</text>
+      <path class="arr" d="M 500 645 L 580 645 L 580 715" marker-end="url(#arr)"/>
+      <text class="edge" x="542" y="639" text-anchor="middle">no</text>
+
+      <rect class="box det" x="60" y="715" width="240" height="50" rx="8"/>
+      <text class="ttl" x="180" y="739" text-anchor="middle">Deterministic vote</text>
+      <text class="sub" x="180" y="755" text-anchor="middle">no LLM · per group</text>
+
+      <rect class="box llm" x="460" y="715" width="240" height="50" rx="8"/>
+      <text class="ttl" x="580" y="739" text-anchor="middle">LLM mediator</text>
+      <text class="sub" x="580" y="755" text-anchor="middle">gpt-4o · per group</text>
+
+      <path class="arr" d="M 180 765 L 180 790 L 380 790 L 380 810" marker-end="url(#arr)"/>
+      <path class="arr" d="M 580 765 L 580 790 L 380 790 L 380 810" marker-end="url(#arr)"/>
+
+      <rect class="box draft" x="240" y="812" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="836" text-anchor="middle">FinalAnswer (draft)</text>
+      <text class="sub" x="380" y="855" text-anchor="middle">list[AnswerVariant], one per entity</text>
+      <path class="arr" d="M 380 868 L 380 902" marker-end="url(#arr)"/>
+
+      <rect class="box skeptic" x="160" y="904" width="440" height="76" rx="10"/>
+      <text class="ttl" x="380" y="928" text-anchor="middle">Skeptic verification agent</text>
+      <text class="sub" x="380" y="946" text-anchor="middle">grounding · citations · counter-evidence · depth · trust + red_flags (NEW input)</text>
+      <text class="sub" x="380" y="964" text-anchor="middle">gpt-4o · keep / reject each variant · fallback restores draft</text>
+      <path class="arr" d="M 380 980 L 380 1010" marker-end="url(#arr)"/>
+
+      <rect class="box output" x="220" y="1010" width="320" height="26" rx="8"/>
+      <text class="ttl" x="380" y="1028" text-anchor="middle">FinalAnswer (verified)</text>
+    </svg>
+  </div>
+
+  <p style="color:var(--muted);font-size:13px;">
+    The Evaluator runs alongside the Analyzer on each retrieved document
+    and emits a structured <code>DocTrust</code> report. Its
+    <code>trust_score</code> is consumed by Reliability scoring (W_TRUST =
+    0.35), and its <code>red_flags</code> are surfaced to the Skeptic
+    inline with each pool document. Crucially, the Evaluator does NOT see
+    other documents and does NOT compare against external facts — it only
+    judges what one document says about itself (internal consistency,
+    encyclopedic quality, specificity, relevance).
+  </p>
+
+  <h2>Prompts</h2>
+  <p style="color:var(--muted);font-size:13px;margin-top:-4px;">Click a card to reveal the full prompt text.</p>
+
+  <div class="prompt-cards">
+    <button class="prompt-card" onclick="document.getElementById('dlg-evaluator').showModal()">
+      <span class="pc-name">📊 Evaluator system prompt (NEW)</span>
+      <span class="pc-meta">per-doc DocTrust + red_flags · gpt-4o-mini · output: bounded floats + closed enum</span>
+    </button>
+    <button class="prompt-card" onclick="document.getElementById('dlg-analyzer').showModal()">
+      <span class="pc-name">📄 Analyzer system prompt</span>
+      <span class="pc-meta">unchanged from v3.3 · output: Claim (strict JSON)</span>
+    </button>
+    <button class="prompt-card" onclick="document.getElementById('dlg-skeptic').showModal()">
+      <span class="pc-name">🔍 Skeptic system prompt</span>
+      <span class="pc-meta">v3 prompt + trust / red_flags awareness · keep/reject decisions</span>
+    </button>
+  </div>
+
+  <dialog id="dlg-evaluator">
+    <div class="dlg-head"><h3>Evaluator system prompt (v4 — NEW)</h3>
+      <button class="close-btn" onclick="document.getElementById('dlg-evaluator').close()">✕</button></div>
+    <div class="dlg-body">
+<pre>You are the Evidence Evaluator agent in a multi-agent RAG pipeline.
+
+You receive a question and ONE retrieved document. Your job is to score
+that document on four LOCAL quality axes and assemble a composite
+trust_score plus a closed-enum list of red_flags. You do NOT see other
+documents and you do NOT compare against external facts. Judge only what
+this document says about itself.
+
+Four axes, each in [0.0, 1.0]:
+
+  1. internal_consistency — does the document contradict itself? Are
+     dates, names and figures coherent within this single document?
+  2. encyclopedic_quality — does it read like a curated reference entry
+     (paragraphs of contextual prose, named subject, dates, figures),
+     or like a one-line assertion / category page / formatting cruft?
+  3. specificity — does it contain concrete specifics (dates, places,
+     people, figures) or only vague generalities?
+  4. relevance — is the document topically aligned with the question?
+
+trust_score is the composite quality in [0.0, 1.0]. Approximate it as
+~ 0.30·internal_consistency + 0.30·encyclopedic_quality + 0.25·specificity + 0.15·relevance,
+then round to two decimals.
+
+red_flags is a list drawn from this CLOSED enum:
+  - "short_stub" — the document is one or two sentences with no context
+  - "self_contradiction" — internal facts contradict each other
+  - "off_topic" — not about the asked subject
+  - "no_specifics" — no dates / places / people / figures
+  - "category_page" — looks like a Wikipedia category page or a list
+  - "formatting_cruft" — broken markup, headers without body, table residue
+
+Output strictly the JSON object with fields:
+  doc_id, internal_consistency, encyclopedic_quality, specificity,
+  relevance, trust_score, red_flags.</pre>
+    </div>
+  </dialog>
+
+  <dialog id="dlg-analyzer">
+    <div class="dlg-head"><h3>Analyzer system prompt (v4)</h3>
+      <button class="close-btn" onclick="document.getElementById('dlg-analyzer').close()">✕</button></div>
+    <div class="dlg-body"><pre>Same as v3.3_analyzer_tuned. The analyzer is unchanged.</pre></div>
+  </dialog>
+
+  <dialog id="dlg-skeptic">
+    <div class="dlg-head"><h3>Skeptic system prompt (v4)</h3>
+      <button class="close-btn" onclick="document.getElementById('dlg-skeptic').close()">✕</button></div>
+    <div class="dlg-body"><pre>Same four-check skeptic prompt as v3 (entity grounding · citation faithfulness · counter-evidence · depth-asymmetry · homonyms-aware), with one extra input: each document in the pool now arrives with a per-doc trust score and a list of red_flags from the Evaluator. The Skeptic is allowed to consider these signals when arbitrating thin-stub vs rich-context variants, but the four-check decision logic is otherwise identical.</pre></div>
+  </dialog>
+
+  <h2>Results</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Metric</th>
+        <th class="num">freeze1</th>
+        <th class="num">freeze2</th>
+        <th class="num">avg</th>
+        <th class="num">Δ vs v3.3</th>
+        <th>Comment</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><b>Misinfo-rejection</b> 🎯</td>
+        <td class="num">0.833</td><td class="num">0.833</td>
+        <td class="num"><b>0.833</b></td>
+        <td class="num"><span class="delta-bad">↓ −0.042</span></td>
+        <td>Headline regression — main hypothesis failed</td>
+      </tr>
+      <tr>
+        <td><b>EM-any-gold</b> 🎯</td>
+        <td class="num">0.750</td><td class="num">0.750</td>
+        <td class="num"><b>0.750</b></td>
+        <td class="num"><span class="delta-bad">↓ −0.042</span></td>
+        <td>Skeptic over-rejects legitimate short answers flagged short_stub</td>
+      </tr>
+      <tr>
+        <td><b>F1-multi-answer</b> 🎯</td>
+        <td class="num">0.661</td><td class="num">0.639</td>
+        <td class="num"><b>0.650</b></td>
+        <td class="num"><span class="delta-bad">↓ −0.025</span></td>
+        <td>Both precision and recall slip</td>
+      </tr>
+      <tr>
+        <td>Recall@gold</td>
+        <td class="num">0.653</td><td class="num">0.625</td>
+        <td class="num">0.639</td>
+        <td class="num"><span class="delta-bad">↓ −0.007</span></td>
+        <td>Essentially flat — recall is not the failure mode</td>
+      </tr>
+      <tr>
+        <td>Noise rejection</td>
+        <td class="num">0.972</td><td class="num">0.972</td>
+        <td class="num">0.972</td>
+        <td class="num"><span class="delta-bad">↓ −0.028</span></td>
+        <td>Slight slip — one noise doc occasionally survives trust-reweighting</td>
+      </tr>
+      <tr>
+        <td>Citation faithfulness</td>
+        <td class="num">0.722</td><td class="num">0.708</td>
+        <td class="num">0.715</td>
+        <td class="num"><span class="delta-bad">↓ −0.035</span></td>
+        <td>Trust-shifted reliability reorders supporting docs</td>
+      </tr>
+      <tr>
+        <td>Correct citation</td>
+        <td class="num">0.917</td><td class="num">0.910</td>
+        <td class="num">0.913</td>
+        <td class="num"><span class="delta-bad">↓ −0.045</span></td>
+        <td>Same root cause as Citation-faithfulness</td>
+      </tr>
+      <tr>
+        <td>Abstention rate</td>
+        <td class="num">0.000</td><td class="num">0.000</td>
+        <td class="num">0.000</td>
+        <td class="num"><span class="delta-flat">↔ 0.000</span></td>
+        <td>Fallback intact — never abstains</td>
+      </tr>
+      <tr>
+        <td>Avg cost / question</td>
+        <td class="num">$0.0113</td><td class="num">$0.0111</td>
+        <td class="num">$0.0112</td>
+        <td class="num"><span class="delta-bad">↑ +$0.0015</span></td>
+        <td>+ Evaluator on every retrieved doc</td>
+      </tr>
+      <tr>
+        <td>Avg LLM calls / question</td>
+        <td class="num">13.2</td><td class="num">13.1</td>
+        <td class="num"><b>13.1</b></td>
+        <td class="num"><span class="delta-bad">↑ +5.9 (+81%)</span></td>
+        <td>Analyzer × K + <b>Evaluator × K</b> + mediator + Skeptic</td>
+      </tr>
+      <tr>
+        <td>Avg latency / question</td>
+        <td class="num">22.8 s</td><td class="num">23.5 s</td>
+        <td class="num"><b>23.1 s</b></td>
+        <td class="num"><span class="delta-bad">↑ +9.6 s (+71%)</span></td>
+        <td>Sequential Analyzer → Evaluator per doc; asyncio.gather would help</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>What works / what doesn't</h2>
+
+  <div class="pros-cons">
+    <section>
+      <h4 class="good-title">✅ What's interesting (even though it lost)</h4>
+      <ul>
+        <li><b>Architecture is clean</b> — the Evaluator is a pure per-document agent with no cross-doc state. <code>DocTrust</code> is a strict Pydantic model with closed-enum red_flags; the new W_TRUST slot replaces the dormant recency / authority placeholders, so the reliability formula now has a fully populated signal stack.</li>
+        <li><b>Failure mode is mechanistic, not random</b> — we can point at exactly which design choices regressed which metrics (see "Why it failed"), which is the whole reason to publish negative results.</li>
+        <li><b>Reproducibility</b> — both freeze runs agree on EM, Misinfo-rej and Noise-rej to four decimals. The regression is stable, not stochastic.</li>
+      </ul>
+    </section>
+    <section>
+      <h4 class="bad-title">⚠ Why it failed</h4>
+      <ul>
+        <li><b>gpt-4o-mini is noisy on bounded-float ratings.</b> Trust-scores on legitimate pure_correct documents scatter across 0.00–0.85, adding noise to <code>reliability</code> instead of order.</li>
+        <li><b><code>red_flags</code> overlaps with legitimate brevity.</b> On pure_correct questions (q093, q094, q458) the gold documents are short encyclopedic stubs — the Evaluator tags them <code>short_stub</code> / <code>no_specifics</code>, and the Skeptic uses those flags to attack legitimate variants with the same depth-asymmetry rule that worked against misinfo in v3.</li>
+        <li><b>W_TRUST = 0.35 is too aggressive.</b> It shifts intra-group ranking toward verbose documents — which sometimes coincides with misinfo (RAMDocs fabrications are often longer than correct stubs).</li>
+        <li><b>Sequential Evaluator calls double the per-doc roundtrip.</b> Latency jumps from 13s to 23s. <code>asyncio.gather</code> would reduce latency but not solve the quality problem.</li>
+      </ul>
+    </section>
+  </div>
+
+  <div class="callout warn">
+    <b>Bottom line:</b> v4.0 ships frozen as a published negative result.
+    Every quality metric ticked down (EM −0.042, F1 −0.025,
+    Misinfo-rejection −0.042, Citation-faith −0.035) while cost +15% and
+    LLM calls per question +81%. The design lesson is recorded: a per-doc
+    quality agent over a small encyclopedic corpus is not free — it injects
+    LLM rating noise into <code>reliability</code> and gives the Skeptic
+    correlated-with-misinfo flags that also fire on legitimate short
+    documents. <b>v3.3_analyzer_tuned remains the recommended default.</b>
+    A potential v4.1 (drop red_flags, lower W_TRUST to 0.10–0.15,
+    move Evaluator to gpt-4o) is left as a direction, not a commitment.
+  </div>
+
+  <h2>Unchanged vs v3.3</h2>
+  <ul>
+    <li>Retriever (BM25 + dense, top_k = 8)</li>
+    <li>Analyzer prompt (the v3.3 multi-candidate disambiguation tune)</li>
+    <li>Intra-Entity Mediator prompt</li>
+    <li>Skeptic prompt body (the four checks); only the input gains <code>trust</code> + <code>red_flags</code> per document</li>
+    <li>Entity grouping logic and the 0.30 weight threshold</li>
+    <li>Mediator / Skeptic models (<code>gpt-4o</code>)</li>
+  </ul>
+
+  <div class="footnote">
+    Run artefacts are immutable. The Evaluator code, prompt and the new
+    reliability formula live in <code>pipelines/v4_0_evidence_quality/</code>
+    so the negative result is reproducible.
+    Frozen baseline: <code>runs/_baseline/v4.0_evidence_quality.json</code>.
+  </div>
+
+</div>
+</body>
+</html>

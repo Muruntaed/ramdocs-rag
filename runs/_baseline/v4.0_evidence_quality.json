@@ -1,0 +1,132 @@
+{
+  "pipeline": "v4.0_evidence_quality",
+  "version": "4.0.0",
+  "n_questions": 12,
+  "frozen_at": "2026-05-16T06:45:18Z",
+  "n_runs_for_avg": 2,
+  "runs": [
+    "v4.0_evidence_quality/nosha_20260516_064034_freeze1",
+    "v4.0_evidence_quality/nosha_20260516_064518_freeze2"
+  ],
+  "metrics_avg": {
+    "em_any_gold": 0.75,
+    "em_substring": 0.75,
+    "recall_all_gold": 0.6388888888888888,
+    "precision_answers": 0.6875,
+    "f1_multi_answer": 0.65,
+    "abstention_rate": 0.0,
+    "misinfo_rejection": 0.8333333333333334,
+    "noise_rejection": 0.9722222222222222,
+    "correct_citation": 0.9131944444444444,
+    "citation_faithfulness": 0.7152777777777778,
+    "coverage": 0.5705357142857143,
+    "total_cost_usd": 0.13438565,
+    "avg_cost_per_question_usd": 0.011198804166666666,
+    "avg_llm_calls_per_question": 13.125,
+    "avg_latency_s": 23.14923161708369
+  },
+  "metrics_per_run": {
+    "freeze1": {
+      "em_any_gold": 0.75,
+      "em_substring": 0.75,
+      "recall_all_gold": 0.6527777777777778,
+      "precision_answers": 0.6944444444444443,
+      "f1_multi_answer": 0.6611111111111111,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 0.8333333333333334,
+      "noise_rejection": 0.9722222222222222,
+      "correct_citation": 0.9166666666666666,
+      "citation_faithfulness": 0.7222222222222223,
+      "coverage": 0.580952380952381,
+      "total_cost_usd": 0.13616175,
+      "avg_cost_per_question_usd": 0.0113468125,
+      "avg_llm_calls_per_question": 13.166666666666666,
+      "avg_latency_s": 22.773471703001025
+    },
+    "freeze2": {
+      "em_any_gold": 0.75,
+      "em_substring": 0.75,
+      "recall_all_gold": 0.625,
+      "precision_answers": 0.6805555555555555,
+      "f1_multi_answer": 0.638888888888889,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 0.8333333333333334,
+      "noise_rejection": 0.9722222222222222,
+      "correct_citation": 0.9097222222222222,
+      "citation_faithfulness": 0.7083333333333334,
+      "coverage": 0.5601190476190476,
+      "total_cost_usd": 0.13260955,
+      "avg_cost_per_question_usd": 0.011050795833333333,
+      "avg_llm_calls_per_question": 13.083333333333334,
+      "avg_latency_s": 23.524991531166354
+    }
+  },
+  "by_category_avg": {
+    "pure_correct": {
+      "em_any_gold": 0.3333333333333333,
+      "em_substring": 0.3333333333333333,
+      "recall_all_gold": 0.3333333333333333,
+      "precision_answers": 0.3333333333333333,
+      "f1_multi_answer": 0.3333333333333333,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 1.0,
+      "noise_rejection": 1.0,
+      "correct_citation": 1.0,
+      "citation_faithfulness": 0.3333333333333333,
+      "coverage": 0.30158730158730157
+    },
+    "has_misinfo": {
+      "em_any_gold": 0.6666666666666666,
+      "em_substring": 0.6666666666666666,
+      "recall_all_gold": 0.6666666666666666,
+      "precision_answers": 0.5555555555555555,
+      "f1_multi_answer": 0.6,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 0.3333333333333333,
+      "noise_rejection": 1.0,
+      "correct_citation": 0.75,
+      "citation_faithfulness": 0.8333333333333334,
+      "coverage": 0.5555555555555556
+    },
+    "has_noise": {
+      "em_any_gold": 1.0,
+      "em_substring": 1.0,
+      "recall_all_gold": 0.7222222222222222,
+      "precision_answers": 1.0,
+      "f1_multi_answer": 0.8222222222222223,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 1.0,
+      "noise_rejection": 1.0,
+      "correct_citation": 1.0,
+      "citation_faithfulness": 0.8333333333333334,
+      "coverage": 0.7166666666666667
+    },
+    "mixed_conflict": {
+      "em_any_gold": 1.0,
+      "em_substring": 1.0,
+      "recall_all_gold": 0.8333333333333333,
+      "precision_answers": 0.8611111111111111,
+      "f1_multi_answer": 0.8444444444444444,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 1.0,
+      "noise_rejection": 0.8888888888888888,
+      "correct_citation": 0.9027777777777777,
+      "citation_faithfulness": 0.8888888888888888,
+      "coverage": 0.7083333333333333
+    }
+  },
+  "deltas_vs_v3.3_analyzer_tuned": {
+    "em_any_gold": -0.0417,
+    "f1_multi_answer": -0.025,
+    "recall_all_gold": -0.0069,
+    "misinfo_rejection": -0.0417,
+    "noise_rejection": -0.0278,
+    "citation_faithfulness": -0.0347,
+    "correct_citation": -0.0451,
+    "coverage": -0.0085,
+    "total_cost_usd": 0.01748,
+    "avg_llm_calls_per_question": 5.875,
+    "avg_latency_s": 9.64
+  },
+  "notes": "v3.3 + per-document Evidence Evaluator agent that emits a structured DocTrust report (internal_consistency, encyclopedic_quality, specificity, relevance, composite trust_score, closed-enum red_flags). The trust_score lands in a new reliability slot (W_TRUST=0.35, formula: 0.40·retrieval + 0.25·confidence + 0.35·trust − 0.10·minority), and red_flags are surfaced to the Skeptic. Hypothesis: a structured per-doc evidence-quality signal should sharpen reliability ordering and let the Skeptic prune misinfo more aggressively without over-pruning legitimate variants. Result: REGRESSION across the board — EM −0.042, F1 −0.025, Misinfo-rejection −0.042 — at +81% LLM calls and +71% latency. The Evaluator adds noise to reliability (gpt-4o-mini is not stable at small-text quality rating with bounded floats) and shifts the Skeptic's decision boundary in the wrong direction (the new red_flags overlap with legitimate short answers in the pure_correct category). v4.0 is published as a frozen NEGATIVE result and is NOT a Pareto improvement over v3. v3.3_analyzer_tuned remains the recommended default."
+}

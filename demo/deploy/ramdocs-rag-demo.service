@@ -1,0 +1,21 @@
+[Unit]
+Description=ramdocs-rag-demo — FastAPI backend (reverse-proxied by Caddy)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/ramdocs-rag-demo
+EnvironmentFile=/etc/ramdocs-rag-demo/.env
+ExecStart=/opt/ramdocs-rag-demo/.venv/bin/uvicorn demo_api.main:app --host 127.0.0.1 --port 8773
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

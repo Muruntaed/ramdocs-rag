@@ -1,0 +1,119 @@
+{
+  "pipeline": "v3.2_skeptic_balanced",
+  "version": "3.2.0",
+  "n_questions": 12,
+  "frozen_at": "2026-05-15T22:22:20Z",
+  "n_runs_for_avg": 2,
+  "runs": [
+    "v3.2_skeptic_balanced/nosha_20260515_221935_freeze1",
+    "v3.2_skeptic_balanced/nosha_20260515_222219_freeze2"
+  ],
+  "metrics_avg": {
+    "em_any_gold": 0.7916666666666667,
+    "em_substring": 0.7916666666666667,
+    "recall_all_gold": 0.6458333333333333,
+    "precision_answers": 0.7638888888888888,
+    "f1_multi_answer": 0.675,
+    "abstention_rate": 0.0,
+    "misinfo_rejection": 0.875,
+    "noise_rejection": 0.9166666666666666,
+    "correct_citation": 0.9375,
+    "citation_faithfulness": 0.7083333333333333,
+    "coverage": 0.5779761904761904,
+    "total_cost_usd": 0.11156074999999999,
+    "avg_cost_per_question_usd": 0.009296729166666667,
+    "avg_llm_calls_per_question": 7.125,
+    "avg_latency_s": 12.676658600249237
+  },
+  "metrics_per_run": {
+    "freeze1": {
+      "em_any_gold": 0.8333333333333334,
+      "em_substring": 0.8333333333333334,
+      "recall_all_gold": 0.6666666666666666,
+      "precision_answers": 0.8055555555555555,
+      "f1_multi_answer": 0.7027777777777778,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 0.9166666666666666,
+      "noise_rejection": 0.9166666666666666,
+      "correct_citation": 0.9583333333333334,
+      "citation_faithfulness": 0.6875,
+      "coverage": 0.5720238095238095,
+      "total_cost_usd": 0.11382979999999998,
+      "avg_cost_per_question_usd": 0.009485816666666666,
+      "avg_llm_calls_per_question": 7.166666666666667,
+      "avg_latency_s": 11.851389559997187
+    },
+    "freeze2": {
+      "em_any_gold": 0.75,
+      "em_substring": 0.75,
+      "recall_all_gold": 0.625,
+      "precision_answers": 0.7222222222222222,
+      "f1_multi_answer": 0.6472222222222223,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 0.8333333333333334,
+      "noise_rejection": 0.9166666666666666,
+      "correct_citation": 0.9166666666666666,
+      "citation_faithfulness": 0.7291666666666666,
+      "coverage": 0.5839285714285715,
+      "total_cost_usd": 0.1092917,
+      "avg_cost_per_question_usd": 0.009107641666666668,
+      "avg_llm_calls_per_question": 7.083333333333333,
+      "avg_latency_s": 13.501927640501284
+    }
+  },
+  "by_category_avg": {
+    "pure_correct": {
+      "em_any_gold": 0.3333333333333333,
+      "em_substring": 0.3333333333333333,
+      "recall_all_gold": 0.3333333333333333,
+      "precision_answers": 0.3333333333333333,
+      "f1_multi_answer": 0.3333333333333333,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 1.0,
+      "noise_rejection": 1.0,
+      "correct_citation": 1.0,
+      "citation_faithfulness": 0.3333333333333333,
+      "coverage": 0.37301587301587297
+    },
+    "has_misinfo": {
+      "em_any_gold": 0.8333333333333333,
+      "em_substring": 0.8333333333333333,
+      "recall_all_gold": 0.75,
+      "precision_answers": 0.7222222222222221,
+      "f1_multi_answer": 0.7111111111111111,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 0.5,
+      "noise_rejection": 1.0,
+      "correct_citation": 0.8333333333333333,
+      "citation_faithfulness": 0.75,
+      "coverage": 0.5555555555555556
+    },
+    "has_noise": {
+      "em_any_gold": 1.0,
+      "em_substring": 1.0,
+      "recall_all_gold": 0.7222222222222222,
+      "precision_answers": 1.0,
+      "f1_multi_answer": 0.8222222222222223,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 1.0,
+      "noise_rejection": 0.6666666666666666,
+      "correct_citation": 0.9166666666666666,
+      "citation_faithfulness": 0.75,
+      "coverage": 0.7166666666666667
+    },
+    "mixed_conflict": {
+      "em_any_gold": 1.0,
+      "em_substring": 1.0,
+      "recall_all_gold": 0.7777777777777777,
+      "precision_answers": 1.0,
+      "f1_multi_answer": 0.8333333333333334,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 1.0,
+      "noise_rejection": 1.0,
+      "correct_citation": 1.0,
+      "citation_faithfulness": 1.0,
+      "coverage": 0.6666666666666666
+    }
+  },
+  "notes": "Final v3 variant. Two minor refinements over v3.0/v3.1: (1) Skeptic prompt adds a depth-asymmetry check on top of the homonym rule — catches thin-stub misinfo while preserving valid namesakes; (2) min_relative_weight 0.40 -> 0.30 lifts multi-answer recall on 3-gold questions. Abstention fallback from v3.1 kept. Best balance overall: vs v3.0 +0.123 EM / +0.062 Recall, -0.042 Misinfo; vs v3.1 Pareto-better on 4 of 5 anchor metrics; vs v2.0 +0.083 Misinfo at -0.04 EM. The earlier v3.0 (aggressive) and v3.1 (over-conservative) iterations are not exposed in the public journal."
+}

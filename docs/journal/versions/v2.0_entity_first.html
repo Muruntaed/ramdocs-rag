@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>v2.0 Entity-First — Research Journal</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div class="container">
+
+  <nav class="crumbs">
+    <a href="../index.html">← Journal index</a>
+  </nav>
+
+  <header class="page-header">
+    <h1>v2.0 · Entity-First Decomposition</h1>
+    <div class="subtitle">
+      <span class="status-frozen">FROZEN · 2026-05-15</span> ·
+      multi-answer as a first-class citizen, grouped by entity
+    </div>
+  </header>
+
+  <dl class="kv">
+    <dt>Version</dt><dd><code>2.0.0</code></dd>
+    <dt>Retrieval parameters</dt><dd>BM25 + dense, weights 0.5 / 0.5, top_k = 8 (same as v1.0)</dd>
+    <dt>Reliability weights</dt><dd>0.40 / 0.25 / 0.20 / 0.15 / −0.10 (same as v1.0)</dd>
+    <dt>Grouping parameters</dt><dd><b>min_relative_weight = 0.40</b> (an entity group enters the answer if its weight is ≥ 40% of the top group)</dd>
+    <dt>Freeze cost</dt><dd>$0.044 across both runs ($0.022 per run, −55% vs v1.0)</dd>
+  </dl>
+
+  <h2>Hypothesis</h2>
+  <p>
+    The Recall@gold = 0.59 cap of single-answer v1.0 will break once the
+    pipeline returns multiple answers grouped by entity. Target:
+    <b>Recall ≥ 0.75</b>, F1 ≥ 0.75, EM lifted by a bare-answer format,
+    and misinfo-rejection holding flat.
+  </p>
+
+  <h2>Architecture</h2>
+  <p style="color:var(--muted);font-size:13px;margin-bottom:6px;">
+    <span style="display:inline-block;width:14px;height:14px;background:#fef9c3;border:2px solid #ca8a04;border-radius:3px;vertical-align:middle;margin-right:4px"></span>
+    <b>Δ</b> — changed vs v1.0 ·
+    <span style="display:inline-block;width:14px;height:14px;background:#fef9c3;border:2px dashed #d97706;border-radius:3px;vertical-align:middle;margin:0 4px 0 12px"></span>
+    <b>NEW</b> — new step
+  </p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 760 820" xmlns="http://www.w3.org/2000/svg"
+         style="max-width:760px;width:100%;height:auto;display:block;margin:0 auto;font-family:system-ui,sans-serif">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#6b7280"/>
+        </marker>
+        <style>
+          .box     { fill:#ffffff; stroke:#cbd5e1; stroke-width:1.5; }
+          .box.input    { fill:#f1f5f9; stroke:#94a3b8; }
+          .box.changed  { fill:#fef9c3; stroke:#ca8a04; stroke-width:2; }
+          .box.newbox   { fill:#fef9c3; stroke:#d97706; stroke-width:2.5; stroke-dasharray:5 3; }
+          .box.det      { fill:#f0fdf4; stroke:#86efac; }
+          .box.llm      { fill:#fffbeb; stroke:#fcd34d; }
+          .box.output   { fill:#fef9c3; stroke:#ca8a04; stroke-width:2; }
+          .diamond      { fill:#fef9c3; stroke:#eab308; stroke-width:1.5; }
+          .ttl   { fill:#0f172a; font-size:13px; font-weight:600; }
+          .sub   { fill:#64748b; font-size:11px; }
+          .edge  { fill:#64748b; font-size:11px; font-style:italic; }
+          .arr   { stroke:#6b7280; stroke-width:1.5; fill:none; }
+          .badge    { fill:#d97706; }
+          .badgetxt { fill:#ffffff; font-size:9px; font-weight:700; }
+          .grp-label { fill:#92400e; font-size:11px; font-style:italic; font-weight:600; }
+          .accent-txt { fill:#92400e; font-weight:600; }
+        </style>
+      </defs>
+
+      <rect class="box input" x="240" y="20" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="44" text-anchor="middle">Question + RAMDocs candidate pool</text>
+      <text class="sub" x="380" y="63" text-anchor="middle">3–8 documents per question</text>
+      <path class="arr" d="M 380 76 L 380 108" marker-end="url(#arr)"/>
+
+      <rect class="box" x="240" y="110" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="134" text-anchor="middle">Retriever</text>
+      <text class="sub" x="380" y="153" text-anchor="middle">BM25 + dense MiniLM · top_k = 8</text>
+      <path class="arr" d="M 380 166 L 380 185 L 140 185 L 140 208" marker-end="url(#arr)"/>
+      <path class="arr" d="M 380 166 L 380 208" marker-end="url(#arr)"/>
+      <path class="arr" d="M 380 166 L 380 185 L 620 185 L 620 208" marker-end="url(#arr)"/>
+
+      <rect class="box changed" x="40"  y="210" width="200" height="76" rx="8"/>
+      <circle class="badge" cx="227" cy="222" r="11"/>
+      <text class="badgetxt" x="227" y="225" text-anchor="middle">Δ</text>
+      <text class="ttl" x="140" y="234" text-anchor="middle">Analyzer 1</text>
+      <text class="sub accent-txt" x="140" y="252" text-anchor="middle">claim + entity</text>
+      <text class="sub" x="140" y="270" text-anchor="middle">gpt-4o-mini · bare-answer text</text>
+
+      <rect class="box changed" x="280" y="210" width="200" height="76" rx="8"/>
+      <circle class="badge" cx="467" cy="222" r="11"/>
+      <text class="badgetxt" x="467" y="225" text-anchor="middle">Δ</text>
+      <text class="ttl" x="380" y="234" text-anchor="middle">Analyzer 2</text>
+      <text class="sub accent-txt" x="380" y="252" text-anchor="middle">claim + entity</text>
+      <text class="sub" x="380" y="270" text-anchor="middle">gpt-4o-mini · bare-answer text</text>
+
+      <rect class="box changed" x="520" y="210" width="200" height="76" rx="8"/>
+      <circle class="badge" cx="707" cy="222" r="11"/>
+      <text class="badgetxt" x="707" y="225" text-anchor="middle">Δ</text>
+      <text class="ttl" x="620" y="234" text-anchor="middle">Analyzer K</text>
+      <text class="sub accent-txt" x="620" y="252" text-anchor="middle">claim + entity</text>
+      <text class="sub" x="620" y="270" text-anchor="middle">gpt-4o-mini · bare-answer text</text>
+
+      <path class="arr" d="M 140 286 L 140 310 L 380 310 L 380 330" marker-end="url(#arr)"/>
+      <path class="arr" d="M 380 286 L 380 330" marker-end="url(#arr)"/>
+      <path class="arr" d="M 620 286 L 620 310 L 380 310 L 380 330" marker-end="url(#arr)"/>
+
+      <rect class="box newbox" x="220" y="330" width="320" height="56" rx="8"/>
+      <rect class="badge" x="505" y="334" width="36" height="14" rx="3"/>
+      <text class="badgetxt" x="523" y="345" text-anchor="middle">NEW</text>
+      <text class="ttl" x="380" y="354" text-anchor="middle">Group by entity (deterministic)</text>
+      <text class="sub" x="380" y="373" text-anchor="middle">canonicalize + substring-merge · no LLM (was: cosine cluster)</text>
+      <path class="arr" d="M 380 386 L 380 418" marker-end="url(#arr)"/>
+
+      <rect class="box changed" x="240" y="420" width="280" height="56" rx="8"/>
+      <circle class="badge" cx="507" cy="432" r="11"/>
+      <text class="badgetxt" x="507" y="435" text-anchor="middle">Δ</text>
+      <text class="ttl" x="380" y="444" text-anchor="middle">Reliability scoring</text>
+      <text class="sub" x="380" y="463" text-anchor="middle">5 factors · minority penalty <tspan class="accent-txt">intra-group</tspan> (was: global)</text>
+      <path class="arr" d="M 380 476 L 380 510" marker-end="url(#arr)"/>
+
+      <rect x="40" y="500" width="680" height="200" rx="10"
+            fill="none" stroke="#d97706" stroke-width="1.5" stroke-dasharray="6 4" opacity="0.55"/>
+      <text class="grp-label" x="60" y="520">for each entity group above the threshold:</text>
+
+      <polygon class="diamond" points="380,520 500,575 380,630 260,575"/>
+      <text class="ttl" x="380" y="568" text-anchor="middle">Intra-group</text>
+      <text class="ttl" x="380" y="586" text-anchor="middle">winner ratio</text>
+      <text class="ttl" x="380" y="604" text-anchor="middle">≥ 1.5 ?</text>
+
+      <path class="arr" d="M 260 575 L 180 575 L 180 645" marker-end="url(#arr)"/>
+      <text class="edge" x="218" y="569" text-anchor="middle">yes</text>
+
+      <path class="arr" d="M 500 575 L 580 575 L 580 645" marker-end="url(#arr)"/>
+      <text class="edge" x="542" y="569" text-anchor="middle">no</text>
+
+      <rect class="box det" x="60" y="645" width="240" height="50" rx="8"/>
+      <text class="ttl" x="180" y="669" text-anchor="middle">Deterministic vote</text>
+      <text class="sub" x="180" y="685" text-anchor="middle">no LLM · per group</text>
+
+      <rect class="box llm" x="460" y="645" width="240" height="50" rx="8"/>
+      <text class="ttl" x="580" y="669" text-anchor="middle">LLM mediator</text>
+      <text class="sub" x="580" y="685" text-anchor="middle">gpt-4o · strict JSON · per group</text>
+
+      <path class="arr" d="M 180 695 L 180 720 L 380 720 L 380 740" marker-end="url(#arr)"/>
+      <path class="arr" d="M 580 695 L 580 720 L 380 720 L 380 740" marker-end="url(#arr)"/>
+
+      <rect class="box output" x="240" y="742" width="280" height="56" rx="8"/>
+      <circle class="badge" cx="508" cy="754" r="11"/>
+      <text class="badgetxt" x="508" y="757" text-anchor="middle">Δ</text>
+      <text class="ttl" x="380" y="767" text-anchor="middle">FinalAnswer</text>
+      <text class="sub accent-txt" x="380" y="785" text-anchor="middle">list[AnswerVariant] (was: single variant)</text>
+    </svg>
+  </div>
+
+  <p style="color:var(--muted);font-size:13px;">
+    The structural changes relative to v1.0:
+    (1) the analyzer must now return <code>entity</code> — the canonical
+    subject extracted verbatim from the document;
+    (2) cosine clustering is replaced by deterministic entity grouping with
+    substring merging;
+    (3) the reliability minority penalty is applied <i>within</i> each entity
+    group rather than globally;
+    (4) the mediator is invoked per entity group, and only when claims inside
+    that group disagree;
+    (5) <code>FinalAnswer.variants</code> is now a list — one variant per
+    entity group above the 0.40 weight threshold.
+  </p>
+
+  <h2>Prompts</h2>
+  <p style="color:var(--muted);font-size:13px;margin-top:-4px;">
+    Click a card to reveal the full prompt text.
+  </p>
+
+  <div class="prompt-cards">
+    <button class="prompt-card" onclick="document.getElementById('dlg-analyzer').showModal()">
+      <span class="pc-name">📄 Analyzer system prompt</span>
+      <span class="pc-meta">extracts entity + bare answer · output: Claim (strict JSON)</span>
+    </button>
+    <button class="prompt-card" onclick="document.getElementById('dlg-mediator').showModal()">
+      <span class="pc-name">🧑‍⚖️ Intra-Entity Mediator prompt</span>
+      <span class="pc-meta">per-entity reconciliation · only invoked on intra-group disagreement</span>
+    </button>
+  </div>
+
+  <dialog id="dlg-analyzer">
+    <div class="dlg-head">
+      <h3>Analyzer system prompt (v2.0)</h3>
+      <button class="close-btn" onclick="document.getElementById('dlg-analyzer').close()">✕</button>
+    </div>
+    <div class="dlg-body">
+<pre>You are the per-document Analyzer in an Entity-First multi-agent RAG pipeline.
+
+Given a USER QUESTION and ONE DOCUMENT, output JSON:
+
+- `doc_id`        — copy verbatim.
+
+- `entity`        — the entity the document is primarily about, taken VERBATIM
+                    from the document (usually its title or first sentence).
+                    If the document titles itself with a parenthetical
+                    disambiguator (e.g. "Security Building (St. Louis,
+                    Missouri)" or "Without You I'm Nothing (Placebo album)"),
+                    KEEP that disambiguator — it is what allows the mediator
+                    to separate same-named entities. Do NOT invent a
+                    disambiguator the document doesn't state. Empty string
+                    only when stance is `no_answer`.
+
+- `text`          — the BARE ANSWER for `entity`. The VALUE ONLY — no leading
+                    "the answer is", no full sentence, no verbose paraphrase.
+                    Examples:
+                      Q: "Who is the artist of X?"   text: "Placebo"
+                                                    NOT: "The artist is Placebo"
+                      Q: "When was X built?"         text: "1892"
+                                                    NOT: "completed in 1892"
+                      Q: "When did X die?"           text: "11 March 1707"
+                                                    NOT: "died on 11 March 1707"
+                      Q: "What is X known for?"     text: "A film"
+                                                    NOT: "is a film that opened in 1974"
+
+- `stance`        — supports | contradicts | no_answer.
+
+- `confidence`    — float in [0, 1]. Lower when source is hedged or unclear.
+
+- `supporting_quote` — verbatim span (≤ 200 chars) grounding the answer.
+
+Hard rules:
+
+- Use ONLY the document text. No outside knowledge.
+- `text` must be the BARE value, readable as the right-hand side of
+  "the answer is __". If your text is a full sentence, you have failed.
+- Keep entity disambiguators verbatim when the document provides them.</pre>
+    </div>
+  </dialog>
+
+  <dialog id="dlg-mediator">
+    <div class="dlg-head">
+      <h3>Intra-Entity Mediator prompt (v2.0)</h3>
+      <button class="close-btn" onclick="document.getElementById('dlg-mediator').close()">✕</button>
+    </div>
+    <div class="dlg-body">
+<pre>You are the Intra-Entity Mediator in an Entity-First multi-agent RAG pipeline.
+
+Documents that pass analysis have already been grouped by the entity they
+describe. You are called ONLY when claims WITHIN a single entity group
+disagree on the answer (e.g., two docs about the same person give different
+death dates). Your job is to pick the right answer for THIS entity.
+
+Inputs:
+- The user QUESTION.
+- The ENTITY this group is about.
+- A list of CONFLICTING CLAIMS, all about this entity. Each has: doc_id,
+  text, confidence, supporting_quote, reliability.
+
+Output strictly JSON:
+- `answer` — the answer entity ONLY, as a bare string. No prose.
+- `confidence` — float in [0, 1].
+- `supporting_doc_ids` — IDs of docs whose claims you accept.
+- `rejected_doc_ids` — IDs of docs you reject as misinfo about this entity.
+- `reconciliation_explanation` — 1-2 sentences.
+
+Rules:
+- Quotes are strongest evidence; trust a claim whose supporting_quote
+  explicitly contains the answer phrase.
+- Higher-reliability claims preferred when quotes are similar.
+- Do not invent answers absent from the claims.
+- Every doc_id MUST be in exactly one of supporting/rejected.</pre>
+    </div>
+  </dialog>
+
+  <h2>Results</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Metric</th>
+        <th class="num">freeze1</th>
+        <th class="num">freeze2</th>
+        <th class="num">avg</th>
+        <th class="num">Δ vs v1.0</th>
+        <th>Comment</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><b>EM-any-gold</b> 🎯</td>
+        <td class="num">0.833</td><td class="num">0.833</td>
+        <td class="num"><b>0.833</b></td>
+        <td class="num"><span class="delta-good">↑ +0.500</span></td>
+        <td>The headline win — driven by the bare-answer format</td>
+      </tr>
+      <tr>
+        <td>EM-substring</td>
+        <td class="num">0.833</td><td class="num">0.833</td>
+        <td class="num">0.833</td>
+        <td class="num"><span class="delta-flat">↔ 0.000</span></td>
+        <td>Unchanged</td>
+      </tr>
+      <tr>
+        <td><b>F1-multi-answer</b> 🎯</td>
+        <td class="num">0.670</td><td class="num">0.670</td>
+        <td class="num"><b>0.670</b></td>
+        <td class="num"><span class="delta-flat">↔ +0.002</span></td>
+        <td>Close to v1.0; precision dips while recall rises</td>
+      </tr>
+      <tr>
+        <td><b>Recall@gold</b></td>
+        <td class="num">0.667</td><td class="num">0.667</td>
+        <td class="num"><b>0.667</b></td>
+        <td class="num"><span class="delta-good">↑ +0.077</span></td>
+        <td>The single-answer structural cap is broken</td>
+      </tr>
+      <tr>
+        <td>Precision-answers</td>
+        <td class="num">0.747</td><td class="num">0.747</td>
+        <td class="num">0.747</td>
+        <td class="num"><span class="delta-bad">↓ −0.086</span></td>
+        <td>The cost of multi-answer — occasional spurious variant</td>
+      </tr>
+      <tr>
+        <td><b>Misinfo-rejection</b> 🎯</td>
+        <td class="num">0.792</td><td class="num">0.792</td>
+        <td class="num"><b>0.792</b></td>
+        <td class="num"><span class="delta-bad">↓ −0.125</span></td>
+        <td>Regression: misinfo forms its own entity group → targeted by v3.0</td>
+      </tr>
+      <tr>
+        <td>Noise rejection</td>
+        <td class="num">0.917</td><td class="num">1.000</td>
+        <td class="num">0.958</td>
+        <td class="num"><span class="delta-good">↑ +0.264</span></td>
+        <td>Entity grouping automatically discards no-entity documents</td>
+      </tr>
+      <tr>
+        <td>Citation faithfulness</td>
+        <td class="num">0.681</td><td class="num">0.687</td>
+        <td class="num">0.684</td>
+        <td class="num"><span class="delta-bad">↓ −0.122</span></td>
+        <td>Multi-answer increases the surface for misaligned quotes</td>
+      </tr>
+      <tr>
+        <td>Correct citation</td>
+        <td class="num">0.926</td><td class="num">0.946</td>
+        <td class="num">0.936</td>
+        <td class="num"><span class="delta-bad">↓ −0.036</span></td>
+        <td>The vast majority of citations are still correct</td>
+      </tr>
+      <tr>
+        <td>Coverage</td>
+        <td class="num">0.647</td><td class="num">0.610</td>
+        <td class="num">0.628</td>
+        <td class="num"><span class="delta-good">↑ +0.131</span></td>
+        <td>More correct documents are surfaced in supporting</td>
+      </tr>
+      <tr>
+        <td>Abstention rate</td>
+        <td class="num">0.000</td><td class="num">0.000</td>
+        <td class="num">0.000</td>
+        <td class="num"><span class="delta-flat">↔ 0.000</span></td>
+        <td>Never abstains — targeted by v5.0</td>
+      </tr>
+      <tr>
+        <td>Avg cost / question</td>
+        <td class="num">$0.0018</td><td class="num">$0.0018</td>
+        <td class="num">$0.0018</td>
+        <td class="num"><span class="delta-good">↓ −55%</span></td>
+        <td>The expensive gpt-4o mediator is rarely invoked (det. vote usually wins)</td>
+      </tr>
+      <tr>
+        <td>Avg LLM calls / question</td>
+        <td class="num">6.2</td><td class="num">6.2</td>
+        <td class="num">6.2</td>
+        <td class="num"><span class="delta-good">↓ −0.4</span></td>
+        <td>K analyzer calls plus the occasional mediator</td>
+      </tr>
+      <tr>
+        <td>Avg latency / question</td>
+        <td class="num">10.6 s</td><td class="num">10.7 s</td>
+        <td class="num">10.7 s</td>
+        <td class="num"><span class="delta-flat">↔ +0.6</span></td>
+        <td>Essentially the same as v1.0</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>By category (averaged over both freeze runs)</h3>
+  <p style="color:var(--muted);font-size:12px;margin:0 0 -6px;">
+    * — the category contains no misinfo documents, so the metric is trivially 1.0.
+  </p>
+  <table>
+    <thead>
+      <tr>
+        <th>Category</th>
+        <th class="num">n</th>
+        <th class="num">F1-multi</th>
+        <th class="num">EM-any</th>
+        <th class="num">Recall@gold</th>
+        <th class="num">Misinfo-rej</th>
+        <th class="num">Citation-faith</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>pure_correct</td><td class="num">3</td><td class="num">0.29</td><td class="num">0.33</td><td class="num">0.33</td><td class="num">1.00*</td><td class="num">0.25</td></tr>
+      <tr><td>has_misinfo</td><td class="num">3</td><td class="num">0.77</td><td class="num">1.00</td><td class="num">0.83</td><td class="num"><b>0.50</b></td><td class="num">0.67</td></tr>
+      <tr><td>has_noise</td><td class="num">3</td><td class="num">0.82</td><td class="num">1.00</td><td class="num">0.72</td><td class="num">1.00*</td><td class="num">0.82</td></tr>
+      <tr><td>mixed_conflict</td><td class="num">3</td><td class="num">0.80</td><td class="num">1.00</td><td class="num">0.78</td><td class="num">0.67</td><td class="num">1.00</td></tr>
+    </tbody>
+  </table>
+
+  <h2>What works / what doesn't</h2>
+
+  <div class="pros-cons">
+    <section>
+      <h4 class="good-title">✅ Strengths</h4>
+      <ul>
+        <li><b>EM-any-gold 0.833</b> — the bare-answer rule plus strict disambiguation lift this from 0.33. EM = 1.00 across every question in <code>has_misinfo</code>, <code>has_noise</code> and <code>mixed_conflict</code>.</li>
+        <li><b>Recall@gold +0.077</b> — the single-answer structural cap is broken. Ambiguous questions like <i>Without You I'm Nothing</i> now return both valid entity variants.</li>
+        <li><b>Noise rejection +0.264</b> — entity grouping implicitly closes the second hole. A document without an entity never enters any group and lands in rejected by construction.</li>
+        <li><b>Coverage +0.131</b> — more correct documents are exposed as supporting (each variant ships all docs of its entity group).</li>
+        <li><b>Cost −55%</b> — deterministic grouping plus intra-group voting handles most cases, so the expensive gpt-4o mediator is invoked far less often.</li>
+        <li><b>Stability:</b> only 2 of 12 questions diverge between freeze runs, and those diverge on capitalization / dedup only.</li>
+      </ul>
+    </section>
+    <section>
+      <h4 class="bad-title">⚠ Weaknesses</h4>
+      <ul>
+        <li><b>Misinfo-rejection −0.125</b> — a structural side effect: a misinfo document with its own (fabricated) entity forms a standalone group, passes the 0.40 threshold and lands inside its own variant's supporting set. This is not a code or prompt bug — it is an information bound: the analyzer sees a single document and cannot cross-check the entity against the corpus. The fix lives in v3.0 (skeptic).</li>
+        <li><b>Citation faithfulness −0.122</b> — under multi-answer, a variant for entity X may cite a document whose <code>eval_metadata.answer</code> is a close-but-different entity.</li>
+        <li><b>pure_correct F1 = 0.29</b> — the weak spot is the category itself: questions such as q094 contain misinfo-style texts labeled as <code>correct</code> in RAMDocs (an internal dataset inconsistency). Not addressable from our pipeline.</li>
+        <li><b>Precision-answers −0.086</b> — structurally inevitable: emitting more variants opens room for a spurious one.</li>
+        <li><b>Abstention rate = 0</b> — there is no "I don't know" pathway even on a degenerate retrieval pool. Targeted by v5.0.</li>
+      </ul>
+    </section>
+  </div>
+
+  <div class="callout warn">
+    <b>Bottom line:</b> entity-first does break the structural cap of
+    single-answer architecture — EM jumps by +0.50, Recall by +0.077,
+    Noise-rejection by +0.264, and cost drops by 55%. The price is a 0.125
+    drop in misinfo-rejection: a misinfo document with its own fabricated
+    entity now forms a group that looks reliable to the rest of the pipeline.
+    This is an <b>information bound</b> — the analyzer sees one document at a
+    time and cannot verify the entity against the corpus.
+    <b>The fix is the skeptic agent in v3.0</b>, which sees every entity group
+    and validates each one against the rest of the corpus.
+  </div>
+
+  <h2>Unchanged vs v1.0</h2>
+  <ul>
+    <li>Retriever: BM25 + dense MiniLM, top_k = 8, weights 0.5 / 0.5</li>
+    <li>Reliability formula: weights 0.40 / 0.25 / 0.20 / 0.15 / −0.10</li>
+    <li>Models: analyzer = <code>gpt-4o-mini</code>, mediator = <code>gpt-4o</code></li>
+    <li>Claim JSON schema (with the addition of the required <code>entity</code> field)</li>
+  </ul>
+
+  <div class="footnote">
+    Run artefacts are immutable: no changes to logic or prompts of v2.0 after freeze.
+    Any change spawns a new minor version (v2.1) with its own freeze run.
+    A minor iteration v2.1_calibrated was attempted and rejected — see
+    <code>runs/_journal.md</code> for details.
+  </div>
+
+</div>
+</body>
+</html>

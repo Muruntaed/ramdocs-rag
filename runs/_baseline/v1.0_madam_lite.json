@@ -1,0 +1,119 @@
+{
+  "pipeline": "v1.0_madam_lite",
+  "version": "1.0.0",
+  "n_questions": 12,
+  "frozen_at": "2026-05-15T18:55:15Z",
+  "n_runs_for_avg": 2,
+  "runs": [
+    "v1.0_madam_lite/nosha_20260515_185256_freeze1",
+    "v1.0_madam_lite/nosha_20260515_185513_freeze2"
+  ],
+  "metrics_avg": {
+    "em_any_gold": 0.3333333333333333,
+    "em_substring": 0.8333333333333334,
+    "recall_all_gold": 0.5902777777777778,
+    "precision_answers": 0.8333333333333334,
+    "f1_multi_answer": 0.6638888888888889,
+    "abstention_rate": 0.0,
+    "misinfo_rejection": 0.9166666666666666,
+    "noise_rejection": 0.6944444444444445,
+    "correct_citation": 0.9722222222222222,
+    "citation_faithfulness": 0.8055555555555557,
+    "coverage": 0.4968253968253969,
+    "total_cost_usd": 0.04854945000000001,
+    "avg_cost_per_question_usd": 0.0040457875,
+    "avg_llm_calls_per_question": 6.583333333333333,
+    "avg_latency_s": 10.082519927208219
+  },
+  "metrics_per_run": {
+    "freeze1": {
+      "em_any_gold": 0.3333333333333333,
+      "em_substring": 0.8333333333333334,
+      "recall_all_gold": 0.5694444444444445,
+      "precision_answers": 0.8333333333333334,
+      "f1_multi_answer": 0.65,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 0.9166666666666666,
+      "noise_rejection": 0.6944444444444445,
+      "correct_citation": 0.9722222222222222,
+      "citation_faithfulness": 0.8055555555555557,
+      "coverage": 0.4898809523809524,
+      "total_cost_usd": 0.048206950000000005,
+      "avg_cost_per_question_usd": 0.004017245833333334,
+      "avg_llm_calls_per_question": 6.583333333333333,
+      "avg_latency_s": 9.927536957583166
+    },
+    "freeze2": {
+      "em_any_gold": 0.3333333333333333,
+      "em_substring": 0.8333333333333334,
+      "recall_all_gold": 0.611111111111111,
+      "precision_answers": 0.8333333333333334,
+      "f1_multi_answer": 0.6777777777777777,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 0.9166666666666666,
+      "noise_rejection": 0.6944444444444445,
+      "correct_citation": 0.9722222222222222,
+      "citation_faithfulness": 0.8055555555555557,
+      "coverage": 0.5037698412698414,
+      "total_cost_usd": 0.04889195,
+      "avg_cost_per_question_usd": 0.004074329166666667,
+      "avg_llm_calls_per_question": 6.583333333333333,
+      "avg_latency_s": 10.237502896833272
+    }
+  },
+  "by_category_avg": {
+    "pure_correct": {
+      "em_any_gold": 0.0,
+      "em_substring": 0.3333333333333333,
+      "recall_all_gold": 0.3333333333333333,
+      "precision_answers": 0.3333333333333333,
+      "f1_multi_answer": 0.3333333333333333,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 1.0,
+      "noise_rejection": 1.0,
+      "correct_citation": 1.0,
+      "citation_faithfulness": 0.3333333333333333,
+      "coverage": 0.25396825396825395
+    },
+    "has_misinfo": {
+      "em_any_gold": 0.0,
+      "em_substring": 1.0,
+      "recall_all_gold": 0.75,
+      "precision_answers": 1.0,
+      "f1_multi_answer": 0.8333333333333333,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 0.6666666666666666,
+      "noise_rejection": 1.0,
+      "correct_citation": 1.0,
+      "citation_faithfulness": 1.0,
+      "coverage": 0.4722222222222222
+    },
+    "has_noise": {
+      "em_any_gold": 0.6666666666666666,
+      "em_substring": 1.0,
+      "recall_all_gold": 0.611111111111111,
+      "precision_answers": 1.0,
+      "f1_multi_answer": 0.7222222222222222,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 1.0,
+      "noise_rejection": 0.3333333333333333,
+      "correct_citation": 0.8888888888888888,
+      "citation_faithfulness": 0.8888888888888888,
+      "coverage": 0.65
+    },
+    "mixed_conflict": {
+      "em_any_gold": 0.6666666666666666,
+      "em_substring": 1.0,
+      "recall_all_gold": 0.6666666666666666,
+      "precision_answers": 1.0,
+      "f1_multi_answer": 0.7666666666666666,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 1.0,
+      "noise_rejection": 0.4444444444444444,
+      "correct_citation": 1.0,
+      "citation_faithfulness": 1.0,
+      "coverage": 0.611111111111111
+    }
+  },
+  "notes": "Two consecutive freeze runs on full 12-Q subset. 1/12 divergence (q131_8a961c71: 'a play' vs 'a play | a 1936 American film') — within ±1 tolerance. EM-any-gold low (0.33) is a known artifact: single-answer EM doesn't credit our '|' multi-answer mediator format. Use F1-multi-answer and misinfo-rejection as anchors. Anchor F1: 0.665 avg; anchor misinfo-rej: 0.92 avg."
+}

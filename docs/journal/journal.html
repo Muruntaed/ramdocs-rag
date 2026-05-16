@@ -1,0 +1,2317 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RAMDocs Multi-Agent RAG — Research Journal</title>
+<style>:root {
+  --bg: #fbfaf7;
+  --fg: #1f2937;
+  --muted: #6b7280;
+  --accent: #2563eb;
+  --accent-light: #dbeafe;
+  --border: #e5e7eb;
+  --code-bg: #f3f4f6;
+  --good: #16a34a;
+  --bad: #dc2626;
+  --warn: #d97706;
+  --neutral: #6b7280;
+  --card-bg: #ffffff;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  background: var(--bg);
+  color: var(--fg);
+  -webkit-font-smoothing: antialiased;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+
+header.page-header {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 16px;
+  margin-bottom: 24px;
+}
+
+header.page-header h1 {
+  margin: 0 0 4px;
+  font-size: 26px;
+  letter-spacing: -0.01em;
+}
+
+header.page-header .subtitle {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+nav.crumbs {
+  font-size: 13px;
+  margin-bottom: 16px;
+  color: var(--muted);
+}
+nav.crumbs a { color: var(--accent); text-decoration: none; }
+nav.crumbs a:hover { text-decoration: underline; }
+
+h2 {
+  font-size: 19px;
+  margin: 32px 0 12px;
+  letter-spacing: -0.005em;
+}
+
+h3 {
+  font-size: 16px;
+  margin: 20px 0 8px;
+}
+
+p { margin: 8px 0; }
+
+a { color: var(--accent); }
+
+code, pre {
+  font-family: "SF Mono", "Menlo", "Consolas", monospace;
+  font-size: 13px;
+}
+
+code {
+  background: var(--code-bg);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+pre {
+  background: var(--code-bg);
+  padding: 12px 14px;
+  border-radius: 6px;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 14px;
+}
+
+th, td {
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+th {
+  background: #f9fafb;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+td.num { font-variant-numeric: tabular-nums; }
+
+/* "Better / worse" delta markers inside the summary table.
+   Usage: <td class="num">0.833 <span class="delta-good">↑+0.50</span></td> */
+.delta-good, .delta-bad, .delta-flat {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+.delta-good { color: var(--good); }
+.delta-bad  { color: var(--bad); }
+.delta-flat { color: var(--muted); }
+
+/* Question-mark badge with an explanation in ``title`` (native browser tooltip).
+   Usage: <th>EM-any-gold <span class="qmark" title="...">?</span></th> */
+.qmark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 4px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--code-bg);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: help;
+  border: 1px solid var(--border);
+  vertical-align: middle;
+  user-select: none;
+}
+.qmark:hover { color: var(--accent); border-color: var(--accent); }
+
+/* Benchmark badges (industry-comparison table).
+   Five quality tiers relative to the typical industry baseline. */
+.bench {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.bench.below { background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; }
+.bench.par   { background:#fef3c7; color:#92400e; border:1px solid #fcd34d; }
+.bench.above { background:#dcfce7; color:#166534; border:1px solid #86efac; }
+.bench.strong{ background:#bbf7d0; color:#14532d; border:1px solid #4ade80; }
+.bench.top   { background:#e0e7ff; color:#3730a3; border:1px solid #a5b4fc; }
+
+.bench-legend { font-size:11px; color:var(--muted); margin-top:6px; }
+.bench-legend .bench { font-size:9px; padding:2px 7px; margin-right:4px; }
+
+.summary-table tbody tr:hover { background: #fafafa; }
+
+.summary-table .status-frozen { color: var(--good); font-weight: 600; }
+.summary-table .status-planned { color: var(--muted); font-style: italic; }
+
+.roadmap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 16px 0 32px;
+}
+
+.version-card {
+  display: block;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 20px;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: var(--shadow);
+  transition: transform .12s ease, border-color .12s ease;
+}
+
+.version-card:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+}
+
+.version-card.planned {
+  opacity: 0.55;
+  background: transparent;
+  border-style: dashed;
+}
+
+.version-card .vc-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.version-card .vc-name {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+.version-card .vc-status {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.version-card .vc-desc {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 6px 0 10px;
+}
+
+.version-card .vc-metrics {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+
+.version-card .metric-pill {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.version-card .metric-pill .label {
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.version-card .metric-pill .value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.changelog {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 18px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.kv {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 16px;
+  margin: 8px 0;
+}
+
+.kv dt {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.kv dd { margin: 0; font-size: 14px; }
+
+.prompt-cards {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 10px 0;
+}
+
+.prompt-card {
+  display: inline-flex;
+  flex-direction: column;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px 16px;
+  cursor: pointer;
+  min-width: 220px;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  transition: border-color .12s ease, transform .12s ease;
+}
+
+.prompt-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.prompt-card .pc-name {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.prompt-card .pc-meta {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+dialog {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0;
+  max-width: 720px;
+  width: 90vw;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+}
+
+dialog::backdrop {
+  background: rgba(15, 23, 42, 0.5);
+}
+
+dialog .dlg-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+dialog .dlg-head h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+dialog .dlg-head .close-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: var(--muted);
+  cursor: pointer;
+  line-height: 1;
+}
+
+dialog .dlg-body {
+  padding: 16px 18px;
+  max-height: 65vh;
+  overflow-y: auto;
+}
+
+dialog pre {
+  background: var(--code-bg);
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+  border: none;
+  padding: 12px 14px;
+}
+
+.callout {
+  border-left: 3px solid var(--accent);
+  background: var(--accent-light);
+  padding: 10px 14px;
+  border-radius: 0 6px 6px 0;
+  margin: 14px 0;
+  font-size: 14px;
+}
+
+.callout.good { border-color: var(--good); background: #ecfdf5; }
+.callout.bad { border-color: var(--bad); background: #fef2f2; }
+.callout.warn { border-color: var(--warn); background: #fffbeb; }
+
+.pros-cons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 12px 0;
+}
+
+@media (max-width: 700px) {
+  .pros-cons { grid-template-columns: 1fr; }
+}
+
+.pros-cons section {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.pros-cons h4 { margin: 0 0 8px; font-size: 14px; }
+.pros-cons .good-title { color: var(--good); }
+.pros-cons .bad-title { color: var(--warn); }
+
+.pros-cons ul { margin: 0; padding-left: 18px; font-size: 13px; }
+.pros-cons li { margin-bottom: 4px; }
+
+.mermaid, .diagram {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+  overflow-x: auto;
+}
+
+.footnote {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 24px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+nav.toptabs { display: flex; gap: 6px; background: var(--card-bg); border-bottom: 1px solid var(--border);
+  padding: 10px 24px; position: sticky; top: 0; z-index: 10; font-size: 14px; margin-bottom: -16px; flex-wrap: wrap; }
+nav.toptabs a { padding: 6px 14px; border-radius: 6px; color: var(--muted); text-decoration: none; }
+nav.toptabs a:hover { background: var(--accent-light); color: var(--accent); }
+nav.toptabs a.active { background: var(--accent); color: white; }
+body > section { display: none; }
+</style>
+</head><body>
+<nav class="toptabs">
+  <a href="#index" onclick="show('index');return false;" data-tab="index">Home · Roadmap</a>
+  <a href="#v1" onclick="show('v1');return false;" data-tab="v1">v1.0 MADAM-lite</a>
+  <a href="#v2" onclick="show('v2');return false;" data-tab="v2">v2.0 Entity-First</a>
+  <a href="#v3" onclick="show('v3');return false;" data-tab="v3">v3 Skeptic</a>
+  <a href="#v4" onclick="show('v4');return false;" data-tab="v4">v4.0 Evidence Quality <span style="color:#fca5a5;font-size:11px;">(negative)</span></a>
+</nav>
+<section id="index">
+<div class="container">
+
+  <header class="page-header">
+    <h1>RAMDocs Multi-Agent RAG — Research Journal</h1>
+    <div class="subtitle">
+      A versioned multi-agent RAG prototype over
+      <a href="https://huggingface.co/datasets/HanNight/RAMDocs">HanNight/RAMDocs</a>.
+      Each version is a self-contained experiment: hypothesis, frozen run, metrics, takeaways.
+    </div>
+  </header>
+
+  <h2>Summary table</h2>
+  <p style="color:var(--muted);font-size:13px;margin:-4px 0 4px;">
+    All values are averaged over two freeze runs on the 12-question RAMDocs subset.
+    Comparison anchors: <b>F1-multi-answer</b> (correctness under ambiguity) and
+    <b>misinfo-rejection</b> (robustness against misinformation).
+  </p>
+
+  <table class="summary-table">
+    <thead>
+      <tr>
+        <th>Version</th>
+        <th>Status</th>
+        <th class="num">EM-any-gold <span class="qmark" title="Exact Match: the primary answer matches one of the gold answers verbatim. Strict and format-sensitive — '1707' does not equal '11 March 1707'.">?</span></th>
+        <th class="num">F1-multi <span class="qmark" title="F1 for multi-answer: harmonic mean of precision (fraction of produced variants that match gold) and recall (fraction of gold answers we captured). The headline correctness metric under ambiguity.">?</span></th>
+        <th class="num">Misinfo-rej <span class="qmark" title="Misinfo Rejection: fraction of misinfo documents the system explicitly rejects. Higher means more robust to corpus manipulation.">?</span></th>
+        <th class="num">Recall@gold <span class="qmark" title="Recall: fraction of valid gold answers that made it into the final answer. Critical for ambiguous questions — 75% of this dataset has multiple valid golds.">?</span></th>
+        <th class="num">$/run <span class="qmark" title="Total cost of one full 12-question run: all OpenAI API spend (analyzer × K plus mediator when invoked).">?</span></th>
+        <th class="num">Lat,s/Q <span class="qmark" title="Average per-question latency in seconds: retrieval (BM25 + dense) + analyzer × K + optional mediator call.">?</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="background:#fafafa;font-style:italic;">
+        <td>Industry baseline <span class="qmark" title="Indicative range for typical production RAG over a noisy corpus, no adversarial verifier. Synthesised from published RAMDocs / MADAM-RAG numbers (HanNight et al., 2024) and common production-grade single-LLM RAG benchmarks. NOT measured on our exact dataset — used as an anchor for relative comparison.">?</span></td>
+        <td style="color:var(--muted);">reference</td>
+        <td class="num">~0.55</td>
+        <td class="num">~0.60</td>
+        <td class="num">~0.70</td>
+        <td class="num">~0.50</td>
+        <td class="num">~$0.10</td>
+        <td class="num">~5</td>
+      </tr>
+      <tr>
+        <td><a href="#v1" onclick="show('v1');return false;"><b>v1.0_madam_lite</b></a></td>
+        <td class="status-frozen">FROZEN · 2026-05-15</td>
+        <td class="num">0.333 <span class="delta-bad">↓ −0.22</span></td>
+        <td class="num">0.665 <span class="delta-good">↑ +0.07</span></td>
+        <td class="num">0.917 <span class="delta-good">↑ +0.22</span></td>
+        <td class="num">0.590 <span class="delta-good">↑ +0.09</span></td>
+        <td class="num">$0.0485 <span class="delta-good">↓ −52%</span></td>
+        <td class="num">10.1 <span class="delta-bad">↑ +5.1</span></td>
+      </tr>
+      <tr>
+        <td><a href="#v2" onclick="show('v2');return false;"><b>v2.0_entity_first</b></a></td>
+        <td class="status-frozen">FROZEN · 2026-05-15</td>
+        <td class="num">0.833 <span class="delta-good">↑ +0.500</span></td>
+        <td class="num">0.667 <span class="delta-flat">↔</span></td>
+        <td class="num">0.792 <span class="delta-bad">↓ −0.125</span></td>
+        <td class="num"><b>0.667</b> <span class="delta-good">↑ +0.077</span></td>
+        <td class="num">$0.022 <span class="delta-good">↓ −55%</span></td>
+        <td class="num">10.7 <span class="delta-flat">↔</span></td>
+      </tr>
+      <tr>
+        <td><a href="#v3" onclick="show('v3');return false;"><b>v3_skeptic</b></a></td>
+        <td class="status-frozen">FROZEN · 2026-05-15</td>
+        <td class="num">0.792 <span class="delta-bad">↓ −0.041</span></td>
+        <td class="num"><b>0.675</b> <span class="delta-flat">↔</span></td>
+        <td class="num"><b>0.875</b> <span class="delta-good">↑ +0.083</span></td>
+        <td class="num">0.646 <span class="delta-bad">↓ −0.021</span></td>
+        <td class="num">$0.097 <span class="delta-bad">↑ +4.4×</span></td>
+        <td class="num">13.5 <span class="delta-bad">↑ +2.8</span></td>
+      </tr>
+      <tr>
+        <td><a href="#v4" onclick="show('v4');return false;"><b>v4.0_evidence_quality</b></a> <span style="color:var(--bad);font-size:11px;">(negative)</span></td>
+        <td class="status-frozen">FROZEN · 2026-05-16</td>
+        <td class="num">0.750 <span class="delta-bad">↓ −0.042</span></td>
+        <td class="num">0.650 <span class="delta-bad">↓ −0.025</span></td>
+        <td class="num">0.833 <span class="delta-bad">↓ −0.042</span></td>
+        <td class="num">0.639 <span class="delta-bad">↓ −0.007</span></td>
+        <td class="num">$0.134 <span class="delta-bad">↑ +38%</span></td>
+        <td class="num">23.1 <span class="delta-bad">↑ +9.6</span></td>
+      </tr>
+      <tr>
+        <td>v5.0_parametric_voice</td>
+        <td class="status-planned">planned</td>
+        <td class="num">—</td><td class="num">—</td><td class="num">—</td>
+        <td class="num">—</td><td class="num">—</td><td class="num">—</td>
+      </tr>
+    </tbody>
+  </table>
+  <p style="color:var(--muted);font-size:11px;margin-top:-4px;">
+    Arrows show the delta relative to the <b>previous row in the table</b>.
+    The first row is an indicative industry baseline (typical production
+    RAG over a noisy corpus, no adversarial verifier — see the
+    <span class="qmark" title="Synthesised from published RAMDocs / MADAM-RAG numbers (HanNight et al., 2024) and common production-grade single-LLM RAG benchmarks.">?</span>
+    tooltip on its label). v1.0 deltas are computed against that baseline.
+    <span class="delta-good">↑/↓ green</span> = improvement,
+    <span class="delta-bad">↑/↓ red</span> = regression,
+    <span class="delta-flat">↔</span> = unchanged (|Δ| &lt; 0.005).
+    For cost and latency, ↓ is the improvement direction.
+  </p>
+
+  <h2>Versus the industry baseline</h2>
+  <p style="color:var(--muted);font-size:13px;margin:-4px 0 6px;">
+    Each cell classifies a version's metric versus the indicative
+    industry baseline at the top of the table above. Five levels:
+    <span class="bench below">below</span>
+    <span class="bench par">on par</span>
+    <span class="bench above">above</span>
+    <span class="bench strong">strong</span>
+    <span class="bench top">exceptional</span>
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Version</th>
+        <th class="num">EM-any-gold</th>
+        <th class="num">F1-multi</th>
+        <th class="num">Misinfo-rej</th>
+        <th class="num">Recall@gold</th>
+        <th class="num">$/run</th>
+        <th class="num">Lat,s/Q</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><b>v1.0_madam_lite</b></td>
+        <td class="num"><span class="bench below">below</span></td>
+        <td class="num"><span class="bench above">above</span></td>
+        <td class="num"><span class="bench strong">strong</span></td>
+        <td class="num"><span class="bench above">above</span></td>
+        <td class="num"><span class="bench top">exceptional</span></td>
+        <td class="num"><span class="bench below">below</span></td>
+      </tr>
+      <tr>
+        <td><b>v2.0_entity_first</b></td>
+        <td class="num"><span class="bench top">exceptional</span></td>
+        <td class="num"><span class="bench above">above</span></td>
+        <td class="num"><span class="bench above">above</span></td>
+        <td class="num"><span class="bench strong">strong</span></td>
+        <td class="num"><span class="bench top">exceptional</span></td>
+        <td class="num"><span class="bench below">below</span></td>
+      </tr>
+      <tr>
+        <td><b>v3_skeptic</b></td>
+        <td class="num"><span class="bench strong">strong</span></td>
+        <td class="num"><span class="bench above">above</span></td>
+        <td class="num"><span class="bench strong">strong</span></td>
+        <td class="num"><span class="bench above">above</span></td>
+        <td class="num"><span class="bench par">on par</span></td>
+        <td class="num"><span class="bench below">below</span></td>
+      </tr>
+      <tr>
+        <td><b>v4.0_evidence_quality</b> <span style="color:var(--bad);font-size:11px;">(negative)</span></td>
+        <td class="num"><span class="bench strong">strong</span></td>
+        <td class="num"><span class="bench above">above</span></td>
+        <td class="num"><span class="bench above">above</span></td>
+        <td class="num"><span class="bench above">above</span></td>
+        <td class="num"><span class="bench below">below</span></td>
+        <td class="num"><span class="bench below">below</span></td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="bench-legend">
+    Thresholds (versus industry baseline; for cost / latency the direction is inverted, lower is better):
+    <span class="bench below">below</span> Δ &lt; −0.05 ·
+    <span class="bench par">on par</span> ±0.05 ·
+    <span class="bench above">above</span> +0.05 to +0.15 ·
+    <span class="bench strong">strong</span> +0.15 to +0.25 ·
+    <span class="bench top">exceptional</span> &gt; +0.25
+  </p>
+
+  <div class="callout">
+    <b>Snapshot as of 2026-05-16:</b> v2.0 (entity-first) broke the v1.0
+    structural cap — EM-any-gold jumped from 0.33 to 0.83 (+0.50),
+    Recall@gold rose by 0.09, cost −55%. The price: misinfo rejection
+    regressed by 0.125. v3 adds an adversarial Skeptic with a
+    homonym-tolerant + depth-asymmetry prompt — <b>misinfo-rejection
+    recovered to 0.875</b> (+0.083 vs v2.0) at a small −0.041 EM cost.
+    v4.0 attempted a per-doc Evidence Evaluator with a trust-weighted
+    reliability formula but regressed every quality metric (EM −0.042,
+    F1 −0.025, Misinfo-rejection −0.042) at +81% LLM calls and +71%
+    latency — published frozen as a negative result. <b>v3.3 remains the
+    recommended default.</b>
+  </div>
+
+  <h2>Roadmap</h2>
+
+  <div class="roadmap">
+
+    <a class="version-card" href="versions/v1.0_madam_lite.html">
+      <div class="vc-head">
+        <div class="vc-name">v1.0 · MADAM-lite baseline</div>
+        <div class="vc-status status-frozen">FROZEN · 2026-05-15</div>
+      </div>
+      <div class="vc-desc">
+        A port of the legacy logic: BM25 + dense retrieval → analyzer × K (LLM)
+        → 5-factor reliability → deterministic vote → LLM-fallback mediator.
+        Single-answer. The reference point for every subsequent comparison.
+      </div>
+      <div class="vc-metrics">
+        <span class="metric-pill"><span class="label">F1-multi</span><span class="value">0.665</span></span>
+        <span class="metric-pill"><span class="label">Misinfo-rej</span><span class="value">0.917</span></span>
+        <span class="metric-pill"><span class="label">EM-substr</span><span class="value">0.833</span></span>
+        <span class="metric-pill"><span class="label">$/run</span><span class="value">$0.049</span></span>
+      </div>
+    </a>
+
+    <a class="version-card" href="versions/v2.0_entity_first.html">
+      <div class="vc-head">
+        <div class="vc-name">v2.0 · entity-first decomposition</div>
+        <div class="vc-status status-frozen">FROZEN · 2026-05-15</div>
+      </div>
+      <div class="vc-desc">
+        Multi-answer as a first-class citizen. The analyzer emits an ENTITY,
+        the mediator groups claims by entity and returns a
+        <code>list[AnswerVariant]</code>.
+        EM-any-gold leaps from 0.33 to 0.83; Recall@gold +0.09;
+        Noise-rejection +0.28. The price is a small misinfo leak —
+        addressed in v3.0.
+      </div>
+      <div class="vc-metrics">
+        <span class="metric-pill"><span class="label">EM-any-gold</span><span class="value">0.833 <span class="delta-good">↑+0.50</span></span></span>
+        <span class="metric-pill"><span class="label">Recall@gold</span><span class="value">0.667 <span class="delta-good">↑+0.08</span></span></span>
+        <span class="metric-pill"><span class="label">Misinfo-rej</span><span class="value">0.792 <span class="delta-bad">↓−0.13</span></span></span>
+        <span class="metric-pill"><span class="label">$/run</span><span class="value">$0.022 <span class="delta-good">↓−55%</span></span></span>
+      </div>
+    </a>
+
+    <a class="version-card" href="versions/v3_skeptic.html">
+      <div class="vc-head">
+        <div class="vc-name">v3 · adversarial verifier (Skeptic)</div>
+        <div class="vc-status status-frozen">FROZEN · 2026-05-15</div>
+      </div>
+      <div class="vc-desc">
+        Adds a single-pass Skeptic after the mediator: it sees every draft
+        variant and the full document pool and returns keep / reject verdicts
+        based on four checks — entity grounding, citation faithfulness,
+        counter-evidence and a depth-asymmetry rule that catches thin-stub
+        misinformation. Pipeline-level fallback restores the draft if the
+        Skeptic ever rejects every variant.
+      </div>
+      <div class="vc-metrics">
+        <span class="metric-pill"><span class="label">Misinfo-rej</span><span class="value">0.875 <span class="delta-good">↑+0.08</span></span></span>
+        <span class="metric-pill"><span class="label">EM-any-gold</span><span class="value">0.792 <span class="delta-bad">↓−0.04</span></span></span>
+        <span class="metric-pill"><span class="label">F1-multi</span><span class="value">0.675 <span class="delta-flat">↔</span></span></span>
+        <span class="metric-pill"><span class="label">$/run</span><span class="value">$0.111 <span class="delta-bad">↑+5×</span></span></span>
+      </div>
+    </a>
+
+    <a class="version-card" href="#v4" onclick="show('v4');return false;">
+      <div class="vc-head">
+        <div class="vc-name">v4.0 · Evidence Quality <span style="color:var(--bad);font-size:11px;">(negative)</span></div>
+        <div class="vc-status status-frozen">FROZEN · 2026-05-16</div>
+      </div>
+      <div class="vc-desc">
+        Adds a per-document Evidence Evaluator alongside the Analyzer. It
+        emits a structured <code>DocTrust</code> report
+        (trust_score + closed-enum red_flags), and the trust signal feeds
+        a new W_TRUST = 0.35 slot in the reliability formula. Hypothesis
+        was that a structured per-doc quality signal would sharpen
+        misinfo-rejection. In practice every quality metric regressed:
+        EM −0.042, F1 −0.025, Misinfo-rejection −0.042, at +81% LLM calls
+        and +71% latency. Published frozen as an honest negative result.
+      </div>
+      <div class="vc-metrics">
+        <span class="metric-pill"><span class="label">Misinfo-rej</span><span class="value">0.833 <span class="delta-bad">↓−0.04</span></span></span>
+        <span class="metric-pill"><span class="label">EM-any-gold</span><span class="value">0.750 <span class="delta-bad">↓−0.04</span></span></span>
+        <span class="metric-pill"><span class="label">F1-multi</span><span class="value">0.650 <span class="delta-bad">↓−0.03</span></span></span>
+        <span class="metric-pill"><span class="label">$/run</span><span class="value">$0.134 <span class="delta-bad">↑+15%</span></span></span>
+      </div>
+    </a>
+
+    <div class="version-card planned">
+      <div class="vc-head">
+        <div class="vc-name">v5.0 · parametric voice + abstention</div>
+        <div class="vc-status">PLANNED</div>
+      </div>
+      <div class="vc-desc">
+        Adds an (N+1)-th agent with no documents — it answers purely from the
+        model's parametric memory. Insurance for cases when the retrieval pool
+        is degenerate (all misinfo or all noise). Calibrated abstention
+        becomes available. Expected to lift edge-case robustness.
+      </div>
+    </div>
+
+  </div>
+
+  <h2>Changelog</h2>
+  <div class="changelog">
+    <p style="margin:0 0 6px;font-weight:600;color:var(--fg);">v1.0 → v2.0 (2026-05-15)</p>
+    <p style="margin:0 0 8px;">
+      <b>Changes:</b> the analyzer now returns a mandatory <code>entity</code>
+      field; cosine clustering is replaced by deterministic entity grouping
+      with substring merging; the mediator is invoked only to resolve
+      <i>intra</i>-group disagreement; the final answer is a list of variants
+      (one per entity group above the 0.40 weight threshold).
+    </p>
+    <p style="margin:0 0 8px;">
+      <b>Expected:</b> Recall@gold ≥ 0.75 and misinfo-rejection holding flat.
+    </p>
+    <p style="margin:0;">
+      <b>Observed:</b> EM-any-gold +0.500, Recall@gold +0.077,
+      noise-rejection +0.264, cost −55% — large wins.
+      Misinfo-rejection −0.125 and citation-faithfulness −0.122 —
+      misinfo with a fabricated entity now forms its own group and
+      passes the threshold. Addressed in v3.
+    </p>
+
+    <p style="margin:18px 0 6px;font-weight:600;color:var(--fg);">v2.0 → v3 (2026-05-15)</p>
+    <p style="margin:0 0 8px;">
+      <b>Changes:</b> a single-pass Skeptic agent is added after the
+      mediator. It sees every draft variant plus the entire document pool
+      and returns a keep / reject verdict per variant based on four checks —
+      entity grounding, citation faithfulness, counter-evidence and a
+      depth-asymmetry rule that flags thin-stub variants when other
+      variants have richer corroboration. A pipeline-level fallback
+      restores the draft if the Skeptic ever rejects every variant. The
+      entity-group threshold is loosened from 0.40 to 0.30 to lift
+      multi-answer recall.
+    </p>
+    <p style="margin:0 0 8px;">
+      <b>Expected:</b> Misinfo-rejection back to ≥ 0.85 with no major loss on EM or Recall.
+    </p>
+    <p style="margin:0;">
+      <b>Observed:</b> Misinfo-rejection 0.792 → 0.875 (+0.083),
+      Citation-faithfulness +0.024, F1 essentially flat (+0.005),
+      Recall −0.021, EM −0.041, abstention 0. v3 is the recommended
+      default when robustness matters; v2.0 stays the cheapest and
+      best-EM option.
+    </p>
+    <p style="margin:8px 0 0;color:var(--muted);font-size:12px;">
+      Internal iterations toward v3 (the aggressive v3.0 and the
+      over-conservative v3.1) live in the repository under
+      <code>pipelines/v3_0_skeptic/</code> and
+      <code>pipelines/v3_1_conservative_skeptic/</code> for code archaeology
+      but are intentionally omitted from this public journal. See
+      <code>runs/_journal.md</code> for the full internal log.
+    </p>
+
+    <p style="margin:18px 0 6px;font-weight:600;color:var(--fg);">v3 → v4.0 (2026-05-16) — <span style="color:var(--bad);">negative result</span></p>
+    <p style="margin:0 0 8px;">
+      <b>Changes:</b> a per-document Evidence Evaluator agent is added
+      alongside the Analyzer. It emits a structured <code>DocTrust</code>
+      report (four local quality axes — internal_consistency,
+      encyclopedic_quality, specificity, relevance — plus a composite
+      <code>trust_score</code> and a closed-enum list of <code>red_flags</code>
+      such as <i>short_stub</i>, <i>category_page</i>, <i>formatting_cruft</i>).
+      The <code>trust_score</code> populates a new W_TRUST = 0.35 slot in
+      the reliability formula (replacing the dormant recency / authority
+      placeholders of v1–v3) and the <code>red_flags</code> are surfaced to
+      the Skeptic inline with each pool document.
+    </p>
+    <p style="margin:0 0 8px;">
+      <b>Expected:</b> Misinfo-rejection ≥ 0.90 with EM ≥ 0.79 and F1 ≥ 0.67.
+    </p>
+    <p style="margin:0;">
+      <b>Observed:</b> EM −0.042, F1 −0.025, <b>Misinfo-rejection −0.042</b>,
+      Citation-faith −0.035, Correct-citation −0.045. Cost +15%, LLM calls
+      per question +81% (Analyzer × K plus Evaluator × K), latency +71%.
+      <b>Regression on every quality axis</b> — published frozen as an
+      honest negative result. Root causes: (1) gpt-4o-mini is noisy on
+      bounded-float ratings of short encyclopedic text, (2) the
+      <code>red_flags</code> list overlaps with legitimate brevity and
+      misdirects the Skeptic into pruning correct short answers, and
+      (3) W_TRUST = 0.35 reorders reliability toward verbose documents,
+      which sometimes coincides with the longer-fabrication misinfo
+      pattern in RAMDocs. <b>v3.3_analyzer_tuned remains the recommended
+      default.</b>
+    </p>
+  </div>
+
+  <div class="footnote">
+    The harness and measurement stand live under <code>ramdocs_rag/</code>.
+    Run artefacts are stored at <code>runs/&lt;version&gt;/&lt;sha&gt;_&lt;ts&gt;/</code>.
+    The free-form research log is <code>runs/_journal.md</code>.
+  </div>
+
+</div>
+</section>
+<section id="v1">
+<div class="container">
+
+  
+
+  <header class="page-header">
+    <h1>v1.0 · MADAM-lite baseline</h1>
+    <div class="subtitle">
+      <span class="status-frozen">FROZEN · 2026-05-15</span> ·
+      reference baseline for every subsequent version
+    </div>
+  </header>
+
+  <dl class="kv">
+    <dt>Version</dt><dd><code>1.0.0</code></dd>
+    <dt>Retrieval parameters</dt><dd>BM25 + dense, weights 0.5 / 0.5, top_k = 8</dd>
+    <dt>Reliability weights</dt><dd>0.40 / 0.25 / 0.20 / 0.15 / −0.10</dd>
+    <dt>Conflict parameters</dt><dd>cosine similarity threshold 0.75, majority ratio 1.5</dd>
+    <dt>Freeze cost</dt><dd>$0.097 across both runs ($0.0485 per run)</dd>
+  </dl>
+
+  <h2>Hypothesis</h2>
+  <p>
+    Porting the legacy logic into the new harness without architectural changes
+    should reproduce its measured behavior: EM-substring ≈ 0.83 and
+    misinfo-rejection ≥ 0.90. The goal is to lock down a reference point
+    against which every future version will be measured.
+  </p>
+
+  <h2>Architecture</h2>
+
+  <div class="diagram">
+    <svg viewBox="0 0 760 780" xmlns="http://www.w3.org/2000/svg"
+         style="max-width:760px;width:100%;height:auto;display:block;margin:0 auto;font-family:system-ui,sans-serif">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#6b7280"/>
+        </marker>
+        <style>
+          .box   { fill:#ffffff; stroke:#cbd5e1; stroke-width:1.5; }
+          .box.input    { fill:#f1f5f9; stroke:#94a3b8; }
+          .box.analyzer { fill:#eff6ff; stroke:#93c5fd; }
+          .box.det      { fill:#f0fdf4; stroke:#86efac; }
+          .box.llm      { fill:#fffbeb; stroke:#fcd34d; }
+          .box.output   { fill:#ecfeff; stroke:#67e8f9; }
+          .diamond      { fill:#fef9c3; stroke:#eab308; stroke-width:1.5; }
+          .ttl  { fill:#0f172a; font-size:13px; font-weight:600; }
+          .sub  { fill:#64748b; font-size:11px; }
+          .edge { fill:#64748b; font-size:11px; font-style:italic; }
+          .arr  { stroke:#6b7280; stroke-width:1.5; fill:none; }
+        </style>
+      </defs>
+
+      <rect class="box input" x="240" y="20" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="44" text-anchor="middle">Question + RAMDocs candidate pool</text>
+      <text class="sub" x="380" y="63" text-anchor="middle">3–8 documents per question</text>
+      <path class="arr" d="M 380 76 L 380 108" marker-end="url(#arr)"/>
+
+      <rect class="box" x="240" y="110" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="134" text-anchor="middle">Retriever</text>
+      <text class="sub" x="380" y="153" text-anchor="middle">BM25 + dense MiniLM · top_k = 8</text>
+      <path class="arr" d="M 380 166 L 380 185 L 140 185 L 140 208" marker-end="url(#arr)"/>
+      <path class="arr" d="M 380 166 L 380 208" marker-end="url(#arr)"/>
+      <path class="arr" d="M 380 166 L 380 185 L 620 185 L 620 208" marker-end="url(#arr)"/>
+
+      <rect class="box analyzer" x="40"  y="210" width="200" height="64" rx="8"/>
+      <text class="ttl" x="140" y="234" text-anchor="middle">Analyzer 1</text>
+      <text class="sub" x="140" y="252" text-anchor="middle">per-doc claim extractor</text>
+      <text class="sub" x="140" y="267" text-anchor="middle">gpt-4o-mini · strict JSON</text>
+
+      <rect class="box analyzer" x="280" y="210" width="200" height="64" rx="8"/>
+      <text class="ttl" x="380" y="234" text-anchor="middle">Analyzer 2</text>
+      <text class="sub" x="380" y="252" text-anchor="middle">per-doc claim extractor</text>
+      <text class="sub" x="380" y="267" text-anchor="middle">gpt-4o-mini · strict JSON</text>
+
+      <rect class="box analyzer" x="520" y="210" width="200" height="64" rx="8"/>
+      <text class="ttl" x="620" y="234" text-anchor="middle">Analyzer K</text>
+      <text class="sub" x="620" y="252" text-anchor="middle">per-doc claim extractor</text>
+      <text class="sub" x="620" y="267" text-anchor="middle">gpt-4o-mini · strict JSON</text>
+
+      <path class="arr" d="M 140 274 L 140 300 L 380 300 L 380 320" marker-end="url(#arr)"/>
+      <path class="arr" d="M 380 274 L 380 320" marker-end="url(#arr)"/>
+      <path class="arr" d="M 620 274 L 620 300 L 380 300 L 380 320" marker-end="url(#arr)"/>
+
+      <rect class="box" x="240" y="320" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="344" text-anchor="middle">Cluster claims</text>
+      <text class="sub" x="380" y="363" text-anchor="middle">cosine similarity ≥ 0.75 · weight = Σ reliability</text>
+      <path class="arr" d="M 380 376 L 380 408" marker-end="url(#arr)"/>
+
+      <rect class="box" x="240" y="410" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="434" text-anchor="middle">Reliability scoring</text>
+      <text class="sub" x="380" y="453" text-anchor="middle">5 factors · 2-pass with minority penalty</text>
+      <path class="arr" d="M 380 466 L 380 498" marker-end="url(#arr)"/>
+
+      <polygon class="diamond" points="380,498 490,558 380,618 270,558"/>
+      <text class="ttl" x="380" y="552" text-anchor="middle">Majority ratio</text>
+      <text class="ttl" x="380" y="570" text-anchor="middle">≥ 1.5 ?</text>
+
+      <path class="arr" d="M 270 558 L 200 558 L 200 638" marker-end="url(#arr)"/>
+      <text class="edge" x="232" y="552" text-anchor="middle">yes</text>
+
+      <path class="arr" d="M 490 558 L 560 558 L 560 638" marker-end="url(#arr)"/>
+      <text class="edge" x="528" y="552" text-anchor="middle">no</text>
+
+      <rect class="box det" x="80"  y="640" width="240" height="60" rx="8"/>
+      <text class="ttl" x="200" y="664" text-anchor="middle">Deterministic vote</text>
+      <text class="sub" x="200" y="682" text-anchor="middle">no LLM · cheap &amp; explainable</text>
+
+      <rect class="box llm" x="440" y="640" width="240" height="60" rx="8"/>
+      <text class="ttl" x="560" y="664" text-anchor="middle">LLM mediator</text>
+      <text class="sub" x="560" y="682" text-anchor="middle">gpt-4o · strict JSON · cites evidence</text>
+
+      <path class="arr" d="M 200 700 L 200 728 L 380 728 L 380 748" marker-end="url(#arr)"/>
+      <path class="arr" d="M 560 700 L 560 728 L 380 728 L 380 748" marker-end="url(#arr)"/>
+
+      <rect class="box output" x="240" y="750" width="280" height="26" rx="8"/>
+      <text class="ttl" x="380" y="768" text-anchor="middle">FinalAnswer (single variant)</text>
+    </svg>
+  </div>
+
+  <p style="color:var(--muted);font-size:13px;">
+    A linear pipeline (no LangGraph). Analyzer agents run sequentially —
+    parallelisation is deliberately deferred for the baseline. The mediator
+    only takes the LLM path when the deterministic weighted vote fails to
+    identify a dominant cluster.
+  </p>
+
+  <h2>Prompts</h2>
+  <p style="color:var(--muted);font-size:13px;margin-top:-4px;">
+    Click a card to reveal the full prompt text.
+  </p>
+
+  <div class="prompt-cards">
+    <button class="prompt-card" onclick="document.getElementById('dlg-analyzer').showModal()">
+      <span class="pc-name">📄 Analyzer system prompt</span>
+      <span class="pc-meta">per-document extractor · output: Claim (strict JSON)</span>
+    </button>
+    <button class="prompt-card" onclick="document.getElementById('dlg-mediator').showModal()">
+      <span class="pc-name">🧑‍⚖️ Mediator system prompt</span>
+      <span class="pc-meta">conflict reconciliation · output: FinalAnswer (strict JSON)</span>
+    </button>
+  </div>
+
+  <dialog id="dlg-analyzer">
+    <div class="dlg-head">
+      <h3>Analyzer system prompt</h3>
+      <button class="close-btn" onclick="document.getElementById('dlg-analyzer').close()">✕</button>
+    </div>
+    <div class="dlg-body">
+<pre>You are the per-document Analyzer in a multi-agent RAG pipeline.
+
+Your job: given a USER QUESTION and ONE DOCUMENT, decide whether the document
+provides an answer to the question, and if so extract it.
+
+Output strictly the JSON object matching the `Claim` schema, with these fields:
+
+- `doc_id`        — copy the `doc_id` from the input verbatim.
+- `text`          — the candidate answer the document supports. A short noun
+                    phrase or sentence (≤ 25 words). Empty string when stance
+                    is `no_answer`.
+- `stance`        — one of:
+                      * `supports`    — the document directly answers the question.
+                      * `contradicts` — the document explicitly states the
+                                        question's premise is false, or denies
+                                        a specific answer it cites.
+                      * `no_answer`   — the document is irrelevant, off-topic,
+                                        or merely mentions the topic without
+                                        addressing the question.
+- `confidence`    — float in [0, 1]. How sure are you that `text` is what
+                    the document says? Penalise hedged or unclear sources.
+- `supporting_quote` — a verbatim span (≤ 200 chars) copied from the document
+                       that grounds `text`. Use an empty string when stance is
+                       `no_answer`.
+
+Rules:
+
+- Use ONLY the document text. Do not invoke outside knowledge.
+- If the document mentions the entity but does not actually answer the
+  question, choose `no_answer` (not `supports`).
+- If multiple plausible answers appear in the same document, return the one
+  the document most clearly endorses; if there is no clear endorsement, choose
+  `no_answer`.
+- The supporting quote must be a substring of the document, not a paraphrase.</pre>
+    </div>
+  </dialog>
+
+  <dialog id="dlg-mediator">
+    <div class="dlg-head">
+      <h3>Mediator system prompt</h3>
+      <button class="close-btn" onclick="document.getElementById('dlg-mediator').close()">✕</button>
+    </div>
+    <div class="dlg-body">
+<pre>You are the Mediator in a multi-agent RAG pipeline.
+
+Inputs you receive:
+- The user QUESTION.
+- A list of CLAIMS extracted from individual documents. Each claim carries:
+  `doc_id`, `text` (candidate answer), `stance`, `confidence`,
+  `supporting_quote`, and a `reliability` score in [0, 1] computed by the
+  pipeline from retrieval rank, analyzer confidence, recency and source
+  authority.
+- A CLUSTERING SUMMARY listing groups of claims that point at the same
+  answer, with the summed reliability of each cluster. A weighted-majority
+  vote was attempted but was inconclusive (no cluster dominated by the
+  required ratio), which is why you were called.
+
+Your job: produce the final answer.
+
+Output strictly the JSON object with these fields:
+
+- `answer` — the answer entity ONLY, as a bare string. No surrounding prose,
+  no full sentence, no leading phrase like "The answer is" or "X died on".
+  Just the value itself.
+    * For a person: "Placebo", not "The artist is Placebo".
+    * For a date: "11 March 1707", not "George Horner died on 11 March 1707."
+    * For a place: "Glasgow", not "He was born in Glasgow."
+  When the question is genuinely ambiguous (e.g., two different entities share
+  the same name and both are correct), join both with " | " — e.g. "Placebo |
+  Sandra Bernhard", "11 March 1707 | 9 February 1677". Still no prose.
+- `confidence` — float in [0, 1]. Lower it when evidence is thin or conflicts
+  remain.
+- `supporting_doc_ids` — IDs of the documents whose claims you relied on.
+- `rejected_doc_ids` — IDs of documents you explicitly judged wrong or
+  irrelevant (misinformation, noise, contradicted by stronger evidence).
+- `reconciliation_explanation` — 2–4 sentences. Explain which cluster you
+  picked, why competing claims were rejected, and how reliability informed
+  the call.
+
+Rules:
+
+- Prefer the cluster with the highest summed reliability unless its
+  supporting quotes are obviously weaker than a runner-up's. Justify
+  deviations in `reconciliation_explanation`.
+- Quotes are the strongest evidence. Treat a claim whose `supporting_quote`
+  clearly contains the answer phrase as more credible than one without.
+- Do not invent answers absent from the claims.
+- Never include any `doc_id` in BOTH `supporting_doc_ids` and
+  `rejected_doc_ids`.</pre>
+    </div>
+  </dialog>
+
+  <h2>Results</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Metric</th>
+        <th class="num">freeze1</th>
+        <th class="num">freeze2</th>
+        <th class="num">avg</th>
+        <th>Comment</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><b>F1-multi-answer</b> 🎯</td>
+        <td class="num">0.650</td>
+        <td class="num">0.681</td>
+        <td class="num"><b>0.665</b></td>
+        <td>Primary anchor for cross-version comparison</td>
+      </tr>
+      <tr>
+        <td><b>Misinfo-rejection</b> 🎯</td>
+        <td class="num">0.917</td>
+        <td class="num">0.917</td>
+        <td class="num"><b>0.917</b></td>
+        <td>Secondary anchor; the ≥ 0.90 target is met</td>
+      </tr>
+      <tr>
+        <td>EM-substring</td>
+        <td class="num">0.833</td>
+        <td class="num">0.833</td>
+        <td class="num">0.833</td>
+        <td>10 / 12 — the real answer quality</td>
+      </tr>
+      <tr>
+        <td>EM-any-gold</td>
+        <td class="num">0.333</td>
+        <td class="num">0.333</td>
+        <td class="num">0.333</td>
+        <td>Artefact: <code>"X | Y"</code> string-equals no single gold</td>
+      </tr>
+      <tr>
+        <td>Recall-all-gold</td>
+        <td class="num">0.569</td>
+        <td class="num">0.611</td>
+        <td class="num">0.590</td>
+        <td>Structural cap of single-answer on ambiguous questions</td>
+      </tr>
+      <tr>
+        <td>Precision-answers</td>
+        <td class="num">0.833</td>
+        <td class="num">0.833</td>
+        <td class="num">0.833</td>
+        <td>Almost no spurious answers</td>
+      </tr>
+      <tr>
+        <td>Citation faithfulness</td>
+        <td class="num">0.806</td>
+        <td class="num">0.806</td>
+        <td class="num">0.806</td>
+        <td>Quote ↔ answer alignment holds for most variants</td>
+      </tr>
+      <tr>
+        <td>Correct citation (precision)</td>
+        <td class="num">0.917</td>
+        <td class="num">0.917</td>
+        <td class="num">0.917</td>
+        <td>Almost always cites correct-typed documents</td>
+      </tr>
+      <tr>
+        <td>Coverage (correct-doc recall)</td>
+        <td class="num">0.422</td>
+        <td class="num">0.422</td>
+        <td class="num">0.422</td>
+        <td>Less than half the correct docs are surfaced — by design</td>
+      </tr>
+      <tr>
+        <td>Noise rejection</td>
+        <td class="num">0.500</td>
+        <td class="num">0.500</td>
+        <td class="num">0.500</td>
+        <td>Half the noise docs are not explicitly rejected</td>
+      </tr>
+      <tr>
+        <td>Abstention rate</td>
+        <td class="num">0.000</td>
+        <td class="num">0.000</td>
+        <td class="num">0.000</td>
+        <td>Never abstains — may become an issue downstream</td>
+      </tr>
+      <tr>
+        <td>Avg cost / question</td>
+        <td class="num">$0.0040</td>
+        <td class="num">$0.0041</td>
+        <td class="num">$0.0041</td>
+        <td>$0.05 per run, very cheap</td>
+      </tr>
+      <tr>
+        <td>Avg LLM calls / question</td>
+        <td class="num">6.6</td>
+        <td class="num">6.6</td>
+        <td class="num">6.6</td>
+        <td>≈ N_docs (analyzers) + occasional mediator</td>
+      </tr>
+      <tr>
+        <td>Avg latency / question</td>
+        <td class="num">9.9 s</td>
+        <td class="num">10.2 s</td>
+        <td class="num">10.1 s</td>
+        <td>Could be cut by running analyzers in parallel</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>By category (averaged over both freeze runs)</h3>
+  <p style="color:var(--muted);font-size:12px;margin:0 0 -6px;">
+    * — the category contains no misinfo documents, so the metric is trivially 1.0.
+  </p>
+  <table>
+    <thead>
+      <tr>
+        <th>Category</th>
+        <th class="num">n</th>
+        <th class="num">F1-multi</th>
+        <th class="num">EM-substr</th>
+        <th class="num">Misinfo-rej</th>
+        <th class="num">Recall@gold</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>pure_correct</td><td class="num">3</td><td class="num">0.33</td><td class="num">0.33</td><td class="num">1.00*</td><td class="num">0.33</td></tr>
+      <tr><td>has_misinfo</td><td class="num">3</td><td class="num">0.83</td><td class="num">1.00</td><td class="num"><b>0.67</b></td><td class="num">0.75</td></tr>
+      <tr><td>has_noise</td><td class="num">3</td><td class="num">0.72</td><td class="num">1.00</td><td class="num">1.00*</td><td class="num">0.61</td></tr>
+      <tr><td>mixed_conflict</td><td class="num">3</td><td class="num">0.77</td><td class="num">1.00</td><td class="num">1.00</td><td class="num">0.67</td></tr>
+    </tbody>
+  </table>
+
+  <h2>What works / what doesn't</h2>
+
+  <div class="pros-cons">
+    <section>
+      <h4 class="good-title">✅ Strengths</h4>
+      <ul>
+        <li><b>Misinfo-rejection 0.917</b> overall; in <code>mixed_conflict</code> it sits at a perfect 1.00.</li>
+        <li><b>Precision-answers 0.833</b> — virtually no spurious or invented answers.</li>
+        <li><b>Correct citation 0.917</b> — the cited documents are almost always the correct-typed ones, not misinfo or noise.</li>
+        <li><b>Reproducibility:</b> 11 / 12 questions produce identical answers across both freeze runs.</li>
+        <li><b>Cost:</b> $0.05 for a 12-question run — negligible relative to the insight gained.</li>
+        <li><b>Transparency:</b> the deterministic vote handles the easy cases; the LLM mediator is invoked only when it's actually needed.</li>
+      </ul>
+    </section>
+    <section>
+      <h4 class="bad-title">⚠ Weaknesses</h4>
+      <ul>
+        <li><b>Recall-all-gold 0.59</b> — the structural cap of single-answer architecture. On questions with 2–3 valid gold answers we surface at most one.</li>
+        <li><b>pure_correct is the worst category</b> by F1 (0.33). Paradoxically the "clean" subset is full of homonyms (e.g. <i>Without You I'm Nothing</i> — Placebo / Sandra Bernhard), and v1.0 picks just one — half the gold is lost.</li>
+        <li><b>Noise rejection 0.50</b> — half the noise docs remain silent rather than being explicitly rejected. Not catastrophic (faithfulness still holds), but worth restoring in v2+.</li>
+        <li><b>Abstention 0.00</b> — there's no "I don't know" pathway. On a degenerate retrieval pool the model will still answer.</li>
+        <li><b>Coverage 0.42</b> — fewer than half of the useful documents are used. The mediator picks the strongest evidence rather than aggregating it.</li>
+        <li><b>EM-any-gold is a weak metric</b> here — it penalises the correct multi-answer format <code>"X | Y"</code>. Do not use it as an anchor.</li>
+      </ul>
+    </section>
+  </div>
+
+  <div class="callout warn">
+    <b>Bottom line:</b> v1.0 handles <i>misinfo and noise</i> well, but <i>ambiguity</i>
+    is structurally beyond reach. Nine out of twelve RAMDocs questions admit ≥ 2 valid
+    gold answers; a single-answer architecture systematically discards half of that.
+    This is the motivation for v2.0 (entity-first decomposition).
+  </div>
+
+  <div class="footnote">
+    Run artefacts are immutable: no changes to logic or prompts of v1.0 after freeze.
+    Any change spawns a new minor version (v1.1) with its own freeze run.
+  </div>
+
+</div>
+</section>
+<section id="v2">
+<div class="container">
+
+  
+
+  <header class="page-header">
+    <h1>v2.0 · Entity-First Decomposition</h1>
+    <div class="subtitle">
+      <span class="status-frozen">FROZEN · 2026-05-15</span> ·
+      multi-answer as a first-class citizen, grouped by entity
+    </div>
+  </header>
+
+  <dl class="kv">
+    <dt>Version</dt><dd><code>2.0.0</code></dd>
+    <dt>Retrieval parameters</dt><dd>BM25 + dense, weights 0.5 / 0.5, top_k = 8 (same as v1.0)</dd>
+    <dt>Reliability weights</dt><dd>0.40 / 0.25 / 0.20 / 0.15 / −0.10 (same as v1.0)</dd>
+    <dt>Grouping parameters</dt><dd><b>min_relative_weight = 0.40</b> (an entity group enters the answer if its weight is ≥ 40% of the top group)</dd>
+    <dt>Freeze cost</dt><dd>$0.044 across both runs ($0.022 per run, −55% vs v1.0)</dd>
+  </dl>
+
+  <h2>Hypothesis</h2>
+  <p>
+    The Recall@gold = 0.59 cap of single-answer v1.0 will break once the
+    pipeline returns multiple answers grouped by entity. Target:
+    <b>Recall ≥ 0.75</b>, F1 ≥ 0.75, EM lifted by a bare-answer format,
+    and misinfo-rejection holding flat.
+  </p>
+
+  <h2>Architecture</h2>
+  <p style="color:var(--muted);font-size:13px;margin-bottom:6px;">
+    <span style="display:inline-block;width:14px;height:14px;background:#fef9c3;border:2px solid #ca8a04;border-radius:3px;vertical-align:middle;margin-right:4px"></span>
+    <b>Δ</b> — changed vs v1.0 ·
+    <span style="display:inline-block;width:14px;height:14px;background:#fef9c3;border:2px dashed #d97706;border-radius:3px;vertical-align:middle;margin:0 4px 0 12px"></span>
+    <b>NEW</b> — new step
+  </p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 760 820" xmlns="http://www.w3.org/2000/svg"
+         style="max-width:760px;width:100%;height:auto;display:block;margin:0 auto;font-family:system-ui,sans-serif">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#6b7280"/>
+        </marker>
+        <style>
+          .box     { fill:#ffffff; stroke:#cbd5e1; stroke-width:1.5; }
+          .box.input    { fill:#f1f5f9; stroke:#94a3b8; }
+          .box.changed  { fill:#fef9c3; stroke:#ca8a04; stroke-width:2; }
+          .box.newbox   { fill:#fef9c3; stroke:#d97706; stroke-width:2.5; stroke-dasharray:5 3; }
+          .box.det      { fill:#f0fdf4; stroke:#86efac; }
+          .box.llm      { fill:#fffbeb; stroke:#fcd34d; }
+          .box.output   { fill:#fef9c3; stroke:#ca8a04; stroke-width:2; }
+          .diamond      { fill:#fef9c3; stroke:#eab308; stroke-width:1.5; }
+          .ttl   { fill:#0f172a; font-size:13px; font-weight:600; }
+          .sub   { fill:#64748b; font-size:11px; }
+          .edge  { fill:#64748b; font-size:11px; font-style:italic; }
+          .arr   { stroke:#6b7280; stroke-width:1.5; fill:none; }
+          .badge    { fill:#d97706; }
+          .badgetxt { fill:#ffffff; font-size:9px; font-weight:700; }
+          .grp-label { fill:#92400e; font-size:11px; font-style:italic; font-weight:600; }
+          .accent-txt { fill:#92400e; font-weight:600; }
+        </style>
+      </defs>
+
+      <rect class="box input" x="240" y="20" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="44" text-anchor="middle">Question + RAMDocs candidate pool</text>
+      <text class="sub" x="380" y="63" text-anchor="middle">3–8 documents per question</text>
+      <path class="arr" d="M 380 76 L 380 108" marker-end="url(#arr)"/>
+
+      <rect class="box" x="240" y="110" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="134" text-anchor="middle">Retriever</text>
+      <text class="sub" x="380" y="153" text-anchor="middle">BM25 + dense MiniLM · top_k = 8</text>
+      <path class="arr" d="M 380 166 L 380 185 L 140 185 L 140 208" marker-end="url(#arr)"/>
+      <path class="arr" d="M 380 166 L 380 208" marker-end="url(#arr)"/>
+      <path class="arr" d="M 380 166 L 380 185 L 620 185 L 620 208" marker-end="url(#arr)"/>
+
+      <rect class="box changed" x="40"  y="210" width="200" height="76" rx="8"/>
+      <circle class="badge" cx="227" cy="222" r="11"/>
+      <text class="badgetxt" x="227" y="225" text-anchor="middle">Δ</text>
+      <text class="ttl" x="140" y="234" text-anchor="middle">Analyzer 1</text>
+      <text class="sub accent-txt" x="140" y="252" text-anchor="middle">claim + entity</text>
+      <text class="sub" x="140" y="270" text-anchor="middle">gpt-4o-mini · bare-answer text</text>
+
+      <rect class="box changed" x="280" y="210" width="200" height="76" rx="8"/>
+      <circle class="badge" cx="467" cy="222" r="11"/>
+      <text class="badgetxt" x="467" y="225" text-anchor="middle">Δ</text>
+      <text class="ttl" x="380" y="234" text-anchor="middle">Analyzer 2</text>
+      <text class="sub accent-txt" x="380" y="252" text-anchor="middle">claim + entity</text>
+      <text class="sub" x="380" y="270" text-anchor="middle">gpt-4o-mini · bare-answer text</text>
+
+      <rect class="box changed" x="520" y="210" width="200" height="76" rx="8"/>
+      <circle class="badge" cx="707" cy="222" r="11"/>
+      <text class="badgetxt" x="707" y="225" text-anchor="middle">Δ</text>
+      <text class="ttl" x="620" y="234" text-anchor="middle">Analyzer K</text>
+      <text class="sub accent-txt" x="620" y="252" text-anchor="middle">claim + entity</text>
+      <text class="sub" x="620" y="270" text-anchor="middle">gpt-4o-mini · bare-answer text</text>
+
+      <path class="arr" d="M 140 286 L 140 310 L 380 310 L 380 330" marker-end="url(#arr)"/>
+      <path class="arr" d="M 380 286 L 380 330" marker-end="url(#arr)"/>
+      <path class="arr" d="M 620 286 L 620 310 L 380 310 L 380 330" marker-end="url(#arr)"/>
+
+      <rect class="box newbox" x="220" y="330" width="320" height="56" rx="8"/>
+      <rect class="badge" x="505" y="334" width="36" height="14" rx="3"/>
+      <text class="badgetxt" x="523" y="345" text-anchor="middle">NEW</text>
+      <text class="ttl" x="380" y="354" text-anchor="middle">Group by entity (deterministic)</text>
+      <text class="sub" x="380" y="373" text-anchor="middle">canonicalize + substring-merge · no LLM (was: cosine cluster)</text>
+      <path class="arr" d="M 380 386 L 380 418" marker-end="url(#arr)"/>
+
+      <rect class="box changed" x="240" y="420" width="280" height="56" rx="8"/>
+      <circle class="badge" cx="507" cy="432" r="11"/>
+      <text class="badgetxt" x="507" y="435" text-anchor="middle">Δ</text>
+      <text class="ttl" x="380" y="444" text-anchor="middle">Reliability scoring</text>
+      <text class="sub" x="380" y="463" text-anchor="middle">5 factors · minority penalty <tspan class="accent-txt">intra-group</tspan> (was: global)</text>
+      <path class="arr" d="M 380 476 L 380 510" marker-end="url(#arr)"/>
+
+      <rect x="40" y="500" width="680" height="200" rx="10"
+            fill="none" stroke="#d97706" stroke-width="1.5" stroke-dasharray="6 4" opacity="0.55"/>
+      <text class="grp-label" x="60" y="520">for each entity group above the threshold:</text>
+
+      <polygon class="diamond" points="380,520 500,575 380,630 260,575"/>
+      <text class="ttl" x="380" y="568" text-anchor="middle">Intra-group</text>
+      <text class="ttl" x="380" y="586" text-anchor="middle">winner ratio</text>
+      <text class="ttl" x="380" y="604" text-anchor="middle">≥ 1.5 ?</text>
+
+      <path class="arr" d="M 260 575 L 180 575 L 180 645" marker-end="url(#arr)"/>
+      <text class="edge" x="218" y="569" text-anchor="middle">yes</text>
+
+      <path class="arr" d="M 500 575 L 580 575 L 580 645" marker-end="url(#arr)"/>
+      <text class="edge" x="542" y="569" text-anchor="middle">no</text>
+
+      <rect class="box det" x="60" y="645" width="240" height="50" rx="8"/>
+      <text class="ttl" x="180" y="669" text-anchor="middle">Deterministic vote</text>
+      <text class="sub" x="180" y="685" text-anchor="middle">no LLM · per group</text>
+
+      <rect class="box llm" x="460" y="645" width="240" height="50" rx="8"/>
+      <text class="ttl" x="580" y="669" text-anchor="middle">LLM mediator</text>
+      <text class="sub" x="580" y="685" text-anchor="middle">gpt-4o · strict JSON · per group</text>
+
+      <path class="arr" d="M 180 695 L 180 720 L 380 720 L 380 740" marker-end="url(#arr)"/>
+      <path class="arr" d="M 580 695 L 580 720 L 380 720 L 380 740" marker-end="url(#arr)"/>
+
+      <rect class="box output" x="240" y="742" width="280" height="56" rx="8"/>
+      <circle class="badge" cx="508" cy="754" r="11"/>
+      <text class="badgetxt" x="508" y="757" text-anchor="middle">Δ</text>
+      <text class="ttl" x="380" y="767" text-anchor="middle">FinalAnswer</text>
+      <text class="sub accent-txt" x="380" y="785" text-anchor="middle">list[AnswerVariant] (was: single variant)</text>
+    </svg>
+  </div>
+
+  <p style="color:var(--muted);font-size:13px;">
+    The structural changes relative to v1.0:
+    (1) the analyzer must now return <code>entity</code> — the canonical
+    subject extracted verbatim from the document;
+    (2) cosine clustering is replaced by deterministic entity grouping with
+    substring merging;
+    (3) the reliability minority penalty is applied <i>within</i> each entity
+    group rather than globally;
+    (4) the mediator is invoked per entity group, and only when claims inside
+    that group disagree;
+    (5) <code>FinalAnswer.variants</code> is now a list — one variant per
+    entity group above the 0.40 weight threshold.
+  </p>
+
+  <h2>Prompts</h2>
+  <p style="color:var(--muted);font-size:13px;margin-top:-4px;">
+    Click a card to reveal the full prompt text.
+  </p>
+
+  <div class="prompt-cards">
+    <button class="prompt-card" onclick="document.getElementById('dlg-analyzer').showModal()">
+      <span class="pc-name">📄 Analyzer system prompt</span>
+      <span class="pc-meta">extracts entity + bare answer · output: Claim (strict JSON)</span>
+    </button>
+    <button class="prompt-card" onclick="document.getElementById('dlg-mediator').showModal()">
+      <span class="pc-name">🧑‍⚖️ Intra-Entity Mediator prompt</span>
+      <span class="pc-meta">per-entity reconciliation · only invoked on intra-group disagreement</span>
+    </button>
+  </div>
+
+  <dialog id="dlg-analyzer">
+    <div class="dlg-head">
+      <h3>Analyzer system prompt (v2.0)</h3>
+      <button class="close-btn" onclick="document.getElementById('dlg-analyzer').close()">✕</button>
+    </div>
+    <div class="dlg-body">
+<pre>You are the per-document Analyzer in an Entity-First multi-agent RAG pipeline.
+
+Given a USER QUESTION and ONE DOCUMENT, output JSON:
+
+- `doc_id`        — copy verbatim.
+
+- `entity`        — the entity the document is primarily about, taken VERBATIM
+                    from the document (usually its title or first sentence).
+                    If the document titles itself with a parenthetical
+                    disambiguator (e.g. "Security Building (St. Louis,
+                    Missouri)" or "Without You I'm Nothing (Placebo album)"),
+                    KEEP that disambiguator — it is what allows the mediator
+                    to separate same-named entities. Do NOT invent a
+                    disambiguator the document doesn't state. Empty string
+                    only when stance is `no_answer`.
+
+- `text`          — the BARE ANSWER for `entity`. The VALUE ONLY — no leading
+                    "the answer is", no full sentence, no verbose paraphrase.
+                    Examples:
+                      Q: "Who is the artist of X?"   text: "Placebo"
+                                                    NOT: "The artist is Placebo"
+                      Q: "When was X built?"         text: "1892"
+                                                    NOT: "completed in 1892"
+                      Q: "When did X die?"           text: "11 March 1707"
+                                                    NOT: "died on 11 March 1707"
+                      Q: "What is X known for?"     text: "A film"
+                                                    NOT: "is a film that opened in 1974"
+
+- `stance`        — supports | contradicts | no_answer.
+
+- `confidence`    — float in [0, 1]. Lower when source is hedged or unclear.
+
+- `supporting_quote` — verbatim span (≤ 200 chars) grounding the answer.
+
+Hard rules:
+
+- Use ONLY the document text. No outside knowledge.
+- `text` must be the BARE value, readable as the right-hand side of
+  "the answer is __". If your text is a full sentence, you have failed.
+- Keep entity disambiguators verbatim when the document provides them.</pre>
+    </div>
+  </dialog>
+
+  <dialog id="dlg-mediator">
+    <div class="dlg-head">
+      <h3>Intra-Entity Mediator prompt (v2.0)</h3>
+      <button class="close-btn" onclick="document.getElementById('dlg-mediator').close()">✕</button>
+    </div>
+    <div class="dlg-body">
+<pre>You are the Intra-Entity Mediator in an Entity-First multi-agent RAG pipeline.
+
+Documents that pass analysis have already been grouped by the entity they
+describe. You are called ONLY when claims WITHIN a single entity group
+disagree on the answer (e.g., two docs about the same person give different
+death dates). Your job is to pick the right answer for THIS entity.
+
+Inputs:
+- The user QUESTION.
+- The ENTITY this group is about.
+- A list of CONFLICTING CLAIMS, all about this entity. Each has: doc_id,
+  text, confidence, supporting_quote, reliability.
+
+Output strictly JSON:
+- `answer` — the answer entity ONLY, as a bare string. No prose.
+- `confidence` — float in [0, 1].
+- `supporting_doc_ids` — IDs of docs whose claims you accept.
+- `rejected_doc_ids` — IDs of docs you reject as misinfo about this entity.
+- `reconciliation_explanation` — 1-2 sentences.
+
+Rules:
+- Quotes are strongest evidence; trust a claim whose supporting_quote
+  explicitly contains the answer phrase.
+- Higher-reliability claims preferred when quotes are similar.
+- Do not invent answers absent from the claims.
+- Every doc_id MUST be in exactly one of supporting/rejected.</pre>
+    </div>
+  </dialog>
+
+  <h2>Results</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Metric</th>
+        <th class="num">freeze1</th>
+        <th class="num">freeze2</th>
+        <th class="num">avg</th>
+        <th class="num">Δ vs v1.0</th>
+        <th>Comment</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><b>EM-any-gold</b> 🎯</td>
+        <td class="num">0.833</td><td class="num">0.833</td>
+        <td class="num"><b>0.833</b></td>
+        <td class="num"><span class="delta-good">↑ +0.500</span></td>
+        <td>The headline win — driven by the bare-answer format</td>
+      </tr>
+      <tr>
+        <td>EM-substring</td>
+        <td class="num">0.833</td><td class="num">0.833</td>
+        <td class="num">0.833</td>
+        <td class="num"><span class="delta-flat">↔ 0.000</span></td>
+        <td>Unchanged</td>
+      </tr>
+      <tr>
+        <td><b>F1-multi-answer</b> 🎯</td>
+        <td class="num">0.670</td><td class="num">0.670</td>
+        <td class="num"><b>0.670</b></td>
+        <td class="num"><span class="delta-flat">↔ +0.002</span></td>
+        <td>Close to v1.0; precision dips while recall rises</td>
+      </tr>
+      <tr>
+        <td><b>Recall@gold</b></td>
+        <td class="num">0.667</td><td class="num">0.667</td>
+        <td class="num"><b>0.667</b></td>
+        <td class="num"><span class="delta-good">↑ +0.077</span></td>
+        <td>The single-answer structural cap is broken</td>
+      </tr>
+      <tr>
+        <td>Precision-answers</td>
+        <td class="num">0.747</td><td class="num">0.747</td>
+        <td class="num">0.747</td>
+        <td class="num"><span class="delta-bad">↓ −0.086</span></td>
+        <td>The cost of multi-answer — occasional spurious variant</td>
+      </tr>
+      <tr>
+        <td><b>Misinfo-rejection</b> 🎯</td>
+        <td class="num">0.792</td><td class="num">0.792</td>
+        <td class="num"><b>0.792</b></td>
+        <td class="num"><span class="delta-bad">↓ −0.125</span></td>
+        <td>Regression: misinfo forms its own entity group → targeted by v3.0</td>
+      </tr>
+      <tr>
+        <td>Noise rejection</td>
+        <td class="num">0.917</td><td class="num">1.000</td>
+        <td class="num">0.958</td>
+        <td class="num"><span class="delta-good">↑ +0.264</span></td>
+        <td>Entity grouping automatically discards no-entity documents</td>
+      </tr>
+      <tr>
+        <td>Citation faithfulness</td>
+        <td class="num">0.681</td><td class="num">0.687</td>
+        <td class="num">0.684</td>
+        <td class="num"><span class="delta-bad">↓ −0.122</span></td>
+        <td>Multi-answer increases the surface for misaligned quotes</td>
+      </tr>
+      <tr>
+        <td>Correct citation</td>
+        <td class="num">0.926</td><td class="num">0.946</td>
+        <td class="num">0.936</td>
+        <td class="num"><span class="delta-bad">↓ −0.036</span></td>
+        <td>The vast majority of citations are still correct</td>
+      </tr>
+      <tr>
+        <td>Coverage</td>
+        <td class="num">0.647</td><td class="num">0.610</td>
+        <td class="num">0.628</td>
+        <td class="num"><span class="delta-good">↑ +0.131</span></td>
+        <td>More correct documents are surfaced in supporting</td>
+      </tr>
+      <tr>
+        <td>Abstention rate</td>
+        <td class="num">0.000</td><td class="num">0.000</td>
+        <td class="num">0.000</td>
+        <td class="num"><span class="delta-flat">↔ 0.000</span></td>
+        <td>Never abstains — targeted by v5.0</td>
+      </tr>
+      <tr>
+        <td>Avg cost / question</td>
+        <td class="num">$0.0018</td><td class="num">$0.0018</td>
+        <td class="num">$0.0018</td>
+        <td class="num"><span class="delta-good">↓ −55%</span></td>
+        <td>The expensive gpt-4o mediator is rarely invoked (det. vote usually wins)</td>
+      </tr>
+      <tr>
+        <td>Avg LLM calls / question</td>
+        <td class="num">6.2</td><td class="num">6.2</td>
+        <td class="num">6.2</td>
+        <td class="num"><span class="delta-good">↓ −0.4</span></td>
+        <td>K analyzer calls plus the occasional mediator</td>
+      </tr>
+      <tr>
+        <td>Avg latency / question</td>
+        <td class="num">10.6 s</td><td class="num">10.7 s</td>
+        <td class="num">10.7 s</td>
+        <td class="num"><span class="delta-flat">↔ +0.6</span></td>
+        <td>Essentially the same as v1.0</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>By category (averaged over both freeze runs)</h3>
+  <p style="color:var(--muted);font-size:12px;margin:0 0 -6px;">
+    * — the category contains no misinfo documents, so the metric is trivially 1.0.
+  </p>
+  <table>
+    <thead>
+      <tr>
+        <th>Category</th>
+        <th class="num">n</th>
+        <th class="num">F1-multi</th>
+        <th class="num">EM-any</th>
+        <th class="num">Recall@gold</th>
+        <th class="num">Misinfo-rej</th>
+        <th class="num">Citation-faith</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>pure_correct</td><td class="num">3</td><td class="num">0.29</td><td class="num">0.33</td><td class="num">0.33</td><td class="num">1.00*</td><td class="num">0.25</td></tr>
+      <tr><td>has_misinfo</td><td class="num">3</td><td class="num">0.77</td><td class="num">1.00</td><td class="num">0.83</td><td class="num"><b>0.50</b></td><td class="num">0.67</td></tr>
+      <tr><td>has_noise</td><td class="num">3</td><td class="num">0.82</td><td class="num">1.00</td><td class="num">0.72</td><td class="num">1.00*</td><td class="num">0.82</td></tr>
+      <tr><td>mixed_conflict</td><td class="num">3</td><td class="num">0.80</td><td class="num">1.00</td><td class="num">0.78</td><td class="num">0.67</td><td class="num">1.00</td></tr>
+    </tbody>
+  </table>
+
+  <h2>What works / what doesn't</h2>
+
+  <div class="pros-cons">
+    <section>
+      <h4 class="good-title">✅ Strengths</h4>
+      <ul>
+        <li><b>EM-any-gold 0.833</b> — the bare-answer rule plus strict disambiguation lift this from 0.33. EM = 1.00 across every question in <code>has_misinfo</code>, <code>has_noise</code> and <code>mixed_conflict</code>.</li>
+        <li><b>Recall@gold +0.077</b> — the single-answer structural cap is broken. Ambiguous questions like <i>Without You I'm Nothing</i> now return both valid entity variants.</li>
+        <li><b>Noise rejection +0.264</b> — entity grouping implicitly closes the second hole. A document without an entity never enters any group and lands in rejected by construction.</li>
+        <li><b>Coverage +0.131</b> — more correct documents are exposed as supporting (each variant ships all docs of its entity group).</li>
+        <li><b>Cost −55%</b> — deterministic grouping plus intra-group voting handles most cases, so the expensive gpt-4o mediator is invoked far less often.</li>
+        <li><b>Stability:</b> only 2 of 12 questions diverge between freeze runs, and those diverge on capitalization / dedup only.</li>
+      </ul>
+    </section>
+    <section>
+      <h4 class="bad-title">⚠ Weaknesses</h4>
+      <ul>
+        <li><b>Misinfo-rejection −0.125</b> — a structural side effect: a misinfo document with its own (fabricated) entity forms a standalone group, passes the 0.40 threshold and lands inside its own variant's supporting set. This is not a code or prompt bug — it is an information bound: the analyzer sees a single document and cannot cross-check the entity against the corpus. The fix lives in v3.0 (skeptic).</li>
+        <li><b>Citation faithfulness −0.122</b> — under multi-answer, a variant for entity X may cite a document whose <code>eval_metadata.answer</code> is a close-but-different entity.</li>
+        <li><b>pure_correct F1 = 0.29</b> — the weak spot is the category itself: questions such as q094 contain misinfo-style texts labeled as <code>correct</code> in RAMDocs (an internal dataset inconsistency). Not addressable from our pipeline.</li>
+        <li><b>Precision-answers −0.086</b> — structurally inevitable: emitting more variants opens room for a spurious one.</li>
+        <li><b>Abstention rate = 0</b> — there is no "I don't know" pathway even on a degenerate retrieval pool. Targeted by v5.0.</li>
+      </ul>
+    </section>
+  </div>
+
+  <div class="callout warn">
+    <b>Bottom line:</b> entity-first does break the structural cap of
+    single-answer architecture — EM jumps by +0.50, Recall by +0.077,
+    Noise-rejection by +0.264, and cost drops by 55%. The price is a 0.125
+    drop in misinfo-rejection: a misinfo document with its own fabricated
+    entity now forms a group that looks reliable to the rest of the pipeline.
+    This is an <b>information bound</b> — the analyzer sees one document at a
+    time and cannot verify the entity against the corpus.
+    <b>The fix is the skeptic agent in v3.0</b>, which sees every entity group
+    and validates each one against the rest of the corpus.
+  </div>
+
+  <h2>Unchanged vs v1.0</h2>
+  <ul>
+    <li>Retriever: BM25 + dense MiniLM, top_k = 8, weights 0.5 / 0.5</li>
+    <li>Reliability formula: weights 0.40 / 0.25 / 0.20 / 0.15 / −0.10</li>
+    <li>Models: analyzer = <code>gpt-4o-mini</code>, mediator = <code>gpt-4o</code></li>
+    <li>Claim JSON schema (with the addition of the required <code>entity</code> field)</li>
+  </ul>
+
+  <div class="footnote">
+    Run artefacts are immutable: no changes to logic or prompts of v2.0 after freeze.
+    Any change spawns a new minor version (v2.1) with its own freeze run.
+    A minor iteration v2.1_calibrated was attempted and rejected — see
+    <code>runs/_journal.md</code> for details.
+  </div>
+
+</div>
+</section>
+<section id="v3">
+<div class="container">
+
+  
+
+  <header class="page-header">
+    <h1>v3 · Skeptic verification agent</h1>
+    <div class="subtitle">
+      <span class="status-frozen">FROZEN · 2026-05-15</span> ·
+      v2.0 plus an adversarial verifier that re-reads the corpus
+    </div>
+  </header>
+
+  <dl class="kv">
+    <dt>Version</dt><dd><code>3.3.0</code> (final v3 — internal iterations v3.0 / v3.1 / v3.2 omitted from this page)</dd>
+    <dt>Retrieval parameters</dt><dd>BM25 + dense, weights 0.5 / 0.5, top_k = 8 (same as v2.0)</dd>
+    <dt>Reliability weights</dt><dd>0.40 / 0.25 / 0.20 / 0.15 / −0.10 (same as v2.0)</dd>
+    <dt>Grouping parameters</dt><dd><b>min_relative_weight = 0.30</b> (lowered from 0.40 to lift multi-answer recall)</dd>
+    <dt>Freeze cost</dt><dd>$0.223 across both runs ($0.111 per run, +5× vs v2.0)</dd>
+  </dl>
+
+  <h2>Hypothesis</h2>
+  <p>
+    The misinfo-rejection regression of v2.0 (0.792, down from v1.0's 0.917)
+    is structural: the analyzer sees only one document at a time and cannot
+    cross-check a fabricated entity against the rest of the corpus. Adding
+    an adversarial Skeptic that <i>does</i> see the full pool — and is
+    explicitly taught to be conservative on legitimate homonyms but
+    aggressive on thin-stub misinfo — should recover misinfo-rejection
+    without sacrificing the v2.0 EM and recall gains.
+  </p>
+
+  <h2>Architecture</h2>
+  <p style="color:var(--muted);font-size:13px;margin-bottom:6px;">
+    <span style="display:inline-block;width:14px;height:14px;background:#fef9c3;border:2px dashed #d97706;border-radius:3px;vertical-align:middle;margin-right:4px"></span>
+    <b>NEW</b> — added in v3 ·
+    everything above the Skeptic is identical to v2.0
+  </p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 760 960" xmlns="http://www.w3.org/2000/svg"
+         style="max-width:760px;width:100%;height:auto;display:block;margin:0 auto;font-family:system-ui,sans-serif">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#6b7280"/>
+        </marker>
+        <style>
+          .box     { fill:#ffffff; stroke:#cbd5e1; stroke-width:1.5; }
+          .box.input    { fill:#f1f5f9; stroke:#94a3b8; }
+          .box.analyzer { fill:#eff6ff; stroke:#93c5fd; }
+          .box.entity   { fill:#fef9c3; stroke:#ca8a04; stroke-width:1.5; }
+          .box.newbox   { fill:#fef9c3; stroke:#d97706; stroke-width:2.5; stroke-dasharray:5 3; }
+          .box.det      { fill:#f0fdf4; stroke:#86efac; }
+          .box.llm      { fill:#fffbeb; stroke:#fcd34d; }
+          .box.draft    { fill:#fef3c7; stroke:#d97706; stroke-width:1.5; }
+          .box.output   { fill:#ecfeff; stroke:#67e8f9; stroke-width:2; }
+          .diamond      { fill:#fef9c3; stroke:#eab308; stroke-width:1.5; }
+          .ttl   { fill:#0f172a; font-size:13px; font-weight:600; }
+          .sub   { fill:#64748b; font-size:11px; }
+          .edge  { fill:#64748b; font-size:11px; font-style:italic; }
+          .arr   { stroke:#6b7280; stroke-width:1.5; fill:none; }
+          .badge    { fill:#d97706; }
+          .badgetxt { fill:#ffffff; font-size:9px; font-weight:700; }
+          .grp-label { fill:#92400e; font-size:11px; font-style:italic; font-weight:600; }
+        </style>
+      </defs>
+
+      <rect class="box input" x="240" y="20" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="44" text-anchor="middle">Question + RAMDocs candidate pool</text>
+      <text class="sub" x="380" y="63" text-anchor="middle">3–8 documents per question</text>
+      <path class="arr" d="M 380 76 L 380 108" marker-end="url(#arr)"/>
+
+      <rect class="box" x="240" y="110" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="134" text-anchor="middle">Retriever</text>
+      <text class="sub" x="380" y="153" text-anchor="middle">BM25 + dense MiniLM · top_k = 8</text>
+      <path class="arr" d="M 380 166 L 380 185 L 140 185 L 140 208" marker-end="url(#arr)"/>
+      <path class="arr" d="M 380 166 L 380 208" marker-end="url(#arr)"/>
+      <path class="arr" d="M 380 166 L 380 185 L 620 185 L 620 208" marker-end="url(#arr)"/>
+
+      <rect class="box analyzer" x="40"  y="210" width="200" height="64" rx="8"/>
+      <text class="ttl" x="140" y="234" text-anchor="middle">Analyzer 1</text>
+      <text class="sub" x="140" y="252" text-anchor="middle">claim + entity</text>
+      <text class="sub" x="140" y="267" text-anchor="middle">gpt-4o-mini</text>
+
+      <rect class="box analyzer" x="280" y="210" width="200" height="64" rx="8"/>
+      <text class="ttl" x="380" y="234" text-anchor="middle">Analyzer 2</text>
+      <text class="sub" x="380" y="252" text-anchor="middle">claim + entity</text>
+      <text class="sub" x="380" y="267" text-anchor="middle">gpt-4o-mini</text>
+
+      <rect class="box analyzer" x="520" y="210" width="200" height="64" rx="8"/>
+      <text class="ttl" x="620" y="234" text-anchor="middle">Analyzer K</text>
+      <text class="sub" x="620" y="252" text-anchor="middle">claim + entity</text>
+      <text class="sub" x="620" y="267" text-anchor="middle">gpt-4o-mini</text>
+
+      <path class="arr" d="M 140 274 L 140 300 L 380 300 L 380 320" marker-end="url(#arr)"/>
+      <path class="arr" d="M 380 274 L 380 320" marker-end="url(#arr)"/>
+      <path class="arr" d="M 620 274 L 620 300 L 380 300 L 380 320" marker-end="url(#arr)"/>
+
+      <rect class="box entity" x="240" y="320" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="344" text-anchor="middle">Group by entity (deterministic)</text>
+      <text class="sub" x="380" y="363" text-anchor="middle">canonicalize + substring-merge · no LLM</text>
+      <path class="arr" d="M 380 376 L 380 408" marker-end="url(#arr)"/>
+
+      <rect class="box" x="240" y="410" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="434" text-anchor="middle">Reliability scoring</text>
+      <text class="sub" x="380" y="453" text-anchor="middle">5 factors · intra-group penalty</text>
+      <path class="arr" d="M 380 466 L 380 500" marker-end="url(#arr)"/>
+
+      <rect x="40" y="490" width="680" height="200" rx="10"
+            fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="6 4" opacity="0.55"/>
+      <text class="grp-label" x="60" y="510" style="fill:#475569">for each entity group above the 0.30 threshold:</text>
+
+      <polygon class="diamond" points="380,510 500,565 380,620 260,565"/>
+      <text class="ttl" x="380" y="558" text-anchor="middle">Intra-group</text>
+      <text class="ttl" x="380" y="576" text-anchor="middle">winner ratio</text>
+      <text class="ttl" x="380" y="594" text-anchor="middle">≥ 1.5 ?</text>
+
+      <path class="arr" d="M 260 565 L 180 565 L 180 635" marker-end="url(#arr)"/>
+      <text class="edge" x="218" y="559" text-anchor="middle">yes</text>
+      <path class="arr" d="M 500 565 L 580 565 L 580 635" marker-end="url(#arr)"/>
+      <text class="edge" x="542" y="559" text-anchor="middle">no</text>
+
+      <rect class="box det" x="60" y="635" width="240" height="50" rx="8"/>
+      <text class="ttl" x="180" y="659" text-anchor="middle">Deterministic vote</text>
+      <text class="sub" x="180" y="675" text-anchor="middle">no LLM · per group</text>
+
+      <rect class="box llm" x="460" y="635" width="240" height="50" rx="8"/>
+      <text class="ttl" x="580" y="659" text-anchor="middle">LLM mediator</text>
+      <text class="sub" x="580" y="675" text-anchor="middle">gpt-4o · per group</text>
+
+      <path class="arr" d="M 180 685 L 180 710 L 380 710 L 380 730" marker-end="url(#arr)"/>
+      <path class="arr" d="M 580 685 L 580 710 L 380 710 L 380 730" marker-end="url(#arr)"/>
+
+      <rect class="box draft" x="240" y="732" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="756" text-anchor="middle">FinalAnswer (draft)</text>
+      <text class="sub" x="380" y="775" text-anchor="middle">list[AnswerVariant], one per entity</text>
+      <path class="arr" d="M 380 788 L 380 822" marker-end="url(#arr)"/>
+
+      <rect class="box newbox" x="160" y="824" width="440" height="76" rx="10"/>
+      <rect class="badge" x="560" y="828" width="36" height="14" rx="3"/>
+      <text class="badgetxt" x="578" y="839" text-anchor="middle">NEW</text>
+      <text class="ttl" x="380" y="848" text-anchor="middle">Skeptic verification agent</text>
+      <text class="sub" x="380" y="866" text-anchor="middle">entity grounding · citation faithfulness · counter-evidence · depth-asymmetry</text>
+      <text class="sub" x="380" y="884" text-anchor="middle">gpt-4o · single pass · keep / reject each variant · fallback restores draft</text>
+      <path class="arr" d="M 380 900 L 380 932" marker-end="url(#arr)"/>
+
+      <rect class="box output" x="220" y="932" width="320" height="26" rx="8"/>
+      <text class="ttl" x="380" y="950" text-anchor="middle">FinalAnswer (verified)</text>
+    </svg>
+  </div>
+
+  <p style="color:var(--muted);font-size:13px;">
+    The pipeline through "FinalAnswer (draft)" is the v2.0 flow with a
+    looser 0.30 entity-group threshold. The Skeptic is a single-pass LLM
+    call that takes every draft variant plus the entire document pool
+    (including documents that earlier stages classified as no_answer or
+    rejected) and returns a keep / reject verdict per variant. A
+    pipeline-level fallback restores the draft if the Skeptic ever
+    rejects every variant — the Skeptic is allowed to reduce, never to
+    zero out, a non-empty draft.
+  </p>
+
+  <h2>Prompts</h2>
+  <p style="color:var(--muted);font-size:13px;margin-top:-4px;">Click a card to reveal the full prompt text.</p>
+
+  <div class="prompt-cards">
+    <button class="prompt-card" onclick="document.getElementById('dlg-analyzer').showModal()">
+      <span class="pc-name">📄 Analyzer system prompt</span>
+      <span class="pc-meta">unchanged from v2.0 · output: Claim (strict JSON)</span>
+    </button>
+    <button class="prompt-card" onclick="document.getElementById('dlg-mediator').showModal()">
+      <span class="pc-name">🧑‍⚖️ Intra-Entity Mediator prompt</span>
+      <span class="pc-meta">unchanged from v2.0 · only invoked on intra-group disagreement</span>
+    </button>
+    <button class="prompt-card" onclick="document.getElementById('dlg-skeptic').showModal()">
+      <span class="pc-name">🔍 Skeptic system prompt (NEW)</span>
+      <span class="pc-meta">homonyms tolerant + depth-asymmetry check · output: keep/reject decisions</span>
+    </button>
+  </div>
+
+  <dialog id="dlg-analyzer">
+    <div class="dlg-head"><h3>Analyzer system prompt (v3)</h3>
+      <button class="close-btn" onclick="document.getElementById('dlg-analyzer').close()">✕</button></div>
+    <div class="dlg-body"><pre>Same as v2.0. The analyzer is unchanged.</pre></div>
+  </dialog>
+
+  <dialog id="dlg-mediator">
+    <div class="dlg-head"><h3>Intra-Entity Mediator prompt (v3)</h3>
+      <button class="close-btn" onclick="document.getElementById('dlg-mediator').close()">✕</button></div>
+    <div class="dlg-body"><pre>Same as v2.0. The mediator is unchanged.</pre></div>
+  </dialog>
+
+  <dialog id="dlg-skeptic">
+    <div class="dlg-head"><h3>Skeptic system prompt (v3 — final)</h3>
+      <button class="close-btn" onclick="document.getElementById('dlg-skeptic').close()">✕</button></div>
+    <div class="dlg-body">
+<pre>You are the Skeptic agent in an Entity-First multi-agent RAG pipeline.
+
+Earlier stages produced a DRAFT FINAL ANSWER consisting of one or more
+candidate variants — one per "entity" the pipeline identified. Your job is
+to CHALLENGE this draft and decide which variants are well-supported and
+which look like artefacts.
+
+You see the entire candidate document pool, including documents that earlier
+stages classified as no_answer or rejected. Use them.
+
+For EACH variant, ask three verification questions:
+
+  1. ENTITY GROUNDING — does this entity exist as a real referent in the pool?
+  2. CITATION FAITHFULNESS — do the supporting documents support BOTH the entity AND the answer?
+  3. COUNTER-EVIDENCE — does any document directly contradict this variant for THIS SPECIFIC ENTITY?
+
+CRITICAL RULE — HOMONYMS / NAMESAKES:
+
+  When two or more variants represent entities that legitimately share a
+  surface name (e.g., "Doug Harvey" the hockey player AND the baseball player),
+  each is a SEPARATE valid entity. The existence of one variant is NEVER
+  evidence against another same-named variant.
+
+NEW RULE — DEPTH-ASYMMETRY CHECK:
+
+  When the draft contains MULTIPLE variants, compare the QUALITY and DEPTH
+  of their supporting evidence side-by-side. A variant whose only supporting
+  document is a SHORT, CONTEXT-FREE one-sentence assertion is suspicious —
+  especially if the OTHER variants have multi-paragraph or richly-contextualised
+  supporting documents. That asymmetry is a classic fingerprint of fabricated
+  misinformation inserted into the pool alongside genuine entries. REJECT the
+  thin-evidence variant even if its surface name overlaps with another (legitimate)
+  variant.
+
+Decision rules:
+
+- KEEP when entity is grounded AND no contradicting evidence AND depth is
+  comparable to other kept variants.
+- REJECT when supporting evidence is a thin context-free stub while other
+  variants have richer corroboration, OR citations are misaligned, OR
+  solid counter-evidence contradicts that specific entity.
+- Default to KEEP when uncertain.
+- For homonyms with comparable grounding depth: KEEP all.
+
+Output strictly the JSON object:
+
+- `decisions` — list, one entry per input variant, in the SAME ORDER:
+    * `entity` — copied verbatim.
+    * `verdict` — `"keep"` or `"reject"`.
+    * `reason` — 1–2 sentences citing the doc_id(s) you relied on.</pre>
+    </div>
+  </dialog>
+
+  <h2>Results</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Metric</th>
+        <th class="num">freeze1</th>
+        <th class="num">freeze2</th>
+        <th class="num">avg</th>
+        <th class="num">Δ vs v2.0</th>
+        <th>Comment</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><b>Misinfo-rejection</b> 🎯</td>
+        <td class="num">0.917</td><td class="num">0.833</td>
+        <td class="num"><b>0.875</b></td>
+        <td class="num"><span class="delta-good">↑ +0.083</span></td>
+        <td>The headline win — depth-asymmetry catches thin-stub misinfo</td>
+      </tr>
+      <tr>
+        <td><b>EM-any-gold</b> 🎯</td>
+        <td class="num">0.833</td><td class="num">0.750</td>
+        <td class="num"><b>0.792</b></td>
+        <td class="num"><span class="delta-bad">↓ −0.041</span></td>
+        <td>Small drop vs v2.0 — fallback prevents abstention</td>
+      </tr>
+      <tr>
+        <td><b>F1-multi-answer</b> 🎯</td>
+        <td class="num">0.701</td><td class="num">0.648</td>
+        <td class="num"><b>0.675</b></td>
+        <td class="num"><span class="delta-good">↑ +0.005</span></td>
+        <td>Essentially flat — gains in precision balance recall costs</td>
+      </tr>
+      <tr>
+        <td>Recall@gold</td>
+        <td class="num">0.667</td><td class="num">0.625</td>
+        <td class="num">0.646</td>
+        <td class="num"><span class="delta-bad">↓ −0.021</span></td>
+        <td>Slightly below v2.0; Skeptic prunes a few borderline variants</td>
+      </tr>
+      <tr>
+        <td>Noise rejection</td>
+        <td class="num">0.917</td><td class="num">0.917</td>
+        <td class="num">0.917</td>
+        <td class="num"><span class="delta-bad">↓ −0.041</span></td>
+        <td>Still high; one noise doc occasionally slips into a variant</td>
+      </tr>
+      <tr>
+        <td>Citation faithfulness</td>
+        <td class="num">0.750</td><td class="num">0.750</td>
+        <td class="num"><b>0.750</b></td>
+        <td class="num"><span class="delta-good">↑ +0.066</span></td>
+        <td>Tuned analyzer prompt aligns citations with the picked answer</td>
+      </tr>
+      <tr>
+        <td>Abstention rate</td>
+        <td class="num">0.000</td><td class="num">0.000</td>
+        <td class="num">0.000</td>
+        <td class="num"><span class="delta-flat">↔ 0.000</span></td>
+        <td>Fallback guarantees no all-rejected abstain</td>
+      </tr>
+      <tr>
+        <td>Avg cost / question</td>
+        <td class="num">$0.0095</td><td class="num">$0.0091</td>
+        <td class="num">$0.0093</td>
+        <td class="num"><span class="delta-bad">↑ +$0.0075</span></td>
+        <td>+1 gpt-4o call per question (the Skeptic)</td>
+      </tr>
+      <tr>
+        <td>Avg LLM calls / question</td>
+        <td class="num">7.2</td><td class="num">7.1</td>
+        <td class="num">7.1</td>
+        <td class="num"><span class="delta-bad">↑ +0.9</span></td>
+        <td>Analyzer + per-group mediator + 1 Skeptic</td>
+      </tr>
+      <tr>
+        <td>Avg latency / question</td>
+        <td class="num">11.9 s</td><td class="num">13.5 s</td>
+        <td class="num">12.7 s</td>
+        <td class="num"><span class="delta-good">↑ +2.0 s</span></td>
+        <td>One extra LLM round-trip</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>What works / what doesn't</h2>
+
+  <div class="pros-cons">
+    <section>
+      <h4 class="good-title">✅ Strengths</h4>
+      <ul>
+        <li><b>Misinfo-rejection +0.083</b> — back to 0.875, the depth-asymmetry rule catches q209-style fabrications (one short stub vs multi-paragraph evidence) that v2.0 let through.</li>
+        <li><b>Best balanced operating point</b> on the 4-way Pareto: beats v2.0 on misinfo, beats v1.0 on EM (+0.46), beats both internal v3 iterations on recall.</li>
+        <li><b>No abstention</b> — the pipeline-level fallback guarantees that a Skeptic over-rejection never produces an empty answer.</li>
+        <li><b>Homonym-safe</b> — explicit prompt rule keeps "Doug Harvey hockey" + "Doug Harvey baseball" as separate valid variants.</li>
+      </ul>
+    </section>
+    <section>
+      <h4 class="bad-title">⚠ Weaknesses</h4>
+      <ul>
+        <li><b>Cost +5×</b> per run vs v2.0 — the Skeptic uses the more expensive gpt-4o model on every question.</li>
+        <li><b>Stability:</b> 2 / 12 questions diverge between freeze runs (q176 dedup, q131 wavers between "film" and "novel") — the Skeptic still has edge-cases on near-equal evidence.</li>
+        <li><b>Recall slightly below v2.0</b> (0.646 vs 0.667) — depth-asymmetry occasionally over-prunes borderline-thin but valid variants.</li>
+        <li><b>Latency +2 s</b> — one extra LLM round-trip per question.</li>
+      </ul>
+    </section>
+  </div>
+
+  <div class="callout warn">
+    <b>Bottom line:</b> v3 establishes a balanced Pareto operating point.
+    Compared to v1.0 it is a clear win on every quality axis (EM +0.46,
+    F1 +0.01, Recall +0.06, Citation-faith on par). Compared to v2.0 it
+    trades a small EM / Recall drop for a substantial misinfo-rejection gain
+    (+0.083). The cost is the Skeptic's extra gpt-4o call. v3 is the
+    recommended default when robustness matters; v2.0 stays the better
+    choice when raw answer quality and cost are the priorities.
+  </div>
+
+  <h2>Unchanged vs v2.0</h2>
+  <ul>
+    <li>Retriever and reliability formula</li>
+    <li>Analyzer and Intra-Entity Mediator prompts</li>
+    <li>Entity grouping logic (only the 0.40 → 0.30 weight threshold changed)</li>
+    <li>Models: analyzer = <code>gpt-4o-mini</code>, mediator = <code>gpt-4o</code></li>
+  </ul>
+
+  <div class="footnote">
+    Run artefacts are immutable. Internal iterations v3.0 (aggressive),
+    v3.1 (over-conservative) and v3.2 (balanced — prior published v3) live
+    in <code>pipelines/v3_0_skeptic/</code>,
+    <code>pipelines/v3_1_conservative_skeptic/</code> and
+    <code>pipelines/v3_2_skeptic_balanced/</code> for code archaeology but
+    are intentionally omitted from this page — only the final v3 variant
+    (v3.3_analyzer_tuned, Pareto-better than v3.2 on citation faithfulness)
+    is published.
+  </div>
+
+</div>
+</section>
+<section id="v4">
+<div class="container">
+
+  <header class="page-header">
+    <h1>v4.0 · Evidence Quality scoring <span style="color:var(--bad);font-size:18px">(negative result)</span></h1>
+    <div class="subtitle">
+      <span class="status-frozen">FROZEN · 2026-05-16</span> ·
+      v3 plus a per-document Evidence Evaluator — published as an honest regression
+    </div>
+  </header>
+
+  <div class="callout warn" style="margin-top:8px;">
+    <b>TL;DR — this version is a regression.</b> v4.0 adds a per-doc
+    Evaluator agent that emits a structured <code>DocTrust</code> report
+    (trust_score + red_flags). The hypothesis was that a structured
+    per-doc evidence-quality signal would let the Skeptic prune misinfo
+    more sharply. In practice every quality metric ticked down (EM −0.042,
+    F1 −0.025, <b>Misinfo-rejection −0.042</b>) while LLM calls per
+    question jumped +81% and latency +71%. <b>v3.3_analyzer_tuned
+    remains the recommended default.</b> v4.0 is shipped frozen so the
+    negative result is reproducible and the design lesson is recorded.
+  </div>
+
+  <dl class="kv">
+    <dt>Version</dt><dd><code>4.0.0</code></dd>
+    <dt>Retrieval parameters</dt><dd>BM25 + dense, weights 0.5 / 0.5, top_k = 8 (same as v3)</dd>
+    <dt>Reliability formula</dt><dd><b>0.40·retrieval + 0.25·confidence + 0.35·trust − 0.10·minority</b> (NEW — replaces the dormant recency / authority slots of v1–v3)</dd>
+    <dt>Grouping parameters</dt><dd>min_relative_weight = 0.30 (same as v3)</dd>
+    <dt>Models</dt><dd>analyzer = <code>gpt-4o-mini</code>, evaluator = <code>gpt-4o-mini</code>, mediator = <code>gpt-4o</code>, skeptic = <code>gpt-4o</code></dd>
+    <dt>Freeze cost</dt><dd>$0.269 across both runs ($0.134 per run, +15% vs v3.3)</dd>
+  </dl>
+
+  <h2>Hypothesis</h2>
+  <p>
+    v3 successfully recovered misinfo-rejection to 0.875 but capped EM at
+    0.792 because the Skeptic uses corpus-level signals only (depth,
+    counter-evidence, homonyms). A structured per-document quality signal
+    — independent of other documents — should let the pipeline (a)
+    sharpen <code>reliability</code> ordering inside each entity group and
+    (b) give the Skeptic an additional axis to discriminate fabricated
+    stubs from legitimate short answers, lifting Misinfo-rejection ≥ 0.90
+    without losing EM or recall.
+  </p>
+
+  <h2>Architecture (vs v3)</h2>
+  <p>
+    Everything above and below the Evaluator is identical to v3.3. The
+    addition is a per-document <b>Evaluator agent</b> that runs alongside
+    the Analyzer on every retrieved document and emits a strict
+    <code>DocTrust</code> Pydantic model:
+  </p>
+  <ul>
+    <li>Four local quality axes — <i>internal_consistency</i>,
+        <i>encyclopedic_quality</i>, <i>specificity</i>, <i>relevance</i> —
+        each in [0.0, 1.0].</li>
+    <li>A composite <code>trust_score</code> in [0.0, 1.0] consumed by the
+        new W_TRUST = 0.35 slot in the reliability formula.</li>
+    <li>A closed-enum list of <code>red_flags</code>: <i>short_stub</i>,
+        <i>self_contradiction</i>, <i>off_topic</i>, <i>no_specifics</i>,
+        <i>category_page</i>, <i>formatting_cruft</i>.</li>
+  </ul>
+  <p style="color:var(--muted);font-size:13px;">
+    The Evaluator does NOT see other documents and does NOT compare
+    against external facts — it only judges what one document says about
+    itself. The full architecture diagram is on the
+    <a href="versions/v4.0_evidence_quality.html">standalone v4.0 page</a>.
+  </p>
+
+  <h2>Results</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Metric</th>
+        <th class="num">freeze1</th>
+        <th class="num">freeze2</th>
+        <th class="num">avg</th>
+        <th class="num">Δ vs v3.3</th>
+        <th>Comment</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><b>Misinfo-rejection</b> 🎯</td>
+        <td class="num">0.833</td><td class="num">0.833</td>
+        <td class="num"><b>0.833</b></td>
+        <td class="num"><span class="delta-bad">↓ −0.042</span></td>
+        <td>Headline regression — main hypothesis failed</td>
+      </tr>
+      <tr>
+        <td><b>EM-any-gold</b> 🎯</td>
+        <td class="num">0.750</td><td class="num">0.750</td>
+        <td class="num"><b>0.750</b></td>
+        <td class="num"><span class="delta-bad">↓ −0.042</span></td>
+        <td>Skeptic over-rejects short answers flagged short_stub</td>
+      </tr>
+      <tr>
+        <td><b>F1-multi-answer</b> 🎯</td>
+        <td class="num">0.661</td><td class="num">0.639</td>
+        <td class="num"><b>0.650</b></td>
+        <td class="num"><span class="delta-bad">↓ −0.025</span></td>
+        <td>Both precision and recall slip</td>
+      </tr>
+      <tr>
+        <td>Recall@gold</td>
+        <td class="num">0.653</td><td class="num">0.625</td>
+        <td class="num">0.639</td>
+        <td class="num"><span class="delta-bad">↓ −0.007</span></td>
+        <td>Essentially flat — recall is not the failure mode</td>
+      </tr>
+      <tr>
+        <td>Noise rejection</td>
+        <td class="num">0.972</td><td class="num">0.972</td>
+        <td class="num">0.972</td>
+        <td class="num"><span class="delta-bad">↓ −0.028</span></td>
+        <td>Slight slip from 1.0</td>
+      </tr>
+      <tr>
+        <td>Citation faithfulness</td>
+        <td class="num">0.722</td><td class="num">0.708</td>
+        <td class="num">0.715</td>
+        <td class="num"><span class="delta-bad">↓ −0.035</span></td>
+        <td>Trust-shifted reliability reorders supporting docs</td>
+      </tr>
+      <tr>
+        <td>Correct citation</td>
+        <td class="num">0.917</td><td class="num">0.910</td>
+        <td class="num">0.913</td>
+        <td class="num"><span class="delta-bad">↓ −0.045</span></td>
+        <td>Same root cause as Citation-faithfulness</td>
+      </tr>
+      <tr>
+        <td>Abstention rate</td>
+        <td class="num">0.000</td><td class="num">0.000</td>
+        <td class="num">0.000</td>
+        <td class="num"><span class="delta-flat">↔ 0.000</span></td>
+        <td>Fallback intact — never abstains</td>
+      </tr>
+      <tr>
+        <td>Avg cost / question</td>
+        <td class="num">$0.0113</td><td class="num">$0.0111</td>
+        <td class="num">$0.0112</td>
+        <td class="num"><span class="delta-bad">↑ +$0.0015</span></td>
+        <td>+ Evaluator on every retrieved doc</td>
+      </tr>
+      <tr>
+        <td>Avg LLM calls / question</td>
+        <td class="num">13.2</td><td class="num">13.1</td>
+        <td class="num"><b>13.1</b></td>
+        <td class="num"><span class="delta-bad">↑ +5.9 (+81%)</span></td>
+        <td>Analyzer × K + <b>Evaluator × K</b> + mediator + Skeptic</td>
+      </tr>
+      <tr>
+        <td>Avg latency / question</td>
+        <td class="num">22.8 s</td><td class="num">23.5 s</td>
+        <td class="num"><b>23.1 s</b></td>
+        <td class="num"><span class="delta-bad">↑ +9.6 s (+71%)</span></td>
+        <td>Sequential Analyzer → Evaluator per doc</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Why it failed</h2>
+
+  <div class="pros-cons">
+    <section>
+      <h4 class="good-title">✅ What's interesting (even though it lost)</h4>
+      <ul>
+        <li><b>Architecture is clean</b> — the Evaluator is a pure per-document agent with no cross-doc state. <code>DocTrust</code> is a strict Pydantic model with closed-enum red_flags; W_TRUST replaces the dormant recency / authority placeholders, so the reliability formula now has a fully populated signal stack.</li>
+        <li><b>Failure mode is mechanistic</b>, not random — we can point at exactly which design choices regressed which metrics, which is the whole reason to publish negative results.</li>
+        <li><b>Reproducibility</b> — both freeze runs agree on EM, Misinfo-rej and Noise-rej to four decimals.</li>
+      </ul>
+    </section>
+    <section>
+      <h4 class="bad-title">⚠ Why it failed</h4>
+      <ul>
+        <li><b>gpt-4o-mini is noisy on bounded-float ratings.</b> Trust-scores on legitimate pure_correct documents scatter across 0.00–0.85, adding noise to reliability instead of order.</li>
+        <li><b><code>red_flags</code> overlaps with legitimate brevity.</b> Gold pure_correct documents are often short encyclopedic stubs; the Evaluator tags them <i>short_stub</i> / <i>no_specifics</i>, and the Skeptic uses those flags to attack legitimate variants.</li>
+        <li><b>W_TRUST = 0.35 is too aggressive.</b> Shifts intra-group ranking toward verbose documents — which sometimes coincides with misinfo (RAMDocs fabrications are often longer than correct stubs).</li>
+        <li><b>Sequential Evaluator calls double per-doc roundtrip.</b> Latency 13 s → 23 s. asyncio.gather could fix latency but not quality.</li>
+      </ul>
+    </section>
+  </div>
+
+  <div class="callout warn">
+    <b>Bottom line:</b> v4.0 ships frozen as a published negative result.
+    Every quality metric ticked down (EM −0.042, F1 −0.025,
+    Misinfo-rejection −0.042, Citation-faith −0.035) while cost +15%
+    and LLM calls per question +81%. The design lesson is recorded:
+    a per-doc quality agent over a small encyclopedic corpus is not free
+    — it injects LLM rating noise into <code>reliability</code> and gives
+    the Skeptic correlated-with-misinfo flags that also fire on legitimate
+    short documents. <b>v3.3_analyzer_tuned remains the recommended
+    default.</b> A potential v4.1 (drop red_flags, lower W_TRUST to
+    0.10–0.15, move Evaluator to gpt-4o) is left as a direction, not a
+    commitment.
+  </div>
+
+  <h2>Unchanged vs v3.3</h2>
+  <ul>
+    <li>Retriever (BM25 + dense, top_k = 8)</li>
+    <li>Analyzer prompt (the v3.3 multi-candidate disambiguation tune)</li>
+    <li>Intra-Entity Mediator prompt</li>
+    <li>Skeptic prompt body (the four checks); only the input gains <code>trust</code> + <code>red_flags</code> per document</li>
+    <li>Entity grouping logic and the 0.30 weight threshold</li>
+    <li>Mediator / Skeptic models (<code>gpt-4o</code>)</li>
+  </ul>
+
+  <div class="footnote">
+    Run artefacts are immutable. The Evaluator code, prompt and the new
+    reliability formula live in <code>pipelines/v4_0_evidence_quality/</code>
+    so the negative result is reproducible.
+    Frozen baseline: <code>runs/_baseline/v4.0_evidence_quality.json</code>.
+  </div>
+
+</div>
+</section>
+<script>
+function show(id) {
+  document.querySelectorAll('body > section').forEach(s => s.style.display = 'none');
+  const el = document.getElementById(id); if (el) el.style.display = 'block';
+  document.querySelectorAll('nav.toptabs a').forEach(a => a.classList.toggle('active', a.dataset.tab === id));
+  history.replaceState(null, '', '#' + id); window.scrollTo(0, 0);
+}
+window.addEventListener('load', () => show((location.hash || '#index').slice(1) || 'index'));
+</script></body></html>

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RAMDocs RAG — evaluation demo</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>RAMDocs multi-agent RAG</h1>
+    <p class="subtitle">
+      Pick a pipeline version and a question. The trace below shows every
+      agent step that produced the answer.
+    </p>
+  </header>
+
+  <main>
+    <section id="controls">
+      <div class="row">
+        <label for="dataset">Dataset</label>
+        <select id="dataset"></select>
+      </div>
+
+      <div class="row inline">
+        <input id="dataset-url" type="url" placeholder="https://… (RAMDocs-format JSON)" />
+        <button id="dataset-load" type="button" class="secondary">Load</button>
+        <span id="dataset-status" class="hint"></span>
+      </div>
+
+      <div class="row versions" id="versions"></div>
+
+      <div class="row">
+        <label for="question">Question (preset)</label>
+        <select id="question"></select>
+      </div>
+
+      <div class="row">
+        <label for="question-text">Prompt (editable — pool stays from the preset)</label>
+        <textarea id="question-text" rows="3"></textarea>
+      </div>
+
+      <div class="row actions">
+        <button id="run" type="button">Run</button>
+        <span id="status" class="hint"></span>
+      </div>
+    </section>
+
+    <section id="output" hidden>
+      <h2>Answer</h2>
+      <div id="answer-block"></div>
+
+      <h2>Trace</h2>
+      <div id="trace-block"></div>
+    </section>
+  </main>
+
+  <footer>
+    <span>gpt-4o / gpt-4o-mini · trace mirrored to Langfuse</span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

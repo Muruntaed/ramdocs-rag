@@ -1,0 +1,119 @@
+{
+  "pipeline": "v2.0_entity_first",
+  "version": "2.0.0",
+  "n_questions": 12,
+  "frozen_at": "2026-05-15T20:22:15Z",
+  "n_runs_for_avg": 2,
+  "runs": [
+    "v2.0_entity_first/nosha_20260515_202002_freeze1_v2prompt",
+    "v2.0_entity_first/nosha_20260515_202213_freeze2_v2prompt"
+  ],
+  "metrics_avg": {
+    "em_any_gold": 0.8333333333333334,
+    "em_substring": 0.8333333333333334,
+    "recall_all_gold": 0.6666666666666666,
+    "precision_answers": 0.7472222222222221,
+    "f1_multi_answer": 0.6697089947089947,
+    "abstention_rate": 0.0,
+    "misinfo_rejection": 0.7916666666666666,
+    "noise_rejection": 0.9583333333333333,
+    "correct_citation": 0.9360119047619049,
+    "citation_faithfulness": 0.6840277777777779,
+    "coverage": 0.6284722222222222,
+    "total_cost_usd": 0.022061699999999997,
+    "avg_cost_per_question_usd": 0.0018384749999999998,
+    "avg_llm_calls_per_question": 6.166666666666667,
+    "avg_latency_s": 10.672585420791922
+  },
+  "metrics_per_run": {
+    "freeze1": {
+      "em_any_gold": 0.8333333333333334,
+      "em_substring": 0.8333333333333334,
+      "recall_all_gold": 0.6666666666666666,
+      "precision_answers": 0.7472222222222221,
+      "f1_multi_answer": 0.6697089947089947,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 0.7916666666666666,
+      "noise_rejection": 0.9166666666666666,
+      "correct_citation": 0.9255952380952381,
+      "citation_faithfulness": 0.6805555555555557,
+      "coverage": 0.6472222222222223,
+      "total_cost_usd": 0.021935399999999997,
+      "avg_cost_per_question_usd": 0.0018279499999999998,
+      "avg_llm_calls_per_question": 6.166666666666667,
+      "avg_latency_s": 10.621538609250516
+    },
+    "freeze2": {
+      "em_any_gold": 0.8333333333333334,
+      "em_substring": 0.8333333333333334,
+      "recall_all_gold": 0.6666666666666666,
+      "precision_answers": 0.7472222222222221,
+      "f1_multi_answer": 0.6697089947089947,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 0.7916666666666666,
+      "noise_rejection": 1.0,
+      "correct_citation": 0.9464285714285715,
+      "citation_faithfulness": 0.6875,
+      "coverage": 0.6097222222222222,
+      "total_cost_usd": 0.022187999999999996,
+      "avg_cost_per_question_usd": 0.0018489999999999997,
+      "avg_llm_calls_per_question": 6.166666666666667,
+      "avg_latency_s": 10.72363223233333
+    }
+  },
+  "by_category_avg": {
+    "pure_correct": {
+      "em_any_gold": 0.3333333333333333,
+      "em_substring": 0.3333333333333333,
+      "recall_all_gold": 0.3333333333333333,
+      "precision_answers": 0.25,
+      "f1_multi_answer": 0.2857142857142857,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 1.0,
+      "noise_rejection": 1.0,
+      "correct_citation": 1.0,
+      "citation_faithfulness": 0.25,
+      "coverage": 0.4444444444444444
+    },
+    "has_misinfo": {
+      "em_any_gold": 1.0,
+      "em_substring": 1.0,
+      "recall_all_gold": 0.8333333333333334,
+      "precision_answers": 0.8055555555555555,
+      "f1_multi_answer": 0.7746031746031745,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 0.5,
+      "noise_rejection": 1.0,
+      "correct_citation": 0.8333333333333334,
+      "citation_faithfulness": 0.6666666666666666,
+      "coverage": 0.638888888888889
+    },
+    "has_noise": {
+      "em_any_gold": 1.0,
+      "em_substring": 1.0,
+      "recall_all_gold": 0.7222222222222222,
+      "precision_answers": 1.0,
+      "f1_multi_answer": 0.8222222222222223,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 1.0,
+      "noise_rejection": 0.8333333333333333,
+      "correct_citation": 0.9583333333333333,
+      "citation_faithfulness": 0.8194444444444444,
+      "coverage": 0.7083333333333333
+    },
+    "mixed_conflict": {
+      "em_any_gold": 1.0,
+      "em_substring": 1.0,
+      "recall_all_gold": 0.7777777777777777,
+      "precision_answers": 0.9333333333333332,
+      "f1_multi_answer": 0.7962962962962963,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 0.6666666666666666,
+      "noise_rejection": 1.0,
+      "correct_citation": 0.9523809523809524,
+      "citation_faithfulness": 1.0,
+      "coverage": 0.7222222222222222
+    }
+  },
+  "notes": "Final v2.0 freeze after iterative prompt tuning. Bare-answer enforcement in analyzer prompt + entity disambiguation + min_relative_weight=0.40. EM-any-gold: 0.33 → 0.83 (+0.50) vs v1.0 and vs rc1 prompts. Inter-run stability: 0/12 divergences (vs 3/12 with rc1 prompts). Trade-off: Misinfo-rejection 0.875 → 0.792 because strict entity isolates misinfo into own groups instead of merging with correct entity groups; the intra-group winner-take-all then promotes misinfo if it's alone. This is the structural problem v3.0 (skeptic) is targeted at."
+}

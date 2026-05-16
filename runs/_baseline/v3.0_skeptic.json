@@ -1,0 +1,119 @@
+{
+  "pipeline": "v3.0_skeptic",
+  "version": "3.0.0",
+  "n_questions": 12,
+  "frozen_at": "2026-05-15T21:35:25Z",
+  "n_runs_for_avg": 2,
+  "runs": [
+    "v3.0_skeptic/nosha_20260515_213247_freeze1",
+    "v3.0_skeptic/nosha_20260515_213523_freeze2"
+  ],
+  "metrics_avg": {
+    "em_any_gold": 0.6666666666666666,
+    "em_substring": 0.6666666666666666,
+    "recall_all_gold": 0.5833333333333333,
+    "precision_answers": 0.6388888888888888,
+    "f1_multi_answer": 0.5916666666666667,
+    "abstention_rate": 0.16666666666666666,
+    "misinfo_rejection": 0.9166666666666666,
+    "noise_rejection": 1.0,
+    "correct_citation": 0.8125,
+    "citation_faithfulness": 0.625,
+    "coverage": 0.5075396825396825,
+    "total_cost_usd": 0.09966895000000002,
+    "avg_cost_per_question_usd": 0.008305745833333336,
+    "avg_llm_calls_per_question": 7.083333333333333,
+    "avg_latency_s": 13.548559198417934
+  },
+  "metrics_per_run": {
+    "freeze1": {
+      "em_any_gold": 0.6666666666666666,
+      "em_substring": 0.6666666666666666,
+      "recall_all_gold": 0.5833333333333333,
+      "precision_answers": 0.6388888888888888,
+      "f1_multi_answer": 0.5916666666666667,
+      "abstention_rate": 0.16666666666666666,
+      "misinfo_rejection": 0.9166666666666666,
+      "noise_rejection": 1.0,
+      "correct_citation": 0.8125,
+      "citation_faithfulness": 0.625,
+      "coverage": 0.5075396825396825,
+      "total_cost_usd": 0.09976550000000002,
+      "avg_cost_per_question_usd": 0.008313791666666669,
+      "avg_llm_calls_per_question": 7.083333333333333,
+      "avg_latency_s": 14.24183425408531
+    },
+    "freeze2": {
+      "em_any_gold": 0.6666666666666666,
+      "em_substring": 0.6666666666666666,
+      "recall_all_gold": 0.5833333333333333,
+      "precision_answers": 0.6388888888888888,
+      "f1_multi_answer": 0.5916666666666667,
+      "abstention_rate": 0.16666666666666666,
+      "misinfo_rejection": 0.9166666666666666,
+      "noise_rejection": 1.0,
+      "correct_citation": 0.8125,
+      "citation_faithfulness": 0.625,
+      "coverage": 0.5075396825396825,
+      "total_cost_usd": 0.09957240000000002,
+      "avg_cost_per_question_usd": 0.008297700000000002,
+      "avg_llm_calls_per_question": 7.083333333333333,
+      "avg_latency_s": 12.855284142750557
+    }
+  },
+  "by_category_avg": {
+    "pure_correct": {
+      "em_any_gold": 0.3333333333333333,
+      "em_substring": 0.3333333333333333,
+      "recall_all_gold": 0.3333333333333333,
+      "precision_answers": 0.3333333333333333,
+      "f1_multi_answer": 0.3333333333333333,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 1.0,
+      "noise_rejection": 1.0,
+      "correct_citation": 1.0,
+      "citation_faithfulness": 0.3333333333333333,
+      "coverage": 0.3968253968253968
+    },
+    "has_misinfo": {
+      "em_any_gold": 0.6666666666666666,
+      "em_substring": 0.6666666666666666,
+      "recall_all_gold": 0.6666666666666666,
+      "precision_answers": 0.5555555555555555,
+      "f1_multi_answer": 0.6,
+      "abstention_rate": 0.3333333333333333,
+      "misinfo_rejection": 0.6666666666666666,
+      "noise_rejection": 1.0,
+      "correct_citation": 0.5833333333333334,
+      "citation_faithfulness": 0.6666666666666666,
+      "coverage": 0.5
+    },
+    "has_noise": {
+      "em_any_gold": 0.6666666666666666,
+      "em_substring": 0.6666666666666666,
+      "recall_all_gold": 0.5555555555555555,
+      "precision_answers": 0.6666666666666666,
+      "f1_multi_answer": 0.6,
+      "abstention_rate": 0.3333333333333333,
+      "misinfo_rejection": 1.0,
+      "noise_rejection": 1.0,
+      "correct_citation": 0.6666666666666666,
+      "citation_faithfulness": 0.5,
+      "coverage": 0.4666666666666666
+    },
+    "mixed_conflict": {
+      "em_any_gold": 1.0,
+      "em_substring": 1.0,
+      "recall_all_gold": 0.7777777777777777,
+      "precision_answers": 1.0,
+      "f1_multi_answer": 0.8333333333333334,
+      "abstention_rate": 0.0,
+      "misinfo_rejection": 1.0,
+      "noise_rejection": 1.0,
+      "correct_citation": 1.0,
+      "citation_faithfulness": 1.0,
+      "coverage": 0.6666666666666666
+    }
+  },
+  "notes": "v2.0 + Skeptic verification agent (single-pass) after the mediator. Skeptic sees every draft variant and the full document pool, and decides keep/reject for each variant. Models: gpt-4o for mediator and skeptic, gpt-4o-mini for analyzer. Results: Misinfo-rejection 0.792 -> 0.917 (recovered toward v1.0 level). BUT Skeptic over-rejects valid variants on 2/12 questions: abstention rate 0.00 -> 0.17, EM 0.833 -> 0.667, Recall 0.667 -> 0.583. Net: the misinfo target is achieved but with a recall cost. Likely fix path for v3.1: more conservative Skeptic prompt + fallback to restore the original draft when Skeptic rejects all variants. Stability: 0/12 divergences."
+}
