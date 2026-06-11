@@ -1,5 +1,14 @@
 # RAMDocs Multi-Agent RAG — Versioned Prototype
 
+> 📄 **Research report (HTML, single page):**
+> [**Multi-Agent RAG over RAMDocs — Architecture Study**](https://htmlpreview.github.io/?https://github.com/Muruntaed/ramdocs-rag/blob/main/docs/journal/architecture_study.html)
+> · ([raw file](docs/journal/architecture_study.html))
+>
+> One-page walk-through of the whole investigation: four candidate approach
+> families, four pipeline versions (v1 → v4) with hypotheses, diagrams,
+> freeze-run metrics, pros/cons, per-question diagnostics, and the engineering
+> stack. Start here if you only have 10 minutes.
+
 A multi-agent RAG prototype over the RAMDocs dataset. The brief asks
 for one solution; this repository delivers
 several — versioned pipelines compared on identical metrics on the
@@ -9,7 +18,8 @@ evidence rather than asserted.
 > **Status:** four major versions published frozen. **v4 · Evidence
 > Evaluator** is the current recommended default; v3 · Skeptic stays the
 > cheaper option when budget matters. Full version history, hypotheses,
-> freeze metrics and trade-offs: see [`docs/journal/index.html`](docs/journal/index.html).
+> freeze metrics and trade-offs: see [`docs/journal/index.html`](docs/journal/index.html)
+> or the standalone report linked above.
 
 ## Why three layers
 

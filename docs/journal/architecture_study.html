@@ -1,0 +1,1790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>RAMDocs Multi-Agent RAG — Architecture Study</title>
+  <style>
+:root {
+  --bg: #fbfaf7;
+  --fg: #1f2937;
+  --muted: #6b7280;
+  --accent: #2563eb;
+  --accent-light: #dbeafe;
+  --border: #e5e7eb;
+  --code-bg: #f3f4f6;
+  --good: #16a34a;
+  --bad: #dc2626;
+  --warn: #d97706;
+  --neutral: #6b7280;
+  --card-bg: #ffffff;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  background: var(--bg);
+  color: var(--fg);
+  -webkit-font-smoothing: antialiased;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+
+header.page-header {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 16px;
+  margin-bottom: 24px;
+}
+
+header.page-header h1 {
+  margin: 0 0 4px;
+  font-size: 26px;
+  letter-spacing: -0.01em;
+}
+
+header.page-header .subtitle {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+nav.crumbs {
+  font-size: 13px;
+  margin-bottom: 16px;
+  color: var(--muted);
+}
+nav.crumbs a { color: var(--accent); text-decoration: none; }
+nav.crumbs a:hover { text-decoration: underline; }
+
+h2 {
+  font-size: 19px;
+  margin: 32px 0 12px;
+  letter-spacing: -0.005em;
+}
+
+h3 {
+  font-size: 16px;
+  margin: 20px 0 8px;
+}
+
+p { margin: 8px 0; }
+
+a { color: var(--accent); }
+
+code, pre {
+  font-family: "SF Mono", "Menlo", "Consolas", monospace;
+  font-size: 13px;
+}
+
+code {
+  background: var(--code-bg);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+pre {
+  background: var(--code-bg);
+  padding: 12px 14px;
+  border-radius: 6px;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 14px;
+}
+
+th, td {
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+th {
+  background: #f9fafb;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+td.num { font-variant-numeric: tabular-nums; }
+
+/* "Better / worse" delta markers inside the summary table.
+   Usage: <td class="num">0.833 <span class="delta-good">↑+0.50</span></td> */
+.delta-good, .delta-bad, .delta-flat {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+.delta-good { color: var(--good); }
+.delta-bad  { color: var(--bad); }
+.delta-flat { color: var(--muted); }
+
+/* Question-mark badge with an explanation in ``title`` (native browser tooltip).
+   Usage: <th>EM-any-gold <span class="qmark" title="...">?</span></th> */
+.qmark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 4px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--code-bg);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: help;
+  border: 1px solid var(--border);
+  vertical-align: middle;
+  user-select: none;
+}
+.qmark:hover { color: var(--accent); border-color: var(--accent); }
+
+/* Benchmark badges (industry-comparison table).
+   Five quality tiers relative to the typical industry baseline. */
+.bench {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.bench.below { background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; }
+.bench.par   { background:#fef3c7; color:#92400e; border:1px solid #fcd34d; }
+.bench.above { background:#dcfce7; color:#166534; border:1px solid #86efac; }
+.bench.strong{ background:#bbf7d0; color:#14532d; border:1px solid #4ade80; }
+.bench.top   { background:#e0e7ff; color:#3730a3; border:1px solid #a5b4fc; }
+
+.bench-legend { font-size:11px; color:var(--muted); margin-top:6px; }
+.bench-legend .bench { font-size:9px; padding:2px 7px; margin-right:4px; }
+
+.summary-table tbody tr:hover { background: #fafafa; }
+
+.summary-table .status-frozen { color: var(--good); font-weight: 600; }
+.summary-table .status-planned { color: var(--muted); font-style: italic; }
+
+.roadmap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 16px 0 32px;
+}
+
+.version-card {
+  display: block;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 20px;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: var(--shadow);
+  transition: transform .12s ease, border-color .12s ease;
+}
+
+.version-card:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+}
+
+.version-card.planned {
+  opacity: 0.55;
+  background: transparent;
+  border-style: dashed;
+}
+
+.version-card .vc-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.version-card .vc-name {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+.version-card .vc-status {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.version-card .vc-desc {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 6px 0 10px;
+}
+
+.version-card .vc-metrics {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+
+.version-card .metric-pill {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.version-card .metric-pill .label {
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.version-card .metric-pill .value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.changelog {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 18px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.kv {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 16px;
+  margin: 8px 0;
+}
+
+.kv dt {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.kv dd { margin: 0; font-size: 14px; }
+
+.prompt-cards {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 10px 0;
+}
+
+.prompt-card {
+  display: inline-flex;
+  flex-direction: column;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px 16px;
+  cursor: pointer;
+  min-width: 220px;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  transition: border-color .12s ease, transform .12s ease;
+}
+
+.prompt-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.prompt-card .pc-name {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.prompt-card .pc-meta {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+dialog {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0;
+  max-width: 720px;
+  width: 90vw;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+}
+
+dialog::backdrop {
+  background: rgba(15, 23, 42, 0.5);
+}
+
+dialog .dlg-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+dialog .dlg-head h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+dialog .dlg-head .close-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: var(--muted);
+  cursor: pointer;
+  line-height: 1;
+}
+
+dialog .dlg-body {
+  padding: 16px 18px;
+  max-height: 65vh;
+  overflow-y: auto;
+}
+
+dialog pre {
+  background: var(--code-bg);
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+  border: none;
+  padding: 12px 14px;
+}
+
+.callout {
+  border-left: 3px solid var(--accent);
+  background: var(--accent-light);
+  padding: 10px 14px;
+  border-radius: 0 6px 6px 0;
+  margin: 14px 0;
+  font-size: 14px;
+}
+
+.callout.good { border-color: var(--good); background: #ecfdf5; }
+.callout.bad { border-color: var(--bad); background: #fef2f2; }
+.callout.warn { border-color: var(--warn); background: #fffbeb; }
+
+.pros-cons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 12px 0;
+}
+
+@media (max-width: 700px) {
+  .pros-cons { grid-template-columns: 1fr; }
+}
+
+.pros-cons section {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.pros-cons h4 { margin: 0 0 8px; font-size: 14px; }
+.pros-cons .good-title { color: var(--good); }
+.pros-cons .bad-title { color: var(--warn); }
+
+.pros-cons ul { margin: 0; padding-left: 18px; font-size: 13px; }
+.pros-cons li { margin-bottom: 4px; }
+
+.mermaid, .diagram {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+  overflow-x: auto;
+}
+
+.footnote {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 24px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+</style>
+  <style>
+    body { padding-top: 56px; }
+    nav.toc {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+      background: rgba(255,255,255,0.96); border-bottom: 1px solid var(--border);
+      padding: 8px 24px; font-size: 12px;
+      backdrop-filter: blur(8px);
+    }
+    nav.toc a { color: var(--muted); text-decoration: none; margin-right: 14px; }
+    nav.toc a:hover { color: var(--accent); }
+    nav.toc a.active { color: var(--accent); font-weight: 600; }
+    nav.toc b { color: var(--fg); margin-right: 16px; }
+    section.report-section { padding-top: 32px; border-top: 1px solid var(--border); }
+    section.report-section:first-of-type { border-top: 0; padding-top: 0; }
+    .hero {
+      background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+      color: #fff; padding: 56px 40px; border-radius: 12px; margin-bottom: 32px;
+    }
+    .hero h1 { margin: 0 0 8px; font-size: 36px; letter-spacing: -0.02em; }
+    .hero .lede { font-size: 20px; opacity: 0.92; font-style: italic; }
+    .hero .hero-note {
+      margin-top: 18px; font-size: 14px; line-height: 1.5;
+      opacity: 0.92; max-width: 760px;
+      padding: 10px 14px; border-left: 3px solid rgba(255,255,255,0.5);
+      background: rgba(255,255,255,0.06); border-radius: 0 6px 6px 0;
+    }
+    .hero .meta { margin-top: 24px; font-size: 13px; opacity: 0.85; }
+    .hero .meta a { color: #fff; text-decoration: underline; text-underline-offset: 2px; }
+    .hero .meta a:hover { opacity: 0.85; }
+    .three-cards {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 16px 0;
+    }
+    .three-cards .card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 14px 16px; box-shadow: var(--shadow);
+    }
+    .three-cards .card h3 { margin: 0 0 8px; font-size: 16px; }
+    .three-cards .card ul { margin: 0; padding-left: 18px; font-size: 13px; }
+    .layer-stack { display: flex; flex-direction: column; gap: 8px; margin: 16px 0; }
+    .layer-stack .layer {
+      padding: 14px 18px; border-radius: 8px; color: #fff;
+    }
+    .layer-stack .layer h4 { margin: 0 0 4px; font-size: 15px; }
+    .layer-stack .layer p { margin: 0; font-size: 13px; opacity: 0.92; }
+    .layer-stack .layer.l1 { background: #4f83cc; }
+    .layer-stack .layer.l2 { background: #1e3a5f; }
+    .layer-stack .layer.l3 { background: #16803a; }
+    .layer-stack .layer code {
+      background: rgba(255,255,255,0.18);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.25);
+    }
+
+    /* QA table */
+    table.qa-table { table-layout: fixed; font-size: 12px; }
+    table.qa-table th { background: #1e3a5f; color: #fff; text-transform: none; }
+    table.qa-table td { vertical-align: top; padding: 6px 8px; }
+    table.qa-table td:first-child { width: 30%; }
+    table.qa-table .qtext { color: var(--muted); font-size: 11px; }
+    table.qa-table .gold { color: var(--good); font-size: 11px; font-style: italic; }
+    table.qa-table td.qa { font-weight: 500; }
+    table.qa-table .qa-green { background: #dcfce7; color: #14532d; }
+    table.qa-table .qa-yellow { background: #fef3c7; color: #7c4a03; }
+    table.qa-table .qa-red { background: #fee2e2; color: #991b1b; }
+    .qa-legend { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+    .qa-legend .qa-green, .qa-legend .qa-yellow, .qa-legend .qa-red {
+      display: inline-block; padding: 2px 8px; border-radius: 10px; margin-right: 6px;
+      font-weight: 600;
+    }
+
+    .open-item { background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 12px 16px; margin-bottom: 10px; }
+    .open-item h3 { margin: 0 0 4px; font-size: 14px; color: var(--accent); }
+    .open-item p { margin: 0; font-size: 13px; color: var(--muted); }
+
+    .takeaway-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 14px 0; }
+    .takeaway-row .tk { padding: 18px; border-radius: 8px; color: #fff; }
+    .takeaway-row .tk h3 { margin: 0 0 6px; font-size: 17px; }
+    .takeaway-row .tk p { margin: 0; font-size: 13px; opacity: 0.95; }
+    .takeaway-row .tk.t1 { background: #4f83cc; }
+    .takeaway-row .tk.t2 { background: #d97706; }
+    .takeaway-row .tk.t3 { background: #16803a; }
+
+    /* v4 prompt rules */
+    .prompt-rules {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 12px 0;
+    }
+    .prompt-rules .rule {
+      background: var(--card-bg); border-left: 4px solid #d97706;
+      padding: 10px 14px; border-radius: 0 6px 6px 0;
+      box-shadow: var(--shadow);
+    }
+    .prompt-rules .rule-name {
+      font-family: "SF Mono","Menlo",monospace; font-size: 12px;
+      color: #92400e; font-weight: 700; letter-spacing: 0.02em;
+    }
+    .prompt-rules .rule-desc { font-size: 13px; color: var(--fg); margin-top: 4px; }
+
+    /* probe comparison */
+    .probe-compare {
+      display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px;
+      align-items: center; margin: 12px 0;
+    }
+    .probe-card { padding: 14px 18px; border-radius: 8px; color: #fff; text-align: center; }
+    .probe-card.slow { background: #6b7280; }
+    .probe-card.fast { background: #16803a; }
+    .probe-card .probe-head { font-size: 14px; font-weight: 600; opacity: 0.92; }
+    .probe-card .probe-num { font-size: 16px; font-weight: 700; margin: 6px 0; font-variant-numeric: tabular-nums; }
+    .probe-card .probe-foot { font-size: 13px; opacity: 0.9; }
+    .probe-arrow { font-size: 32px; color: var(--muted); font-weight: 700; }
+
+    /* print */
+    @media print {
+      nav.toc { display: none; }
+      body { padding-top: 0; }
+      section.report-section { page-break-before: always; }
+      }
+  </style>
+</head>
+<body>
+
+<nav class="toc">
+  <b>RAMDocs RAG · Architecture Study</b>
+  <a href="#task">Task</a>
+  <a href="#landscape">Landscape</a>
+  <a href="#approach">Approach</a>
+  <a href="#v1">v1</a>
+  <a href="#v2">v2</a>
+  <a href="#v3">v3</a>
+  <a href="#v4">v4 ⭐</a>
+  <a href="#qa">Per-question</a>
+  <a href="#tooling">Tooling</a>
+  <a href="#takeaways">Takeaways</a>
+  <a href="#stack">Stack</a>
+</nav>
+
+<div class="container">
+
+  <div class="hero">
+    <h1>Multi-Agent RAG over RAMDocs</h1>
+    <div class="lede">Architecture driven by measurement, not taste.</div>
+    <div class="hero-note">
+      Evaluated on a curated 12-question RAMDocs subset that spans every conflict
+      category (pure correct · misinfo · noise · mixed). The same harness scales
+      to the full set — see §10.
+    </div>
+    <div class="meta">
+      Research report on agentic RAG architectures · May 2026 · by Andrey Muruntaev ·
+      <a href="https://www.linkedin.com/in/muruntaev">LinkedIn</a> ·
+      <a href="https://github.com/Muruntaed/ramdocs-rag">Source on GitHub</a>
+    </div>
+  </div>
+
+  <!-- ============================== 1. TASK ============================== -->
+  <section class="report-section" id="task">
+    <h2>1 · The task</h2>
+    <div class="three-cards">
+      <div class="card" style="border-color:#4f83cc">
+        <h3>RAMDocs</h3>
+        <p style="font-size:13px;margin:0;color:var(--muted)">
+          A RAG benchmark where retrieved documents deliberately conflict.
+        </p>
+        <ul>
+          <li><b>correct</b> — gold-aligned</li>
+          <li><b>misinfo</b> — synthetic fabrications</li>
+          <li><b>noise</b> — off-topic distractors</li>
+        </ul>
+      </div>
+      <div class="card" style="border-color:#16803a">
+        <h3>Multi-answer</h3>
+        <p style="font-size:13px;margin:0;color:var(--muted)">
+          Most questions admit 2–3 valid gold answers due to entity ambiguity (homonyms).
+        </p>
+        <ul>
+          <li>e.g. <i>Without You I'm Nothing</i> — Placebo / Sandra Bernhard</li>
+          <li>e.g. <i>Doug Harvey</i> — Hockey / Baseball</li>
+        </ul>
+      </div>
+      <div class="card" style="border-color:#d97706">
+        <h3>Constraints</h3>
+        <ul>
+          <li>Retriever + Analyzer + Mediator required</li>
+          <li>Citations & per-step traces</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout">
+      <b>Goal of this report.</b> Not a single working solution — a justified
+      architecture choice: what alternatives were considered, why this one,
+      how it was measured, and what was improved between versions.
+    </div>
+  </section>
+
+  <!-- ============================ 2. LANDSCAPE ============================ -->
+  <section class="report-section" id="landscape">
+    <h2>2 · Conflict-sensitive RAG — four families of approaches</h2>
+    <table>
+      <thead><tr>
+        <th>Family</th><th>Representative work</th><th>Why not</th><th>Pick</th>
+      </tr></thead>
+      <tbody>
+        <tr><td><b>Training-based</b></td>
+          <td>Self-RAG (Asai 2024), RAFT (Zhang 2024)</td>
+          <td>requires fine-tuning → out of budget</td>
+          <td><span class="bench below">✗</span></td></tr>
+        <tr><td><b>Single-agent corrective</b></td>
+          <td>CRAG (Yan 2024)</td>
+          <td>one prompt averages over the entire pool</td>
+          <td><span class="bench below">✗</span></td></tr>
+        <tr><td><b>Self-verification</b></td>
+          <td>Chain-of-Verification (Dhuliawala 2024)</td>
+          <td>no retrieval — does not resolve source conflicts</td>
+          <td><span class="bench below">✗</span></td></tr>
+        <tr style="background:#ecfdf5"><td><b>Multi-agent</b></td>
+          <td>MADAM-RAG (Wang 2024), Multi-Agent Debate (Du 2023), Astute RAG (Google 2024)</td>
+          <td>—</td>
+          <td><span class="bench strong">✓ chosen</span></td></tr>
+      </tbody>
+    </table>
+    <div class="callout good">
+      <b>Why MADAM-RAG specifically.</b> Same paper as RAMDocs → direct benchmark anchor ·
+      per-document analysis is the structural defence against majority-misinfo ·
+      no fine-tuning required, fits the brief.
+      <br><br>
+      <b>My modification.</b> 3-round debate loop → <b>one round + deterministic vote + LLM-mediator on disagreement</b>.
+      Hence v1 is called <b>MADAM-lite</b>.
+    </div>
+  </section>
+
+  <!-- =========================== 3. APPROACH ============================== -->
+  <section class="report-section" id="approach">
+    <h2>3 · Versioned project structure</h2>
+    <h3>Three independent layers</h3>
+    <div class="layer-stack">
+      <div class="layer l1">
+        <h4>Measurement stand <span style="opacity:.7;font-weight:400">— write once, never edit</span></h4>
+        <p>11 deterministic metrics · run-registry · immutable artefacts dump. No LLM-judge: RAMDocs ships per-doc ground truth.</p>
+      </div>
+      <div class="layer l2">
+        <h4>Versioned pipelines <span style="opacity:.7;font-weight:400">— interchangeable implementations</span></h4>
+        <p>One folder per version: <code>pipelines/v1_0_madam_lite/</code>, <code>v2_0_entity_first/</code>, <code>v3_3_analyzer_tuned/</code>, <code>v4_1_promptfix/</code>.</p>
+      </div>
+      <div class="layer l3">
+        <h4>Immutable run artefacts <span style="opacity:.7;font-weight:400">— frozen for the record</span></h4>
+        <p><code>runs/&lt;version&gt;/&lt;ts&gt;/</code> → <code>config.yaml</code> · <code>trace.jsonl</code> · <code>metrics.json</code>. Never edited after freeze. Bug found → new minor version.</p>
+      </div>
+    </div>
+
+    <h3>Major vs Minor versions</h3>
+    <table>
+      <thead><tr><th></th><th>What changes</th><th>Project examples</th></tr></thead>
+      <tbody>
+        <tr><td><b>major (vN)</b></td>
+          <td>graph structure, new agent role</td>
+          <td>v1.0  v2.0  v3.0  v4.0</td></tr>
+        <tr><td><b>minor (vN.M)</b></td>
+          <td>same graph, different prompts or hyper-parameters — <b>all kept, including rejected</b></td>
+          <td>v2.1 (rejected)  v3.1 / v3.2 / v3.3  v4.1</td></tr>
+      </tbody>
+    </table>
+    <div class="callout warn">
+      <b>Freeze rule.</b> Each frozen version runs <b>twice consecutively</b>. If the two runs diverge by more
+      than ±1 answer out of 12 — the version is <b>not</b> frozen; the prompt is brittle or the code is
+      non-deterministic, dig in.
+    </div>
+
+    <h3>Side branch v2.1 — calibrated confidence (rejected)</h3>
+    <div class="callout bad">
+      <b>What was tried.</b> Before freezing v2.0, an attempted minor iteration
+      with <b>calibrated confidence in the analyzer + grouping threshold 0.50</b>
+      (instead of 0.40) — aimed at restoring misinfo-rejection.
+      <br><br>
+      <b>What happened.</b> Misinfo +0.04 and Citation +0.04, but at the cost
+      of <b>EM −0.08 and Recall −0.04</b>. Net trade-off not worth it — branch
+      rejected, kept in repo as a frozen regression with the note:
+      <i>«prompt-only misinfo fix is hitting a ceiling — needs an architectural fix»</i>.
+      That is the explicit justification for jumping into v3 (Skeptic).
+    </div>
+
+  </section>
+
+  <!-- ============================== v1.0 ============================== -->
+  <section class="report-section" id="v1">
+    <h2>4 · v1.0 · MADAM-lite baseline</h2>
+    <p>
+    Porting the legacy logic into the new harness without architectural changes
+    should reproduce its measured behavior: EM-substring ≈ 0.83 and
+    misinfo-rejection ≥ 0.90. The goal is to lock down a reference point
+    against which every future version will be measured.
+  </p>
+    <div class="diagram"><svg viewBox="0 0 760 780" xmlns="http://www.w3.org/2000/svg"
+         style="max-width:760px;width:100%;height:auto;display:block;margin:0 auto;font-family:system-ui,sans-serif">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#6b7280"/>
+        </marker>
+        <style>
+          .box   { fill:#ffffff; stroke:#cbd5e1; stroke-width:1.5; }
+          .box.input    { fill:#f1f5f9; stroke:#94a3b8; }
+          .box.analyzer { fill:#eff6ff; stroke:#93c5fd; }
+          .box.det      { fill:#f0fdf4; stroke:#86efac; }
+          .box.llm      { fill:#fffbeb; stroke:#fcd34d; }
+          .box.output   { fill:#ecfeff; stroke:#67e8f9; }
+          .diamond      { fill:#fef9c3; stroke:#eab308; stroke-width:1.5; }
+          .ttl  { fill:#0f172a; font-size:13px; font-weight:600; }
+          .sub  { fill:#64748b; font-size:11px; }
+          .edge { fill:#64748b; font-size:11px; font-style:italic; }
+          .arr  { stroke:#6b7280; stroke-width:1.5; fill:none; }
+        </style>
+      </defs>
+
+      <rect class="box input" x="240" y="20" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="44" text-anchor="middle">Question + RAMDocs candidate pool</text>
+      <text class="sub" x="380" y="63" text-anchor="middle">3–8 documents per question</text>
+      <path class="arr" d="M 380 76 L 380 108" marker-end="url(#arr)"/>
+
+      <rect class="box" x="240" y="110" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="134" text-anchor="middle">Retriever</text>
+      <text class="sub" x="380" y="153" text-anchor="middle">BM25 + dense MiniLM · top_k = 8</text>
+      <path class="arr" d="M 380 166 L 380 185 L 140 185 L 140 208" marker-end="url(#arr)"/>
+      <path class="arr" d="M 380 166 L 380 208" marker-end="url(#arr)"/>
+      <path class="arr" d="M 380 166 L 380 185 L 620 185 L 620 208" marker-end="url(#arr)"/>
+
+      <rect class="box analyzer" x="40"  y="210" width="200" height="64" rx="8"/>
+      <text class="ttl" x="140" y="234" text-anchor="middle">Analyzer 1</text>
+      <text class="sub" x="140" y="252" text-anchor="middle">per-doc claim extractor</text>
+      <text class="sub" x="140" y="267" text-anchor="middle">gpt-4o-mini · strict JSON</text>
+
+      <rect class="box analyzer" x="280" y="210" width="200" height="64" rx="8"/>
+      <text class="ttl" x="380" y="234" text-anchor="middle">Analyzer 2</text>
+      <text class="sub" x="380" y="252" text-anchor="middle">per-doc claim extractor</text>
+      <text class="sub" x="380" y="267" text-anchor="middle">gpt-4o-mini · strict JSON</text>
+
+      <rect class="box analyzer" x="520" y="210" width="200" height="64" rx="8"/>
+      <text class="ttl" x="620" y="234" text-anchor="middle">Analyzer K</text>
+      <text class="sub" x="620" y="252" text-anchor="middle">per-doc claim extractor</text>
+      <text class="sub" x="620" y="267" text-anchor="middle">gpt-4o-mini · strict JSON</text>
+
+      <path class="arr" d="M 140 274 L 140 300 L 380 300 L 380 320" marker-end="url(#arr)"/>
+      <path class="arr" d="M 380 274 L 380 320" marker-end="url(#arr)"/>
+      <path class="arr" d="M 620 274 L 620 300 L 380 300 L 380 320" marker-end="url(#arr)"/>
+
+      <rect class="box" x="240" y="320" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="344" text-anchor="middle">Cluster claims</text>
+      <text class="sub" x="380" y="363" text-anchor="middle">cosine similarity ≥ 0.75 · weight = Σ reliability</text>
+      <path class="arr" d="M 380 376 L 380 408" marker-end="url(#arr)"/>
+
+      <rect class="box" x="240" y="410" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="434" text-anchor="middle">Reliability scoring</text>
+      <text class="sub" x="380" y="453" text-anchor="middle">5 factors · 2-pass with minority penalty</text>
+      <path class="arr" d="M 380 466 L 380 498" marker-end="url(#arr)"/>
+
+      <polygon class="diamond" points="380,498 490,558 380,618 270,558"/>
+      <text class="ttl" x="380" y="552" text-anchor="middle">Majority ratio</text>
+      <text class="ttl" x="380" y="570" text-anchor="middle">≥ 1.5 ?</text>
+
+      <path class="arr" d="M 270 558 L 200 558 L 200 638" marker-end="url(#arr)"/>
+      <text class="edge" x="232" y="552" text-anchor="middle">yes</text>
+
+      <path class="arr" d="M 490 558 L 560 558 L 560 638" marker-end="url(#arr)"/>
+      <text class="edge" x="528" y="552" text-anchor="middle">no</text>
+
+      <rect class="box det" x="80"  y="640" width="240" height="60" rx="8"/>
+      <text class="ttl" x="200" y="664" text-anchor="middle">Deterministic vote</text>
+      <text class="sub" x="200" y="682" text-anchor="middle">no LLM · cheap &amp; explainable</text>
+
+      <rect class="box llm" x="440" y="640" width="240" height="60" rx="8"/>
+      <text class="ttl" x="560" y="664" text-anchor="middle">LLM mediator</text>
+      <text class="sub" x="560" y="682" text-anchor="middle">gpt-4o · strict JSON · cites evidence</text>
+
+      <path class="arr" d="M 200 700 L 200 728 L 380 728 L 380 748" marker-end="url(#arr)"/>
+      <path class="arr" d="M 560 700 L 560 728 L 380 728 L 380 748" marker-end="url(#arr)"/>
+
+      <rect class="box output" x="240" y="750" width="280" height="26" rx="8"/>
+      <text class="ttl" x="380" y="768" text-anchor="middle">FinalAnswer (single variant)</text>
+    </svg></div>
+      <div class="pros-cons">
+    <section>
+      <h4 class="good-title">✅ Strengths</h4>
+      <ul>
+        <li><b>Misinfo-rejection 0.917</b> overall; in <code>mixed_conflict</code> it sits at a perfect 1.00.</li>
+        <li><b>Precision-answers 0.833</b> — virtually no spurious or invented answers.</li>
+        <li><b>Correct citation 0.917</b> — the cited documents are almost always the correct-typed ones, not misinfo or noise.</li>
+        <li><b>Reproducibility:</b> 11 / 12 questions produce identical answers across both freeze runs.</li>
+        <li><b>Cost:</b> $0.05 for a 12-question run — negligible relative to the insight gained.</li>
+        <li><b>Transparency:</b> the deterministic vote handles the easy cases; the LLM mediator is invoked only when it's actually needed.</li>
+      </ul>
+    </section>
+    <section>
+      <h4 class="bad-title">⚠ Weaknesses</h4>
+      <ul>
+        <li><b>Recall-all-gold 0.59</b> — the structural cap of single-answer architecture. On questions with 2–3 valid gold answers we surface at most one.</li>
+        <li><b>pure_correct is the worst category</b> by F1 (0.33). Paradoxically the "clean" subset is full of homonyms (e.g. <i>Without You I'm Nothing</i> — Placebo / Sandra Bernhard), and v1.0 picks just one — half the gold is lost.</li>
+        <li><b>Noise rejection 0.50</b> — half the noise docs remain silent rather than being explicitly rejected. Not catastrophic (faithfulness still holds), but worth restoring in v2+.</li>
+        <li><b>Abstention 0.00</b> — there's no "I don't know" pathway. On a degenerate retrieval pool the model will still answer.</li>
+        <li><b>Coverage 0.42</b> — fewer than half of the useful documents are used. The mediator picks the strongest evidence rather than aggregating it.</li>
+        <li><b>EM-any-gold is a weak metric</b> here — it penalises the correct multi-answer format <code>"X | Y"</code>. Do not use it as an anchor.</li>
+      </ul>
+    </section>
+  </div>
+      <div class="callout warn">
+    <b>Bottom line:</b> v1.0 handles <i>misinfo and noise</i> well, but <i>ambiguity</i>
+    is structurally beyond reach. Nine out of twelve RAMDocs questions admit ≥ 2 valid
+    gold answers; a single-answer architecture systematically discards half of that.
+    This is the motivation for v2.0 (entity-first decomposition).
+  </div>
+  </section>
+
+  <!-- ============================== v2.0 ============================== -->
+  <section class="report-section" id="v2">
+    <h2>5 · v2.0 · Entity-First Decomposition</h2>
+    <p>
+    The Recall@gold = 0.59 cap of single-answer v1.0 will break once the
+    pipeline returns multiple answers grouped by entity. Target:
+    <b>Recall ≥ 0.75</b>, F1 ≥ 0.75, EM lifted by a bare-answer format,
+    and misinfo-rejection holding flat.
+  </p>
+    <div class="diagram"><svg viewBox="0 0 760 820" xmlns="http://www.w3.org/2000/svg"
+         style="max-width:760px;width:100%;height:auto;display:block;margin:0 auto;font-family:system-ui,sans-serif">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#6b7280"/>
+        </marker>
+        <style>
+          .box     { fill:#ffffff; stroke:#cbd5e1; stroke-width:1.5; }
+          .box.input    { fill:#f1f5f9; stroke:#94a3b8; }
+          .box.changed  { fill:#fef9c3; stroke:#ca8a04; stroke-width:2; }
+          .box.newbox   { fill:#fef9c3; stroke:#d97706; stroke-width:2.5; stroke-dasharray:5 3; }
+          .box.det      { fill:#f0fdf4; stroke:#86efac; }
+          .box.llm      { fill:#fffbeb; stroke:#fcd34d; }
+          .box.output   { fill:#fef9c3; stroke:#ca8a04; stroke-width:2; }
+          .diamond      { fill:#fef9c3; stroke:#eab308; stroke-width:1.5; }
+          .ttl   { fill:#0f172a; font-size:13px; font-weight:600; }
+          .sub   { fill:#64748b; font-size:11px; }
+          .edge  { fill:#64748b; font-size:11px; font-style:italic; }
+          .arr   { stroke:#6b7280; stroke-width:1.5; fill:none; }
+          .badge    { fill:#d97706; }
+          .badgetxt { fill:#ffffff; font-size:9px; font-weight:700; }
+          .grp-label { fill:#92400e; font-size:11px; font-style:italic; font-weight:600; }
+          .accent-txt { fill:#92400e; font-weight:600; }
+        </style>
+      </defs>
+
+      <rect class="box input" x="240" y="20" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="44" text-anchor="middle">Question + RAMDocs candidate pool</text>
+      <text class="sub" x="380" y="63" text-anchor="middle">3–8 documents per question</text>
+      <path class="arr" d="M 380 76 L 380 108" marker-end="url(#arr)"/>
+
+      <rect class="box" x="240" y="110" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="134" text-anchor="middle">Retriever</text>
+      <text class="sub" x="380" y="153" text-anchor="middle">BM25 + dense MiniLM · top_k = 8</text>
+      <path class="arr" d="M 380 166 L 380 185 L 140 185 L 140 208" marker-end="url(#arr)"/>
+      <path class="arr" d="M 380 166 L 380 208" marker-end="url(#arr)"/>
+      <path class="arr" d="M 380 166 L 380 185 L 620 185 L 620 208" marker-end="url(#arr)"/>
+
+      <rect class="box changed" x="40"  y="210" width="200" height="76" rx="8"/>
+      <circle class="badge" cx="227" cy="222" r="11"/>
+      <text class="badgetxt" x="227" y="225" text-anchor="middle">Δ</text>
+      <text class="ttl" x="140" y="234" text-anchor="middle">Analyzer 1</text>
+      <text class="sub accent-txt" x="140" y="252" text-anchor="middle">claim + entity</text>
+      <text class="sub" x="140" y="270" text-anchor="middle">gpt-4o-mini · bare-answer text</text>
+
+      <rect class="box changed" x="280" y="210" width="200" height="76" rx="8"/>
+      <circle class="badge" cx="467" cy="222" r="11"/>
+      <text class="badgetxt" x="467" y="225" text-anchor="middle">Δ</text>
+      <text class="ttl" x="380" y="234" text-anchor="middle">Analyzer 2</text>
+      <text class="sub accent-txt" x="380" y="252" text-anchor="middle">claim + entity</text>
+      <text class="sub" x="380" y="270" text-anchor="middle">gpt-4o-mini · bare-answer text</text>
+
+      <rect class="box changed" x="520" y="210" width="200" height="76" rx="8"/>
+      <circle class="badge" cx="707" cy="222" r="11"/>
+      <text class="badgetxt" x="707" y="225" text-anchor="middle">Δ</text>
+      <text class="ttl" x="620" y="234" text-anchor="middle">Analyzer K</text>
+      <text class="sub accent-txt" x="620" y="252" text-anchor="middle">claim + entity</text>
+      <text class="sub" x="620" y="270" text-anchor="middle">gpt-4o-mini · bare-answer text</text>
+
+      <path class="arr" d="M 140 286 L 140 310 L 380 310 L 380 330" marker-end="url(#arr)"/>
+      <path class="arr" d="M 380 286 L 380 330" marker-end="url(#arr)"/>
+      <path class="arr" d="M 620 286 L 620 310 L 380 310 L 380 330" marker-end="url(#arr)"/>
+
+      <rect class="box newbox" x="220" y="330" width="320" height="56" rx="8"/>
+      <rect class="badge" x="505" y="334" width="36" height="14" rx="3"/>
+      <text class="badgetxt" x="523" y="345" text-anchor="middle">NEW</text>
+      <text class="ttl" x="380" y="354" text-anchor="middle">Group by entity (deterministic)</text>
+      <text class="sub" x="380" y="373" text-anchor="middle">canonicalize + substring-merge · no LLM (was: cosine cluster)</text>
+      <path class="arr" d="M 380 386 L 380 418" marker-end="url(#arr)"/>
+
+      <rect class="box changed" x="240" y="420" width="280" height="56" rx="8"/>
+      <circle class="badge" cx="507" cy="432" r="11"/>
+      <text class="badgetxt" x="507" y="435" text-anchor="middle">Δ</text>
+      <text class="ttl" x="380" y="444" text-anchor="middle">Reliability scoring</text>
+      <text class="sub" x="380" y="463" text-anchor="middle">5 factors · minority penalty <tspan class="accent-txt">intra-group</tspan> (was: global)</text>
+      <path class="arr" d="M 380 476 L 380 510" marker-end="url(#arr)"/>
+
+      <rect x="40" y="500" width="680" height="200" rx="10"
+            fill="none" stroke="#d97706" stroke-width="1.5" stroke-dasharray="6 4" opacity="0.55"/>
+      <text class="grp-label" x="60" y="520">for each entity group above the threshold:</text>
+
+      <polygon class="diamond" points="380,520 500,575 380,630 260,575"/>
+      <text class="ttl" x="380" y="568" text-anchor="middle">Intra-group</text>
+      <text class="ttl" x="380" y="586" text-anchor="middle">winner ratio</text>
+      <text class="ttl" x="380" y="604" text-anchor="middle">≥ 1.5 ?</text>
+
+      <path class="arr" d="M 260 575 L 180 575 L 180 645" marker-end="url(#arr)"/>
+      <text class="edge" x="218" y="569" text-anchor="middle">yes</text>
+
+      <path class="arr" d="M 500 575 L 580 575 L 580 645" marker-end="url(#arr)"/>
+      <text class="edge" x="542" y="569" text-anchor="middle">no</text>
+
+      <rect class="box det" x="60" y="645" width="240" height="50" rx="8"/>
+      <text class="ttl" x="180" y="669" text-anchor="middle">Deterministic vote</text>
+      <text class="sub" x="180" y="685" text-anchor="middle">no LLM · per group</text>
+
+      <rect class="box llm" x="460" y="645" width="240" height="50" rx="8"/>
+      <text class="ttl" x="580" y="669" text-anchor="middle">LLM mediator</text>
+      <text class="sub" x="580" y="685" text-anchor="middle">gpt-4o · strict JSON · per group</text>
+
+      <path class="arr" d="M 180 695 L 180 720 L 380 720 L 380 740" marker-end="url(#arr)"/>
+      <path class="arr" d="M 580 695 L 580 720 L 380 720 L 380 740" marker-end="url(#arr)"/>
+
+      <rect class="box output" x="240" y="742" width="280" height="56" rx="8"/>
+      <circle class="badge" cx="508" cy="754" r="11"/>
+      <text class="badgetxt" x="508" y="757" text-anchor="middle">Δ</text>
+      <text class="ttl" x="380" y="767" text-anchor="middle">FinalAnswer</text>
+      <text class="sub accent-txt" x="380" y="785" text-anchor="middle">list[AnswerVariant] (was: single variant)</text>
+    </svg></div>
+      <div class="pros-cons">
+    <section>
+      <h4 class="good-title">✅ Strengths</h4>
+      <ul>
+        <li><b>EM-any-gold 0.833</b> — the bare-answer rule plus strict disambiguation lift this from 0.33. EM = 1.00 across every question in <code>has_misinfo</code>, <code>has_noise</code> and <code>mixed_conflict</code>.</li>
+        <li><b>Recall@gold +0.077</b> — the single-answer structural cap is broken. Ambiguous questions like <i>Without You I'm Nothing</i> now return both valid entity variants.</li>
+        <li><b>Noise rejection +0.264</b> — entity grouping implicitly closes the second hole. A document without an entity never enters any group and lands in rejected by construction.</li>
+        <li><b>Coverage +0.131</b> — more correct documents are exposed as supporting (each variant ships all docs of its entity group).</li>
+        <li><b>Cost −55%</b> — deterministic grouping plus intra-group voting handles most cases, so the expensive gpt-4o mediator is invoked far less often.</li>
+        <li><b>Stability:</b> only 2 of 12 questions diverge between freeze runs, and those diverge on capitalization / dedup only.</li>
+      </ul>
+    </section>
+    <section>
+      <h4 class="bad-title">⚠ Weaknesses</h4>
+      <ul>
+        <li><b>Misinfo-rejection −0.125</b> — a structural side effect: a misinfo document with its own (fabricated) entity forms a standalone group, passes the 0.40 threshold and lands inside its own variant's supporting set. This is not a code or prompt bug — it is an information bound: the analyzer sees a single document and cannot cross-check the entity against the corpus. The fix lives in v3.0 (skeptic).</li>
+        <li><b>Citation faithfulness −0.122</b> — under multi-answer, a variant for entity X may cite a document whose <code>eval_metadata.answer</code> is a close-but-different entity.</li>
+        <li><b>pure_correct F1 = 0.29</b> — the weak spot is the category itself: questions such as q094 contain misinfo-style texts labeled as <code>correct</code> in RAMDocs (an internal dataset inconsistency). Not addressable from our pipeline.</li>
+        <li><b>Precision-answers −0.086</b> — structurally inevitable: emitting more variants opens room for a spurious one.</li>
+        <li><b>Abstention rate = 0</b> — there is no "I don't know" pathway even on a degenerate retrieval pool. Targeted by v5.0.</li>
+      </ul>
+    </section>
+  </div>
+      <div class="callout warn">
+    <b>Bottom line:</b> entity-first does break the structural cap of
+    single-answer architecture — EM jumps by +0.50, Recall by +0.077,
+    Noise-rejection by +0.264, and cost drops by 55%. The price is a 0.125
+    drop in misinfo-rejection: a misinfo document with its own fabricated
+    entity now forms a group that looks reliable to the rest of the pipeline.
+    This is an <b>information bound</b> — the analyzer sees one document at a
+    time and cannot verify the entity against the corpus.
+    <b>The fix is the skeptic agent in v3.0</b>, which sees every entity group
+    and validates each one against the rest of the corpus.
+  </div>
+  </section>
+
+  <!-- ============================== v3 ============================== -->
+  <section class="report-section" id="v3">
+    <h2>6 · v3 · Skeptic verification agent</h2>
+    <p>
+    The misinfo-rejection regression of v2.0 (0.792, down from v1.0's 0.917)
+    is structural: the analyzer sees only one document at a time and cannot
+    cross-check a fabricated entity against the rest of the corpus. Adding
+    an adversarial Skeptic that <i>does</i> see the full pool — and is
+    explicitly taught to be conservative on legitimate homonyms but
+    aggressive on thin-stub misinfo — should recover misinfo-rejection
+    without sacrificing the v2.0 EM and recall gains.
+  </p>
+    <div class="diagram"><svg viewBox="0 0 760 960" xmlns="http://www.w3.org/2000/svg"
+         style="max-width:760px;width:100%;height:auto;display:block;margin:0 auto;font-family:system-ui,sans-serif">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#6b7280"/>
+        </marker>
+        <style>
+          .box     { fill:#ffffff; stroke:#cbd5e1; stroke-width:1.5; }
+          .box.input    { fill:#f1f5f9; stroke:#94a3b8; }
+          .box.analyzer { fill:#eff6ff; stroke:#93c5fd; }
+          .box.entity   { fill:#fef9c3; stroke:#ca8a04; stroke-width:1.5; }
+          .box.newbox   { fill:#fef9c3; stroke:#d97706; stroke-width:2.5; stroke-dasharray:5 3; }
+          .box.det      { fill:#f0fdf4; stroke:#86efac; }
+          .box.llm      { fill:#fffbeb; stroke:#fcd34d; }
+          .box.draft    { fill:#fef3c7; stroke:#d97706; stroke-width:1.5; }
+          .box.output   { fill:#ecfeff; stroke:#67e8f9; stroke-width:2; }
+          .diamond      { fill:#fef9c3; stroke:#eab308; stroke-width:1.5; }
+          .ttl   { fill:#0f172a; font-size:13px; font-weight:600; }
+          .sub   { fill:#64748b; font-size:11px; }
+          .edge  { fill:#64748b; font-size:11px; font-style:italic; }
+          .arr   { stroke:#6b7280; stroke-width:1.5; fill:none; }
+          .badge    { fill:#d97706; }
+          .badgetxt { fill:#ffffff; font-size:9px; font-weight:700; }
+          .grp-label { fill:#92400e; font-size:11px; font-style:italic; font-weight:600; }
+        </style>
+      </defs>
+
+      <rect class="box input" x="240" y="20" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="44" text-anchor="middle">Question + RAMDocs candidate pool</text>
+      <text class="sub" x="380" y="63" text-anchor="middle">3–8 documents per question</text>
+      <path class="arr" d="M 380 76 L 380 108" marker-end="url(#arr)"/>
+
+      <rect class="box" x="240" y="110" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="134" text-anchor="middle">Retriever</text>
+      <text class="sub" x="380" y="153" text-anchor="middle">BM25 + dense MiniLM · top_k = 8</text>
+      <path class="arr" d="M 380 166 L 380 185 L 140 185 L 140 208" marker-end="url(#arr)"/>
+      <path class="arr" d="M 380 166 L 380 208" marker-end="url(#arr)"/>
+      <path class="arr" d="M 380 166 L 380 185 L 620 185 L 620 208" marker-end="url(#arr)"/>
+
+      <rect class="box analyzer" x="40"  y="210" width="200" height="64" rx="8"/>
+      <text class="ttl" x="140" y="234" text-anchor="middle">Analyzer 1</text>
+      <text class="sub" x="140" y="252" text-anchor="middle">claim + entity</text>
+      <text class="sub" x="140" y="267" text-anchor="middle">gpt-4o-mini</text>
+
+      <rect class="box analyzer" x="280" y="210" width="200" height="64" rx="8"/>
+      <text class="ttl" x="380" y="234" text-anchor="middle">Analyzer 2</text>
+      <text class="sub" x="380" y="252" text-anchor="middle">claim + entity</text>
+      <text class="sub" x="380" y="267" text-anchor="middle">gpt-4o-mini</text>
+
+      <rect class="box analyzer" x="520" y="210" width="200" height="64" rx="8"/>
+      <text class="ttl" x="620" y="234" text-anchor="middle">Analyzer K</text>
+      <text class="sub" x="620" y="252" text-anchor="middle">claim + entity</text>
+      <text class="sub" x="620" y="267" text-anchor="middle">gpt-4o-mini</text>
+
+      <path class="arr" d="M 140 274 L 140 300 L 380 300 L 380 320" marker-end="url(#arr)"/>
+      <path class="arr" d="M 380 274 L 380 320" marker-end="url(#arr)"/>
+      <path class="arr" d="M 620 274 L 620 300 L 380 300 L 380 320" marker-end="url(#arr)"/>
+
+      <rect class="box entity" x="240" y="320" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="344" text-anchor="middle">Group by entity (deterministic)</text>
+      <text class="sub" x="380" y="363" text-anchor="middle">canonicalize + substring-merge · no LLM</text>
+      <path class="arr" d="M 380 376 L 380 408" marker-end="url(#arr)"/>
+
+      <rect class="box" x="240" y="410" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="434" text-anchor="middle">Reliability scoring</text>
+      <text class="sub" x="380" y="453" text-anchor="middle">5 factors · intra-group penalty</text>
+      <path class="arr" d="M 380 466 L 380 500" marker-end="url(#arr)"/>
+
+      <rect x="40" y="490" width="680" height="200" rx="10"
+            fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="6 4" opacity="0.55"/>
+      <text class="grp-label" x="60" y="510" style="fill:#475569">for each entity group above the 0.30 threshold:</text>
+
+      <polygon class="diamond" points="380,510 500,565 380,620 260,565"/>
+      <text class="ttl" x="380" y="558" text-anchor="middle">Intra-group</text>
+      <text class="ttl" x="380" y="576" text-anchor="middle">winner ratio</text>
+      <text class="ttl" x="380" y="594" text-anchor="middle">≥ 1.5 ?</text>
+
+      <path class="arr" d="M 260 565 L 180 565 L 180 635" marker-end="url(#arr)"/>
+      <text class="edge" x="218" y="559" text-anchor="middle">yes</text>
+      <path class="arr" d="M 500 565 L 580 565 L 580 635" marker-end="url(#arr)"/>
+      <text class="edge" x="542" y="559" text-anchor="middle">no</text>
+
+      <rect class="box det" x="60" y="635" width="240" height="50" rx="8"/>
+      <text class="ttl" x="180" y="659" text-anchor="middle">Deterministic vote</text>
+      <text class="sub" x="180" y="675" text-anchor="middle">no LLM · per group</text>
+
+      <rect class="box llm" x="460" y="635" width="240" height="50" rx="8"/>
+      <text class="ttl" x="580" y="659" text-anchor="middle">LLM mediator</text>
+      <text class="sub" x="580" y="675" text-anchor="middle">gpt-4o · per group</text>
+
+      <path class="arr" d="M 180 685 L 180 710 L 380 710 L 380 730" marker-end="url(#arr)"/>
+      <path class="arr" d="M 580 685 L 580 710 L 380 710 L 380 730" marker-end="url(#arr)"/>
+
+      <rect class="box draft" x="240" y="732" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="756" text-anchor="middle">FinalAnswer (draft)</text>
+      <text class="sub" x="380" y="775" text-anchor="middle">list[AnswerVariant], one per entity</text>
+      <path class="arr" d="M 380 788 L 380 822" marker-end="url(#arr)"/>
+
+      <rect class="box newbox" x="160" y="824" width="440" height="76" rx="10"/>
+      <rect class="badge" x="560" y="828" width="36" height="14" rx="3"/>
+      <text class="badgetxt" x="578" y="839" text-anchor="middle">NEW</text>
+      <text class="ttl" x="380" y="848" text-anchor="middle">Skeptic verification agent</text>
+      <text class="sub" x="380" y="866" text-anchor="middle">entity grounding · citation faithfulness · counter-evidence · depth-asymmetry</text>
+      <text class="sub" x="380" y="884" text-anchor="middle">gpt-4o · single pass · keep / reject each variant · fallback restores draft</text>
+      <path class="arr" d="M 380 900 L 380 932" marker-end="url(#arr)"/>
+
+      <rect class="box output" x="220" y="932" width="320" height="26" rx="8"/>
+      <text class="ttl" x="380" y="950" text-anchor="middle">FinalAnswer (verified)</text>
+    </svg></div>
+      <div class="pros-cons">
+    <section>
+      <h4 class="good-title">✅ Strengths</h4>
+      <ul>
+        <li><b>Misinfo-rejection +0.083</b> — back to 0.875, the depth-asymmetry rule catches q209-style fabrications (one short stub vs multi-paragraph evidence) that v2.0 let through.</li>
+        <li><b>Best balanced operating point</b> on the 4-way Pareto: beats v2.0 on misinfo, beats v1.0 on EM (+0.46), beats both internal v3 iterations on recall.</li>
+        <li><b>No abstention</b> — the pipeline-level fallback guarantees that a Skeptic over-rejection never produces an empty answer.</li>
+        <li><b>Homonym-safe</b> — explicit prompt rule keeps "Doug Harvey hockey" + "Doug Harvey baseball" as separate valid variants.</li>
+      </ul>
+    </section>
+    <section>
+      <h4 class="bad-title">⚠ Weaknesses</h4>
+      <ul>
+        <li><b>Cost +5×</b> per run vs v2.0 — the Skeptic uses the more expensive gpt-4o model on every question.</li>
+        <li><b>Stability:</b> 2 / 12 questions diverge between freeze runs (q176 dedup, q131 wavers between "film" and "novel") — the Skeptic still has edge-cases on near-equal evidence.</li>
+        <li><b>Recall slightly below v2.0</b> (0.646 vs 0.667) — depth-asymmetry occasionally over-prunes borderline-thin but valid variants.</li>
+        <li><b>Latency +2 s</b> — one extra LLM round-trip per question.</li>
+      </ul>
+    </section>
+  </div>
+      <div class="callout warn">
+    <b>Bottom line:</b> v3 establishes a balanced Pareto operating point.
+    Compared to v1.0 it is a clear win on every quality axis (EM +0.46,
+    F1 +0.01, Recall +0.06, Citation-faith on par). Compared to v2.0 it
+    trades a small EM / Recall drop for a substantial misinfo-rejection gain
+    (+0.083). The cost is the Skeptic's extra gpt-4o call. v3 is the
+    recommended default when robustness matters; v2.0 stays the better
+    choice when raw answer quality and cost are the priorities.
+  </div>
+
+    <h3>Internal v3 iterations — how the balance was found</h3>
+    <table>
+      <thead><tr><th>Iteration</th><th>What was changed</th><th>What happened</th><th>Verdict</th></tr></thead>
+      <tbody>
+        <tr><td><b>v3.0 aggressive</b></td>
+          <td>Skeptic: strict entity grounding<br>Threshold 0.40</td>
+          <td>Pruned legitimate homonyms<br>(Doug Harvey hockey / baseball)</td>
+          <td><span class="bench below">✗</span></td></tr>
+        <tr><td><b>v3.1 conservative</b></td>
+          <td>+ pipeline-fallback on reject-all<br>Threshold 0.40</td>
+          <td>Let misinfo through<br>(back to v2.0 misinfo-rate)</td>
+          <td><span class="bench below">✗</span></td></tr>
+        <tr style="background:#ecfdf5"><td><b>v3.2 balanced</b></td>
+          <td>+ depth-asymmetry check<br>Threshold 0.30</td>
+          <td>Misinfo recovered, EM only −0.04<br>Best Pareto-balanced point</td>
+          <td><span class="bench strong">✓</span></td></tr>
+        <tr style="background:#ecfdf5"><td><b>v3.3 analyzer-tuned</b></td>
+          <td>v3.2 + focused analyzer-prompt fix<br>(multi-candidate disambiguation)</td>
+          <td>Citation +0.04<br>Pareto-better than v3.2</td>
+          <td><span class="bench strong">✓ default</span></td></tr>
+      </tbody>
+    </table>
+    <p class="footnote">
+      v3.0 and v3.1 live as code in <code>pipelines/v3_0_skeptic/</code> and
+      <code>pipelines/v3_1_conservative_skeptic/</code>. Public journal only
+      publishes v3.3 (the Pareto-best).
+    </p>
+
+  </section>
+
+  <!-- ============================== v4 ============================== -->
+  <section class="report-section" id="v4">
+    <h2>7 · v4 · Evidence Evaluator <span style="color:var(--good);font-size:16px">— recommended default ⭐</span></h2>
+    <p>
+    v3 successfully recovered misinfo-rejection to 0.875 but capped EM
+    at 0.792 because the Skeptic uses corpus-level signals only (depth,
+    counter-evidence, homonyms). A <b>structured per-document quality
+    signal</b> — independent of other documents — should let the
+    pipeline (a) sharpen <code>reliability</code> ordering inside each
+    entity group and (b) give the Skeptic an additional axis to
+    discriminate fabricated stubs from legitimate short answers,
+    lifting Misinfo-rejection ≥ 0.90 without losing EM or recall.
+    Combined with a <b>top-anchored analyzer prompt</b> that strictly
+    enforces grounding, the Skeptic should make keep / reject decisions
+    on cleanly grounded entity / text annotations rather than on noisy
+    paraphrase.
+  </p>
+    <div class="diagram"><svg viewBox="0 0 760 1040" xmlns="http://www.w3.org/2000/svg"
+         style="max-width:760px;width:100%;height:auto;display:block;margin:0 auto;font-family:system-ui,sans-serif">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#6b7280"/>
+        </marker>
+        <style>
+          .box     { fill:#ffffff; stroke:#cbd5e1; stroke-width:1.5; }
+          .box.input    { fill:#f1f5f9; stroke:#94a3b8; }
+          .box.analyzer { fill:#eff6ff; stroke:#93c5fd; }
+          .box.evaluator{ fill:#fef9c3; stroke:#d97706; stroke-width:2.5; stroke-dasharray:5 3; }
+          .box.entity   { fill:#eff6ff; stroke:#93c5fd; stroke-width:1.5; }
+          .box.det      { fill:#f0fdf4; stroke:#86efac; }
+          .box.llm      { fill:#fffbeb; stroke:#fcd34d; }
+          .box.draft    { fill:#fef3c7; stroke:#d97706; stroke-width:1.5; }
+          .box.skeptic  { fill:#fef3c7; stroke:#d97706; stroke-width:1.5; }
+          .box.output   { fill:#ecfeff; stroke:#67e8f9; stroke-width:2; }
+          .diamond      { fill:#fef9c3; stroke:#eab308; stroke-width:1.5; }
+          .ttl   { fill:#0f172a; font-size:13px; font-weight:600; }
+          .sub   { fill:#64748b; font-size:11px; }
+          .edge  { fill:#64748b; font-size:11px; font-style:italic; }
+          .arr   { stroke:#6b7280; stroke-width:1.5; fill:none; }
+          .badge    { fill:#d97706; }
+          .badgetxt { fill:#ffffff; font-size:9px; font-weight:700; }
+          .grp-label { fill:#92400e; font-size:11px; font-style:italic; font-weight:600; }
+        </style>
+      </defs>
+
+      <rect class="box input" x="240" y="20" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="44" text-anchor="middle">Question + RAMDocs candidate pool</text>
+      <text class="sub" x="380" y="63" text-anchor="middle">3–8 documents per question</text>
+      <path class="arr" d="M 380 76 L 380 108" marker-end="url(#arr)"/>
+
+      <rect class="box" x="240" y="110" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="134" text-anchor="middle">Retriever</text>
+      <text class="sub" x="380" y="153" text-anchor="middle">BM25 + dense MiniLM · top_k = 8</text>
+      <path class="arr" d="M 380 166 L 380 185 L 140 185 L 140 208" marker-end="url(#arr)"/>
+      <path class="arr" d="M 380 166 L 380 208" marker-end="url(#arr)"/>
+      <path class="arr" d="M 380 166 L 380 185 L 620 185 L 620 208" marker-end="url(#arr)"/>
+
+      <rect class="box analyzer" x="40"  y="210" width="200" height="64" rx="8"/>
+      <text class="ttl" x="140" y="234" text-anchor="middle">Analyzer 1</text>
+      <text class="sub" x="140" y="252" text-anchor="middle">claim + entity (grounded)</text>
+      <text class="sub" x="140" y="267" text-anchor="middle">gpt-4o-mini · rewritten prompt</text>
+
+      <rect class="box analyzer" x="280" y="210" width="200" height="64" rx="8"/>
+      <text class="ttl" x="380" y="234" text-anchor="middle">Analyzer 2</text>
+      <text class="sub" x="380" y="252" text-anchor="middle">claim + entity (grounded)</text>
+      <text class="sub" x="380" y="267" text-anchor="middle">gpt-4o-mini · rewritten prompt</text>
+
+      <rect class="box analyzer" x="520" y="210" width="200" height="64" rx="8"/>
+      <text class="ttl" x="620" y="234" text-anchor="middle">Analyzer K</text>
+      <text class="sub" x="620" y="252" text-anchor="middle">claim + entity (grounded)</text>
+      <text class="sub" x="620" y="267" text-anchor="middle">gpt-4o-mini · rewritten prompt</text>
+
+      <rect class="box evaluator" x="40"  y="290" width="200" height="64" rx="8"/>
+      <rect class="badge" x="200" y="294" width="36" height="14" rx="3"/>
+      <text class="badgetxt" x="218" y="305" text-anchor="middle">NEW</text>
+      <text class="ttl" x="140" y="316" text-anchor="middle">Evaluator 1</text>
+      <text class="sub" x="140" y="332" text-anchor="middle">DocTrust + red_flags</text>
+      <text class="sub" x="140" y="347" text-anchor="middle">gpt-4o-mini</text>
+
+      <rect class="box evaluator" x="280"  y="290" width="200" height="64" rx="8"/>
+      <rect class="badge" x="440" y="294" width="36" height="14" rx="3"/>
+      <text class="badgetxt" x="458" y="305" text-anchor="middle">NEW</text>
+      <text class="ttl" x="380" y="316" text-anchor="middle">Evaluator 2</text>
+      <text class="sub" x="380" y="332" text-anchor="middle">DocTrust + red_flags</text>
+      <text class="sub" x="380" y="347" text-anchor="middle">gpt-4o-mini</text>
+
+      <rect class="box evaluator" x="520" y="290" width="200" height="64" rx="8"/>
+      <rect class="badge" x="680" y="294" width="36" height="14" rx="3"/>
+      <text class="badgetxt" x="698" y="305" text-anchor="middle">NEW</text>
+      <text class="ttl" x="620" y="316" text-anchor="middle">Evaluator K</text>
+      <text class="sub" x="620" y="332" text-anchor="middle">DocTrust + red_flags</text>
+      <text class="sub" x="620" y="347" text-anchor="middle">gpt-4o-mini</text>
+
+      <path class="arr" d="M 140 354 L 140 380 L 380 380 L 380 400" marker-end="url(#arr)"/>
+      <path class="arr" d="M 380 354 L 380 400" marker-end="url(#arr)"/>
+      <path class="arr" d="M 620 354 L 620 380 L 380 380 L 380 400" marker-end="url(#arr)"/>
+
+      <rect class="box entity" x="240" y="400" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="424" text-anchor="middle">Group by entity (deterministic)</text>
+      <text class="sub" x="380" y="443" text-anchor="middle">canonicalize + substring-merge · no LLM</text>
+      <path class="arr" d="M 380 456 L 380 488" marker-end="url(#arr)"/>
+
+      <rect class="box evaluator" x="240" y="490" width="280" height="56" rx="8"/>
+      <rect class="badge" x="478" y="494" width="36" height="14" rx="3"/>
+      <text class="badgetxt" x="496" y="505" text-anchor="middle">NEW</text>
+      <text class="ttl" x="380" y="514" text-anchor="middle">Reliability scoring (trust-weighted)</text>
+      <text class="sub" x="380" y="533" text-anchor="middle">0.40·retr + 0.25·conf + 0.35·trust − 0.10·minority</text>
+      <path class="arr" d="M 380 546 L 380 580" marker-end="url(#arr)"/>
+
+      <rect x="40" y="570" width="680" height="200" rx="10"
+            fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="6 4" opacity="0.55"/>
+      <text class="grp-label" x="60" y="590" style="fill:#475569">for each entity group above the 0.30 threshold:</text>
+
+      <polygon class="diamond" points="380,590 500,645 380,700 260,645"/>
+      <text class="ttl" x="380" y="638" text-anchor="middle">Intra-group</text>
+      <text class="ttl" x="380" y="656" text-anchor="middle">winner ratio</text>
+      <text class="ttl" x="380" y="674" text-anchor="middle">≥ 1.5 ?</text>
+
+      <path class="arr" d="M 260 645 L 180 645 L 180 715" marker-end="url(#arr)"/>
+      <text class="edge" x="218" y="639" text-anchor="middle">yes</text>
+      <path class="arr" d="M 500 645 L 580 645 L 580 715" marker-end="url(#arr)"/>
+      <text class="edge" x="542" y="639" text-anchor="middle">no</text>
+
+      <rect class="box det" x="60" y="715" width="240" height="50" rx="8"/>
+      <text class="ttl" x="180" y="739" text-anchor="middle">Deterministic vote</text>
+      <text class="sub" x="180" y="755" text-anchor="middle">no LLM · per group</text>
+
+      <rect class="box llm" x="460" y="715" width="240" height="50" rx="8"/>
+      <text class="ttl" x="580" y="739" text-anchor="middle">LLM mediator</text>
+      <text class="sub" x="580" y="755" text-anchor="middle">gpt-4o · per group</text>
+
+      <path class="arr" d="M 180 765 L 180 790 L 380 790 L 380 810" marker-end="url(#arr)"/>
+      <path class="arr" d="M 580 765 L 580 790 L 380 790 L 380 810" marker-end="url(#arr)"/>
+
+      <rect class="box draft" x="240" y="812" width="280" height="56" rx="8"/>
+      <text class="ttl" x="380" y="836" text-anchor="middle">FinalAnswer (draft)</text>
+      <text class="sub" x="380" y="855" text-anchor="middle">list[AnswerVariant], one per entity</text>
+      <path class="arr" d="M 380 868 L 380 902" marker-end="url(#arr)"/>
+
+      <rect class="box skeptic" x="160" y="904" width="440" height="76" rx="10"/>
+      <text class="ttl" x="380" y="928" text-anchor="middle">Skeptic verification agent</text>
+      <text class="sub" x="380" y="946" text-anchor="middle">grounding · citations · counter-evidence · depth · trust + red_flags (NEW input)</text>
+      <text class="sub" x="380" y="964" text-anchor="middle">gpt-4o · keep / reject each variant · fallback restores draft</text>
+      <path class="arr" d="M 380 980 L 380 1010" marker-end="url(#arr)"/>
+
+      <rect class="box output" x="220" y="1010" width="320" height="26" rx="8"/>
+      <text class="ttl" x="380" y="1028" text-anchor="middle">FinalAnswer (verified)</text>
+    </svg></div>
+    <div class="pros-cons">
+    <section>
+      <h4 class="good-title">✅ What worked</h4>
+      <ul>
+        <li><b>Structured per-document quality signal lifts everything when grounding is solid.</b> The Evaluator's trust_score + red_flags pay off only after the Analyzer reliably emits grounded entity / text pairs — once that pre-condition is met, every quality anchor moves in the right direction at once (EM-any, F1, Misinfo, Recall, Citation-faithfulness, Coverage).</li>
+        <li><b>Probe-driven prompt iteration.</b> Failure modes were reproduced on single (question, document) pairs at ~$0.0005 per probe before any full-pipeline run was attempted. The second-pass patch (q458) was diagnosed and verified on probe before the freeze.</li>
+        <li><b>GOOD/BAD contrasts beat buried rules.</b> Rules that existed in the initial draft and were ignored started working once they had GOOD/BAD examples and lived at the top of the prompt instead of 160 lines deep.</li>
+        <li><b>Run-to-run agreement on every anchor.</b> Abstention, Misinfo-rejection, Noise-rejection and Correct-citation are bit-identical across freeze1 and freeze2. The +1-question shift on EM is in a single noise category and is within the stability rule.</li>
+        <li><b>Shared safety layer is free insurance.</b> 94/94 tests green, no quality regression, adversarial injection structurally neutralised.</li>
+      </ul>
+    </section>
+    <section>
+      <h4 class="bad-title">⚠ Where it's still soft</h4>
+      <ul>
+        <li><b><code>has_noise</code> F1 = 0.729</b> is the weakest category — one shaky noise question swings ±1 between runs. Lifting this safely requires care: W_TRUST = 0.35 cuts noise but also helps on misinfo, so naive reduction risks re-introducing misinfo regressions.</li>
+        <li><b>q306 Oklahoma group still open.</b> The intra-mediator occasionally loses on a pure-table sub-line vs main-line lead. Candidate for v4.x: an explicit <code>is_main_line_value</code> signal from the analyzer, or a lead-sentence boost inside <code>agents.resolve_entity_group</code>.</li>
+        <li><b>Cost / latency are ~2× v3.</b> ~$0.022/Q and ~24 s/Q. If budget is tight, v3 stays the recommended cheap default.</li>
+        <li><b>Pure misinfo (q131-style)</b> stays at 0.667 inside <code>has_misinfo</code> — the analyzer is clean but the Skeptic still misses one specific misinformation pattern. Same shape as in v3, not regressed.</li>
+      </ul>
+    </section>
+  </div>
+
+  
+    <div class="callout">
+    <b>Bottom line:</b> v4 · Evidence Evaluator is shipped frozen as the
+    recommended default. Both freeze runs hit every pre-declared anchor
+    (Abstention 0.000, Misinfo-rejection ≥ 0.917, Noise-rejection
+    ≥ 0.972, EM-substring ≥ 0.917, F1-multi ≥ 0.77), and the
+    averaged metrics are a clean Pareto-improvement over v3 (the prior
+    recommended default). Cost / latency roughly double v3 (~$0.022/Q,
+    24 s/Q), so v3 remains the cheap-default option when budget matters
+    more than the last percentage points of quality.
+  </div>
+
+    <h3>5 new rules in the analyzer prompt</h3>
+    <div class="prompt-rules">
+      <div class="rule">
+        <div class="rule-name">HARD GROUNDING RULE</div>
+        <div class="rule-desc">If the verbatim span with both <i>entity</i> and <i>text</i> can't be quoted from the document → <code>no_answer</code>. Top-anchored, read first.</div>
+      </div>
+      <div class="rule">
+        <div class="rule-name">CITATION-IS-NOT-DESCRIPTION</div>
+        <div class="rule-desc">On review-style documents a critic's quote ≠ the answer. Explicit GOOD/BAD contrasts.</div>
+      </div>
+      <div class="rule">
+        <div class="rule-name">PURE-TABLE FALLBACK</div>
+        <div class="rule-desc">If a document is a bare table without lead-prose → abstain rather than scrape a number.</div>
+      </div>
+      <div class="rule">
+        <div class="rule-name">PLACE-DISAMBIGUATOR MANDATORY</div>
+        <div class="rule-desc">Cities and towns must include state/country in <code>entity</code>, so three different Longtowns don't collapse into one group.</div>
+      </div>
+      <div class="rule">
+        <div class="rule-name">ROLE-QUESTION DISAMBIGUATION</div>
+        <div class="rule-desc">When the question uses a generic role («Administrator general») and the doc names a specific entity («Fontaine Ministry») — that is NOT an entity mismatch.</div>
+      </div>
+    </div>
+
+    <h3>agent_probe — the iteration tool</h3>
+    <div class="probe-compare">
+      <div class="probe-card slow">
+        <div class="probe-head">Full pipeline</div>
+        <div class="probe-num">13 LLM calls · ~30 s</div>
+        <div class="probe-foot">⇒ 2 iterations / evening</div>
+      </div>
+      <div class="probe-arrow">→</div>
+      <div class="probe-card fast">
+        <div class="probe-head">agent_probe</div>
+        <div class="probe-num">1 LLM call · ~2 s · ~$0.0005</div>
+        <div class="probe-foot">⇒ <b>20 iterations / evening</b></div>
+      </div>
+    </div>
+    <p style="color:var(--muted);font-size:13px;margin-top:4px">
+      Runs one agent (analyzer / evaluator) on one <code>(question, document)</code> pair.
+      Supports <code>--dry-run</code> for prompt audit without spend. Made the
+      v4 analyzer rewrite possible — failure modes were reproduced on probe
+      before any freeze run was attempted.
+    </p>
+
+    <div class="callout good">
+      <b>Main takeaway from v4.</b>
+      Architecture and prompt quality are <b>two independent levers</b>.
+      I could have stopped at v3 and called it done — but being able to
+      change the analyzer prompt under a fixed architecture, and watch
+      exactly which component the improvement comes from, is the whole
+      point of the versioned stand.
+    </div>
+
+  </section>
+
+  <!-- ============================ Per-question ============================ -->
+  <section class="report-section" id="qa">
+    <h2>8 · Per-question diagnostic · 12 questions × 4 versions</h2>
+    <p style="color:var(--muted);font-size:13px">
+      Colour-coded against each version's <code>freeze1</code> answers from the actual <code>trace.jsonl</code>.
+      Notes summarise what the model returned vs. the gold set.
+    </p>
+    <table class="qa-table"><thead><tr><th>Question</th><th>v1.0</th><th>v2.1</th><th>v3.3</th><th>v4.1</th></tr></thead><tbody><tr><td><b>q176</b><br><span class="qtext">Artist of 'Without You I'm Nothing'?</span><br><span class="gold">gold: Placebo / Sandra Bernhard</span></td><td class="qa qa-green">✓ OK (via |)</td><td class="qa qa-yellow">⚠ + wrong The Beatles</td><td class="qa qa-yellow">⚠ duplicate Sandra B. ×2</td><td class="qa qa-green">✓ OK</td></tr>
+<tr><td><b>q094</b><br><span class="qtext">What is 'The Great McGonagall' known for?</span><br><span class="gold">gold: A film</span></td><td class="qa qa-red">✗ wrong: poet</td><td class="qa qa-red">✗ wrong: poet</td><td class="qa qa-red">✗ body paraphrase</td><td class="qa qa-yellow">⚠ OK · stray 'A poet'</td></tr>
+<tr><td><b>q306</b><br><span class="qtext">Population of Longtown?</span><br><span class="gold">gold: 158 / 2,397 / 3,000</span></td><td class="qa qa-red">✗ wrong 2,659</td><td class="qa qa-red">✗ wrong 2,659</td><td class="qa qa-red">✗ wrong 2,659</td><td class="qa qa-yellow">⚠ 1/3 (Oklahoma only)</td></tr>
+<tr><td><b>q221</b><br><span class="qtext">Artist of 'Big Fun'?</span><br><span class="gold">gold: Miles Davis / Shalamar</span></td><td class="qa qa-green">✓ OK</td><td class="qa qa-green">✓ OK</td><td class="qa qa-green">✓ OK</td><td class="qa qa-green">✓ OK</td></tr>
+<tr><td><b>q209</b><br><span class="qtext">Greg Boyer's profession?</span><br><span class="gold">gold: Trombonist / Water polo player</span></td><td class="qa qa-yellow">⚠ 1/2 (no trombonist)</td><td class="qa qa-yellow">⚠ + wrong Chef</td><td class="qa qa-yellow">⚠ + wrong Chef</td><td class="qa qa-yellow">⚠ + wrong Chef</td></tr>
+<tr><td><b>q131</b><br><span class="qtext">Medium of 'Green Pastures'?</span><br><span class="gold">gold: Play / Film</span></td><td class="qa qa-yellow">⚠ 1/2 (single 'play')</td><td class="qa qa-red">✗ wrong: novel</td><td class="qa qa-yellow">⚠ 1/2 (single 'film')</td><td class="qa qa-green">✓ OK</td></tr>
+<tr><td><b>q113</b><br><span class="qtext">What sport is Doug Harvey associated with?</span><br><span class="gold">gold: Hockey / Baseball</span></td><td class="qa qa-yellow">⚠ 1/2 (single)</td><td class="qa qa-yellow">⚠ 1/2 (single)</td><td class="qa qa-yellow">⚠ 1/2 (single)</td><td class="qa qa-green">✓ OK</td></tr>
+<tr><td><b>q458</b><br><span class="qtext">When did the Administrator general come into power?</span><br><span class="gold">gold: 1 August 1848 / 2 December 1848 / 23 September 1854</span></td><td class="qa qa-yellow">⚠ 1/3</td><td class="qa qa-yellow">⚠ 2/3</td><td class="qa qa-yellow">⚠ 2/3</td><td class="qa qa-yellow">⚠ 2/3 (off-by-1 yr)</td></tr>
+<tr><td><b>q093</b><br><span class="qtext">Median age in Fort Kent?</span><br><span class="gold">gold: 42.7 years</span></td><td class="qa qa-green">✓ OK</td><td class="qa qa-green">✓ OK</td><td class="qa qa-green">✓ OK</td><td class="qa qa-green">✓ OK</td></tr>
+<tr><td><b>q464</b><br><span class="qtext">When did George Horner die?</span><br><span class="gold">gold: 9 February 1677 / 11 March 1707 / 1930</span></td><td class="qa qa-yellow">⚠ 2/3 (no 1930)</td><td class="qa qa-green">✓ OK</td><td class="qa qa-green">✓ OK</td><td class="qa qa-yellow">⚠ OK + dup 1930</td></tr>
+<tr><td><b>q342</b><br><span class="qtext">When was the Security Building constructed?</span><br><span class="gold">gold: 1928 / 1892 / 1926-1927</span></td><td class="qa qa-yellow">⚠ 1/3 (single)</td><td class="qa qa-yellow">⚠ 1/3</td><td class="qa qa-yellow">⚠ 1/3</td><td class="qa qa-yellow">⚠ 3/3 ✓</td></tr>
+<tr><td><b>q021</b><br><span class="qtext">When did Louis Alexandre die?</span><br><span class="gold">gold: 1 December 1737</span></td><td class="qa qa-green">✓ OK</td><td class="qa qa-yellow">⚠ duplicate</td><td class="qa qa-yellow">⚠ duplicate</td><td class="qa qa-yellow">⚠ duplicate</td></tr></tbody></table>
+    <p class="qa-legend">
+      <span class="qa-green">✓ green</span> full match — every gold covered, nothing extra
+      <span class="qa-yellow">⚠ yellow</span> partial — subset of gold, extras, or duplicates
+      <span class="qa-red">✗ red</span> wrong / abstain — no gold covered or wrong answer present
+    </p>
+
+    <h3 style="margin-top:28px">Aggregated metrics across all versions</h3>
+    <h2>Summary table</h2>
+  <p style="color:var(--muted);font-size:13px;margin:-4px 0 4px;">
+    All values are averaged over two freeze runs on the 12-question RAMDocs subset.
+    Comparison anchors: <b>F1-multi-answer</b> (correctness under ambiguity) and
+    <b>misinfo-rejection</b> (robustness against misinformation).
+  </p>
+
+  <table class="summary-table">
+    <thead>
+      <tr>
+        <th>Version</th>
+        <th>Status</th>
+        <th class="num">EM-any-gold <span class="qmark" title="Exact Match: the primary answer matches one of the gold answers verbatim. Strict and format-sensitive — '1707' does not equal '11 March 1707'.">?</span></th>
+        <th class="num">F1-multi <span class="qmark" title="F1 for multi-answer: harmonic mean of precision (fraction of produced variants that match gold) and recall (fraction of gold answers we captured). The headline correctness metric under ambiguity.">?</span></th>
+        <th class="num">Misinfo-rej <span class="qmark" title="Misinfo Rejection: fraction of misinfo documents the system explicitly rejects. Higher means more robust to corpus manipulation.">?</span></th>
+        <th class="num">Recall@gold <span class="qmark" title="Recall: fraction of valid gold answers that made it into the final answer. Critical for ambiguous questions — 75% of this dataset has multiple valid golds.">?</span></th>
+        <th class="num">$/run <span class="qmark" title="Total cost of one full 12-question run: all OpenAI API spend (analyzer × K plus mediator when invoked).">?</span></th>
+        <th class="num">Lat,s/Q <span class="qmark" title="Average per-question latency in seconds: retrieval (BM25 + dense) + analyzer × K + optional mediator call.">?</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="background:#fafafa;font-style:italic;">
+        <td>Industry baseline <span class="qmark" title="Indicative range for typical production RAG over a noisy corpus, no adversarial verifier. Synthesised from published RAMDocs / MADAM-RAG numbers (HanNight et al., 2024) and common production-grade single-LLM RAG benchmarks. NOT measured on our exact dataset — used as an anchor for relative comparison.">?</span></td>
+        <td style="color:var(--muted);">reference</td>
+        <td class="num">~0.55</td>
+        <td class="num">~0.60</td>
+        <td class="num">~0.70</td>
+        <td class="num">~0.50</td>
+        <td class="num">~$0.10</td>
+        <td class="num">~5</td>
+      </tr>
+      <tr>
+        <td><a href="#v1.0_madam_lite"><b>v1.0_madam_lite</b></a></td>
+        <td class="status-frozen">FROZEN · 2026-05-15</td>
+        <td class="num">0.333 <span class="delta-bad">↓ −0.22</span></td>
+        <td class="num">0.665 <span class="delta-good">↑ +0.07</span></td>
+        <td class="num">0.917 <span class="delta-good">↑ +0.22</span></td>
+        <td class="num">0.590 <span class="delta-good">↑ +0.09</span></td>
+        <td class="num">$0.0485 <span class="delta-good">↓ −52%</span></td>
+        <td class="num">10.1 <span class="delta-bad">↑ +5.1</span></td>
+      </tr>
+      <tr>
+        <td><a href="#v2.0_entity_first"><b>v2.0_entity_first</b></a></td>
+        <td class="status-frozen">FROZEN · 2026-05-15</td>
+        <td class="num">0.833 <span class="delta-good">↑ +0.500</span></td>
+        <td class="num">0.667 <span class="delta-flat">↔</span></td>
+        <td class="num">0.792 <span class="delta-bad">↓ −0.125</span></td>
+        <td class="num"><b>0.667</b> <span class="delta-good">↑ +0.077</span></td>
+        <td class="num">$0.022 <span class="delta-good">↓ −55%</span></td>
+        <td class="num">10.7 <span class="delta-flat">↔</span></td>
+      </tr>
+      <tr>
+        <td><a href="#v3_skeptic"><b>v3_skeptic</b></a></td>
+        <td class="status-frozen">FROZEN · 2026-05-15</td>
+        <td class="num">0.792 <span class="delta-bad">↓ −0.041</span></td>
+        <td class="num"><b>0.675</b> <span class="delta-flat">↔</span></td>
+        <td class="num"><b>0.875</b> <span class="delta-good">↑ +0.083</span></td>
+        <td class="num">0.646 <span class="delta-bad">↓ −0.021</span></td>
+        <td class="num">$0.097 <span class="delta-bad">↑ +4.4×</span></td>
+        <td class="num">13.5 <span class="delta-bad">↑ +2.8</span></td>
+      </tr>
+      <tr>
+        <td><a href="#v4.1_promptfix"><b>v4 · Evidence Evaluator</b></a> <span style="color:var(--good);font-size:11px;">(recommended)</span></td>
+        <td class="status-frozen">FROZEN · 2026-05-16</td>
+        <td class="num"><b>0.875</b> <span class="delta-good">↑ +0.083</span></td>
+        <td class="num"><b>0.818</b> <span class="delta-good">↑ +0.143</span></td>
+        <td class="num"><b>0.917</b> <span class="delta-good">↑ +0.042</span></td>
+        <td class="num"><b>0.847</b> <span class="delta-good">↑ +0.201</span></td>
+        <td class="num">$0.265 <span class="delta-bad">↑ +173%</span></td>
+        <td class="num">24.0 <span class="delta-bad">↑ +10.5</span></td>
+      </tr>
+    </tbody>
+  </table>
+  <p style="color:var(--muted);font-size:11px;margin-top:-4px;">
+    Arrows show the delta relative to the <b>previous row in the table</b>.
+    The first row is an indicative industry baseline (typical production
+    RAG over a noisy corpus, no adversarial verifier — see the
+    <span class="qmark" title="Synthesised from published RAMDocs / MADAM-RAG numbers (HanNight et al., 2024) and common production-grade single-LLM RAG benchmarks.">?</span>
+    tooltip on its label). v1.0 deltas are computed against that baseline.
+    <span class="delta-good">↑/↓ green</span> = improvement,
+    <span class="delta-bad">↑/↓ red</span> = regression,
+    <span class="delta-flat">↔</span> = unchanged (|Δ| &lt; 0.005).
+    For cost and latency, ↓ is the improvement direction.
+  </p>
+    <h2>Versus the industry baseline</h2>
+  <p style="color:var(--muted);font-size:13px;margin:-4px 0 6px;">
+    Each cell classifies a version's metric versus the indicative
+    industry baseline at the top of the table above. Five levels:
+    <span class="bench below">below</span>
+    <span class="bench par">on par</span>
+    <span class="bench above">above</span>
+    <span class="bench strong">strong</span>
+    <span class="bench top">exceptional</span>
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Version</th>
+        <th class="num">EM-any-gold</th>
+        <th class="num">F1-multi</th>
+        <th class="num">Misinfo-rej</th>
+        <th class="num">Recall@gold</th>
+        <th class="num">$/run</th>
+        <th class="num">Lat,s/Q</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><b>v1.0_madam_lite</b></td>
+        <td class="num"><span class="bench below">below</span></td>
+        <td class="num"><span class="bench above">above</span></td>
+        <td class="num"><span class="bench strong">strong</span></td>
+        <td class="num"><span class="bench above">above</span></td>
+        <td class="num"><span class="bench top">exceptional</span></td>
+        <td class="num"><span class="bench below">below</span></td>
+      </tr>
+      <tr>
+        <td><b>v2.0_entity_first</b></td>
+        <td class="num"><span class="bench top">exceptional</span></td>
+        <td class="num"><span class="bench above">above</span></td>
+        <td class="num"><span class="bench above">above</span></td>
+        <td class="num"><span class="bench strong">strong</span></td>
+        <td class="num"><span class="bench top">exceptional</span></td>
+        <td class="num"><span class="bench below">below</span></td>
+      </tr>
+      <tr>
+        <td><b>v3_skeptic</b></td>
+        <td class="num"><span class="bench strong">strong</span></td>
+        <td class="num"><span class="bench above">above</span></td>
+        <td class="num"><span class="bench strong">strong</span></td>
+        <td class="num"><span class="bench above">above</span></td>
+        <td class="num"><span class="bench par">on par</span></td>
+        <td class="num"><span class="bench below">below</span></td>
+      </tr>
+      <tr>
+        <td><b>v4 · Evidence Evaluator</b> <span style="color:var(--good);font-size:11px;">(recommended)</span></td>
+        <td class="num"><span class="bench top">exceptional</span></td>
+        <td class="num"><span class="bench strong">strong</span></td>
+        <td class="num"><span class="bench strong">strong</span></td>
+        <td class="num"><span class="bench top">exceptional</span></td>
+        <td class="num"><span class="bench below">below</span></td>
+        <td class="num"><span class="bench below">below</span></td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="bench-legend">
+    Thresholds (versus industry baseline; for cost / latency the direction is inverted, lower is better):
+    <span class="bench below">below</span> Δ &lt; −0.05 ·
+    <span class="bench par">on par</span> ±0.05 ·
+    <span class="bench above">above</span> +0.05 to +0.15 ·
+    <span class="bench strong">strong</span> +0.15 to +0.25 ·
+    <span class="bench top">exceptional</span> &gt; +0.25
+  </p>
+
+  </section>
+
+  <!-- =========================== Tooling backup =========================== -->
+  <section class="report-section" id="tooling">
+    <h2>9 · Tooling & testing</h2>
+
+    <h3>Testing pyramid (94 tests, ~8 s total, no API)</h3>
+    <table>
+      <thead><tr><th>Layer</th><th>What it covers</th><th>Speed</th><th>Cost</th></tr></thead>
+      <tbody>
+        <tr><td><b>unit</b></td>
+          <td>metrics math, Pydantic models, MockLLM, safety layer, conflict / reliability per version</td>
+          <td>&lt; 8 s</td><td>$0</td></tr>
+        <tr><td><b>contract</b></td>
+          <td>per-agent I/O with MockLLM — analyzer / evaluator / mediator / skeptic schemas</td>
+          <td>&lt; 2 s</td><td>$0</td></tr>
+        <tr><td><b>integration</b></td>
+          <td>full pipeline with MockLLM — every version end-to-end on hand-crafted scenarios</td>
+          <td>&lt; 5 s</td><td>$0</td></tr>
+        <tr><td><b>e2e</b> <code>@pytest.mark.e2e</code></td>
+          <td>real OpenAI smoke, opt-in</td>
+          <td>~30 s / Q</td><td>~$0.005–0.02</td></tr>
+        <tr><td><b><code>make bench</code></b></td>
+          <td>full freeze on 12-question subset, publishes baselines</td>
+          <td>~5 min</td><td>~$0.10–0.27 / run</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Pipeline contract (every version implements this)</h3>
+    <pre><code>class Pipeline(ABC):
+    name: str          # registry key, e.g. "v4.1_promptfix"
+    version: str       # semver-ish, e.g. "4.1.0"
+
+    def __init__(self, llm: LLMClient, config: dict | None = None) -> None: ...
+
+    @abstractmethod
+    def run(self, question: Question) -> RunResult:
+        """Execute the full pipeline on one question."""
+
+    def describe(self) -> dict:
+        """Snapshot of config — dumped to config.yaml at freeze time."""</code></pre>
+
+    <h3>What lives in <code>runs/&lt;version&gt;/&lt;ts&gt;/</code></h3>
+    <div class="three-cards">
+      <div class="card" style="border-color:#4f83cc">
+        <h3><code>config.yaml</code></h3>
+        <p style="font-size:13px;margin:0;color:var(--muted)">
+          Snapshot of <code>pipeline.describe()</code> — pipeline graph, prompts,
+          model hashes, thresholds. Tells you what the pipeline was at freeze time.
+        </p>
+      </div>
+      <div class="card" style="border-color:#1e3a5f">
+        <h3><code>trace.jsonl</code></h3>
+        <p style="font-size:13px;margin:0;color:var(--muted)">
+          One event per question. <code>final_answer.variants[]</code> with
+          <code>answer · confidence · supporting_doc_ids · entity</code>,
+          <code>rejected_doc_ids</code>, and <code>explanation</code> (Skeptic's
+          keep/reject reasoning, in plain text).
+        </p>
+      </div>
+      <div class="card" style="border-color:#16803a">
+        <h3><code>metrics.json</code></h3>
+        <p style="font-size:13px;margin:0;color:var(--muted)">
+          All 11 metrics aggregated and broken down by category
+          (<code>pure_correct</code> / <code>has_misinfo</code> /
+          <code>has_noise</code> / <code>mixed_conflict</code>) + cost + latency.
+        </p>
+      </div>
+    </div>
+
+    <p class="footnote">
+      Immutable after freeze. Bug → new minor version. No <code>LangGraph</code>:
+      plain Python control-flow for legibility and easy mocking
+      (early LangGraph prototype kept in <code>_legacy/ramdocs_rag_v0/</code>).
+    </p>
+  </section>
+
+  <!-- ============================ Takeaways ============================ -->
+  <section class="report-section" id="takeaways">
+    <h2>10 · Three takeaways</h2>
+    <div class="takeaway-row">
+      <div class="tk t1">
+        <h3>Measurement, not taste</h3>
+        <p>Every version = hypothesis + two freeze runs + journal entry. The final default falls out of numbers, not opinion.</p>
+      </div>
+      <div class="tk t2">
+        <h3>Negative results are kept</h3>
+        <p>v2.1 lives in the repo as a frozen regression. Without it v3's design has no justification.</p>
+      </div>
+      <div class="tk t3">
+        <h3>Architecture ≠ prompt</h3>
+        <p>Prompt quality is a separate lever from graph structure. Tooling under it (agent_probe, MockLLM, immutable artefacts) is the main takeaway.</p>
+      </div>
+    </div>
+
+    <h3>Open questions — candidates for v4.x (not blockers)</h3>
+        <div class="open-item"><h3>q306 Oklahoma — main-line vs sub-line</h3><p>Intra-mediator occasionally picks the 2010 timeline row over the main-line lead-sentence. Candidate for v4.x: an explicit <code>is_main_line_value</code> signal from the analyzer, or a lead-sentence boost in <code>agents.resolve_entity_group</code>.</p></div>
+    <div class="open-item"><h3>has_noise F1 = 0.73 — weakest category</h3><p>Skeptic doesn't always separate uniform noise from a valid alternative. Lowering W_TRUST is risky — it also helps on misinfo, so naive reduction risks re-introducing misinfo regressions.</p></div>
+    <div class="open-item"><h3>12 → 500 questions</h3><p>Stand is ready to scale: same <code>make bench</code>, one full run per version ≈ $10. Eight versions frozen on the 12-question subset (as permitted by the brief).</p></div>
+
+  </section>
+  <!-- =========================== Stack & decisions =========================== -->
+  <section class="report-section" id="stack">
+    <h2>11 · Stack &amp; engineering decisions</h2>
+
+    <p style="color:var(--muted);font-size:13.5px;margin-top:-4px">
+      A short tour through the stack — what was picked, why, what the
+      trade-offs are, and what would need to change before this ships to
+      production with real load.
+    </p>
+
+    <h3>Runtime &amp; control flow</h3>
+    <ul>
+      <li><b>Python 3.13</b> + plain imperative control flow. No graph framework.</li>
+      <li><b>Why no LangGraph / LangChain:</b> early prototype was on LangGraph (kept under <code>_legacy/</code>). Dropped it because the graph abstraction made step-by-step debugging harder and tests harder to mock. With 4–5 agents we don't yet have a state machine that needs a graph engine.</li>
+      <li><b>Re-evaluate when:</b> the pipeline gains conditional branches that depend on intermediate state across more than 2 steps, or we need parallel sub-graphs with rejoin semantics. Then LangGraph (or a custom state machine) starts paying off.</li>
+    </ul>
+
+    <h3>Models</h3>
+    <ul>
+      <li><b>OpenAI API.</b> Two tiers — <code>gpt-4o-mini</code> for the parallel high-volume roles (Analyzer × K, Evaluator × K) and <code>gpt-4o</code> for the reasoning-heavy single-shot roles (Mediator, Skeptic). Cost &amp; latency are mostly driven by the cheap tier, quality by the expensive tier.</li>
+      <li><b>Vendor-agnostic via Protocol.</b> All LLM calls go through a single <code>LLMClient</code> Protocol (<code>complete_json(system, user, schema, schema_name)</code> →&nbsp;parsed result). Swap to Anthropic / Bedrock / a self-hosted vLLM is a one-class change, not a refactor across the codebase.</li>
+      <li><b>Strict JSON output</b> enforced through Pydantic schemas. The model returns a typed object, not free text. Reduces a whole class of bugs at the parsing layer.</li>
+      <li><b>Production concern:</b> <code>gpt-4o-mini</code> is unstable on bounded-float ratings — that's exactly what bit v4.0 (Evaluator's trust scores scattered). For a real production deploy I'd put the Evaluator on a fine-tuned smaller model or move it to <code>gpt-4o</code> and re-tune the weight.</li>
+    </ul>
+
+    <h3>Retrieval &amp; embeddings</h3>
+    <ul>
+      <li><b>Hybrid BM25 + dense, top-8.</b> BM25 via <code>rank_bm25</code>. Dense via <code>sentence-transformers/all-MiniLM-L6-v2</code> (~80 MB, bi-encoder, cached in <code>~/.cache/huggingface</code>). Weights 0.5 / 0.5.</li>
+      <li><b>Why MiniLM:</b> small, fast on CPU, good enough for the 3–8 doc pools RAMDocs ships. It is not a multilingual or domain-specific model — for a production deploy the swap target is something domain-tuned (BGE, e5-large, or fine-tuned on the company's corpus).</li>
+      <li><b>No vector DB.</b> RAMDocs questions ship their own candidate pool (3–8 docs each), so we don't index a corpus. For production this is the layer where we plug in pgvector / Qdrant / OpenSearch.</li>
+    </ul>
+
+    <h3>Schemas &amp; contracts</h3>
+    <ul>
+      <li><b>Pydantic v2, strict mode.</b> Every cross-boundary object (<code>Question</code>, <code>RAMDoc</code>, <code>Claim</code>, <code>AnswerVariant</code>, <code>FinalAnswer</code>, <code>RunResult</code>, <code>RunMetrics</code>) is a validated model.</li>
+      <li><b>Effect:</b> contract tests fail loudly on a breaking schema change. Re-running an old pipeline on a new schema (or vice versa) is impossible by construction.</li>
+      <li><b>Artefact formats:</b> <code>config.yaml</code> (human-readable snapshot of <code>pipeline.describe()</code>), <code>trace.jsonl</code> (one event per question, replayable), <code>metrics.json</code> (aggregates). All append-only and immutable after freeze.</li>
+    </ul>
+
+    <h3>Testing &amp; QA</h3>
+    <ul>
+      <li><b>pytest, 94 tests, ~8 seconds, $0 cost.</b> Four layers: <code>unit</code> (pure Python), <code>contract</code> (per-agent I/O with MockLLM), <code>integration</code> (full pipeline with MockLLM), <code>e2e</code> (real OpenAI, opt-in via <code>@pytest.mark.e2e</code>).</li>
+      <li><b>MockLLM</b> is the key piece — script-driven, deterministic, lets us cover the full graph end-to-end without API spend. It is how «turn around twenty prompt iterations in an evening» is possible at all.</li>
+      <li><b>Coverage</b> via <code>pytest-cov</code>. <b>Lint &amp; format</b> via <code>ruff</code>.</li>
+    </ul>
+
+    <h3>Observability</h3>
+    <ul>
+      <li><b>Langfuse drop-in.</b> If <code>LANGFUSE_PUBLIC_KEY</code> is set in env, <code>OpenAIClient</code> auto-switches to <code>langfuse.openai</code>. Every LLM call lands in the Langfuse UI with prompt / completion / latency / cost. Off by default, free to turn on.</li>
+      <li><b>Local trace</b> independently written to <code>trace.jsonl</code> regardless of Langfuse — this is the file the per-question diagnostic above is built from. Means the run is fully introspectable from disk, no external service required.</li>
+    </ul>
+
+    <h3>Dev loop</h3>
+    <ul>
+      <li><b><code>Makefile</code></b> is the entry point: <code>make test</code>, <code>make test-e2e</code>, <code>make bench PIPELINE=v4.1_promptfix</code>, <code>make compare VERSIONS="v3.3 v4.1"</code>.</li>
+      <li><b><code>agent_probe</code></b> — custom CLI for isolated single-agent debugging on one <code>(question, doc)</code> pair, ~$0.0005 per call. The single tool that made the v4 analyzer rewrite possible.</li>
+      <li><b>Pipeline registry</b> — a single side-effect module that imports every version and binds it to a string name. Adding v5 is one file + one <code>register(...)</code> line.</li>
+    </ul>
+
+    <h3>Demo deploy (separate from the core code)</h3>
+    <ul>
+      <li><b>Purpose:</b> let a reviewer run the pipeline through a hosted web UI — pick a question, watch the agents work step by step, inspect the full trace — without cloning the repo, installing Python, or paying for an OpenAI key.</li>
+      <li><b>Lives in <code>demo/</code>, structurally separate from the pipeline.</b> The pipeline is a library; the demo imports it. The demo can be rewritten / replaced / hosted elsewhere without touching a single line of <code>src/ramdocs_rag/</code>.</li>
+      <li><b>Stack:</b> <code>FastAPI</code> backend + <code>uvicorn</code> behind <code>nginx</code>, running under <code>systemd</code> on a single host. <code>pip install -e .</code> into a venv, no Docker. Adequate for a single-host showcase.</li>
+      <li><b>UI tracing:</b> the demo uses <code>TracingClient</code> — a subclass of the standard <code>OpenAIClient</code> that captures every LLM call into a context-var buffer so the frontend can render the per-step trace (which agent did what, on which document, with what verdict). One tiny class on top of the existing <code>LLMClient</code> Protocol — zero impact on the pipeline.</li>
+      <li><b>CI/CD:</b> the demo has its own <code>demo/.github/workflows/deploy.yml</code> (rsync + systemd restart on push). The main pipeline repo intentionally has no CI yet — the demo's workflow does not pull from it directly.</li>
+      <li><b>Why this matters for production:</b> the pipeline never «cares about a frontend». If we later swap the demo for a real product UI, or expose the pipeline via a different surface (a worker queue, a CLI batch tool, an internal Slack bot), nothing in <code>src/ramdocs_rag/</code> has to change.</li>
+    </ul>
+
+    <h3>Decisions deliberately NOT taken</h3>
+    <ul>
+      <li><b>No LLM-judge.</b> RAMDocs ships per-document ground-truth labels — all 11 metrics are computed deterministically. A judging LLM would add noise, cost, and a second model to maintain. Re-evaluate only if we move to a dataset without per-doc labels.</li>
+      <li><b>No Docker / no orchestration.</b> Deploy of the demo is <code>pip install -e .</code> into a venv + <code>systemd</code> + <code>uvicorn</code> behind nginx. Fine for a 1-host showcase. For multi-host or autoscaling we'd containerise and move the model client behind a queue.</li>
+      <li><b>No CI/CD in the main repo.</b> Only the demo has a GitHub Actions deploy workflow. <code>pre-commit</code> + ruff hook is on the to-do list, not blocking.</li>
+      <li><b>No fine-tuning.</b> Out of budget and contradicts the goal — show that a versioned multi-agent stack can hit good numbers on a hostile corpus with prompts only.</li>
+    </ul>
+  </section>
+
+
+</div>
+
+<script>
+// active-section highlight in the sticky TOC
+const links = document.querySelectorAll('nav.toc a');
+const sections = [...links].map(a => document.querySelector(a.getAttribute('href')));
+window.addEventListener('scroll', () => {
+  const y = window.scrollY + 100;
+  let active = 0;
+  sections.forEach((s, i) => { if (s && s.offsetTop <= y) active = i; });
+  links.forEach(l => l.classList.remove('active'));
+  if (links[active]) links[active].classList.add('active');
+});
+</script>
+
+</body>
+</html>
