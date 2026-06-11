@@ -1,8 +1,8 @@
 # RAMDocs Multi-Agent RAG — Versioned Prototype
 
 > 📄 **Research report (HTML, single page):**
-> [**Multi-Agent RAG over RAMDocs — Architecture Study**](https://htmlpreview.github.io/?https://github.com/Muruntaed/ramdocs-rag/blob/main/docs/journal/architecture_study.html)
-> · ([raw file](docs/journal/architecture_study.html))
+> [**Multi-Agent RAG over RAMDocs — Architecture Study**](https://muruntaed.github.io/ramdocs-rag/docs/journal/architecture_study.html)
+> · ([source in repo](docs/journal/architecture_study.html))
 >
 > One-page walk-through of the whole investigation: four candidate approach
 > families, four pipeline versions (v1 → v4) with hypotheses, diagrams,
